@@ -248,6 +248,11 @@ abstract contract ConfidentialFungibleToken is IConfidentialFungibleToken {
         _requestHandles[requestId] = euint64.wrap(0);
     }
 
+    /// @dev Returns the cypher-text handle associated with a given request Id `requestId`.
+    function requestHandles(uint256 requestId) public view virtual returns (euint64) {
+        return _requestHandles[requestId];
+    }
+
     function _setOperator(address holder, address operator, uint48 until) internal virtual {
         _operators[holder][operator] = until;
         emit OperatorSet(holder, operator, until);

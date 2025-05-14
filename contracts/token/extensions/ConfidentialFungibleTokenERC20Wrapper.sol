@@ -134,6 +134,11 @@ abstract contract ConfidentialFungibleTokenERC20Wrapper is ConfidentialFungibleT
         SafeERC20.safeTransfer(underlying(), to, amount * rate());
     }
 
+    /// @dev Returns the receiver address associated with a given request Id `requestId`.
+    function receivers(uint256 requestId) public view virtual returns (address) {
+        return _receivers[requestId];
+    }
+
     function _unwrap(address from, address to, euint64 amount) internal virtual {
         require(to != address(0), ConfidentialFungibleTokenInvalidReceiver(to));
         require(
