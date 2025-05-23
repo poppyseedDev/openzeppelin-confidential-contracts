@@ -11,9 +11,7 @@ const tryRead = (cmd) => {
   }
 };
 
-// For the time being, the confidential contracts repo will undergo rapid development. We will want docs to update live.
-// The master branch is used for development, and the docs are updated from there.
-// Use /^release-v(?<version>(?<major>\d+)\.(?<minor>\d+)(?:\.(?<patch>\d+))?)$/ for a release branch
+// The confidential contracts are currently in rapid development. Docs should be updated with all pushes to master.
 const masterBranch = /^master$/;
 
 const currentBranch = read("git rev-parse --abbrev-ref HEAD");
