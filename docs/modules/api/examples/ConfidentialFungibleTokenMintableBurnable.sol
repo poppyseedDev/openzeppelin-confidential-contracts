@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import { TFHE, einput, ebool, euint64 } from "fhevm/lib/TFHE.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { ConfidentialFungibleToken } from "@openzeppelin/confidential-contracts/token/ConfidentialFungibleToken.sol";
+import {TFHE, einput, ebool, euint64} from "fhevm/lib/TFHE.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ConfidentialFungibleToken} from "@openzeppelin/confidential-contracts/token/ConfidentialFungibleToken.sol";
 
 contract ConfidentialFungibleTokenMintableBurnable is ConfidentialFungibleToken, Ownable {
     using TFHE for *;
