@@ -7,6 +7,7 @@
 :ConfidentialFungibleToken: pass:normal[xref:token.adoc#ConfidentialFungibleToken[`ConfidentialFungibleToken`]]
 :IConfidentialFungibleToken: pass:normal[xref:interfaces.adoc#IConfidentialFungibleToken[`IConfidentialFungibleToken`]]
 :IConfidentialFungibleTokenReceiver-onConfidentialTransferReceived: pass:normal[xref:interfaces.adoc#IConfidentialFungibleTokenReceiver-onConfidentialTransferReceived-address-address-euint64-bytes-[`IConfidentialFungibleTokenReceiver.onConfidentialTransferReceived`]]
+:IConfidentialFungibleToken-EncryptedAmountDisclosed: pass:normal[xref:interfaces.adoc#IConfidentialFungibleToken-EncryptedAmountDisclosed-euint64-uint64-[`IConfidentialFungibleToken.EncryptedAmountDisclosed`]]
 :ConfidentialFungibleToken: pass:normal[xref:token.adoc#ConfidentialFungibleToken[`ConfidentialFungibleToken`]]
 :ConfidentialFungibleToken: pass:normal[xref:token.adoc#ConfidentialFungibleToken[`ConfidentialFungibleToken`]]
 :ConfidentialFungibleToken: pass:normal[xref:token.adoc#ConfidentialFungibleToken[`ConfidentialFungibleToken`]]
@@ -30,7 +31,6 @@ This set of interfaces, contracts, and utilities are all related to the evolving
 :ConfidentialFungibleTokenUnauthorizedUseOfEncryptedAmount: pass:normal[xref:#ConfidentialFungibleToken-ConfidentialFungibleTokenUnauthorizedUseOfEncryptedAmount-euint64-address-[`++ConfidentialFungibleTokenUnauthorizedUseOfEncryptedAmount++`]]
 :ConfidentialFungibleTokenUnauthorizedCaller: pass:normal[xref:#ConfidentialFungibleToken-ConfidentialFungibleTokenUnauthorizedCaller-address-[`++ConfidentialFungibleTokenUnauthorizedCaller++`]]
 :ConfidentialFungibleTokenInvalidGatewayRequest: pass:normal[xref:#ConfidentialFungibleToken-ConfidentialFungibleTokenInvalidGatewayRequest-uint256-[`++ConfidentialFungibleTokenInvalidGatewayRequest++`]]
-:onlyGateway: pass:normal[xref:#ConfidentialFungibleToken-onlyGateway--[`++onlyGateway++`]]
 :constructor: pass:normal[xref:#ConfidentialFungibleToken-constructor-string-string-string-[`++constructor++`]]
 :name: pass:normal[xref:#ConfidentialFungibleToken-name--[`++name++`]]
 :symbol: pass:normal[xref:#ConfidentialFungibleToken-symbol--[`++symbol++`]]
@@ -40,16 +40,16 @@ This set of interfaces, contracts, and utilities are all related to the evolving
 :balanceOf: pass:normal[xref:#ConfidentialFungibleToken-balanceOf-address-[`++balanceOf++`]]
 :isOperator: pass:normal[xref:#ConfidentialFungibleToken-isOperator-address-address-[`++isOperator++`]]
 :setOperator: pass:normal[xref:#ConfidentialFungibleToken-setOperator-address-uint48-[`++setOperator++`]]
-:confidentialTransfer: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransfer-address-einput-bytes-[`++confidentialTransfer++`]]
+:confidentialTransfer: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransfer-address-externalEuint64-bytes-[`++confidentialTransfer++`]]
 :confidentialTransfer: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransfer-address-euint64-[`++confidentialTransfer++`]]
-:confidentialTransferFrom: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferFrom-address-address-einput-bytes-[`++confidentialTransferFrom++`]]
+:confidentialTransferFrom: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferFrom-address-address-externalEuint64-bytes-[`++confidentialTransferFrom++`]]
 :confidentialTransferFrom: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferFrom-address-address-euint64-[`++confidentialTransferFrom++`]]
-:confidentialTransferAndCall: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferAndCall-address-einput-bytes-bytes-[`++confidentialTransferAndCall++`]]
+:confidentialTransferAndCall: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferAndCall-address-externalEuint64-bytes-bytes-[`++confidentialTransferAndCall++`]]
 :confidentialTransferAndCall: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferAndCall-address-euint64-bytes-[`++confidentialTransferAndCall++`]]
-:confidentialTransferFromAndCall: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-einput-bytes-bytes-[`++confidentialTransferFromAndCall++`]]
+:confidentialTransferFromAndCall: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-externalEuint64-bytes-bytes-[`++confidentialTransferFromAndCall++`]]
 :confidentialTransferFromAndCall: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-euint64-bytes-[`++confidentialTransferFromAndCall++`]]
 :discloseEncryptedAmount: pass:normal[xref:#ConfidentialFungibleToken-discloseEncryptedAmount-euint64-[`++discloseEncryptedAmount++`]]
-:finalizeDiscloseEncryptedAmount: pass:normal[xref:#ConfidentialFungibleToken-finalizeDiscloseEncryptedAmount-uint256-uint64-[`++finalizeDiscloseEncryptedAmount++`]]
+:finalizeDiscloseEncryptedAmount: pass:normal[xref:#ConfidentialFungibleToken-finalizeDiscloseEncryptedAmount-uint256-uint64-bytes---[`++finalizeDiscloseEncryptedAmount++`]]
 :_setOperator: pass:normal[xref:#ConfidentialFungibleToken-_setOperator-address-address-uint48-[`++_setOperator++`]]
 :_mint: pass:normal[xref:#ConfidentialFungibleToken-_mint-address-euint64-[`++_mint++`]]
 :_burn: pass:normal[xref:#ConfidentialFungibleToken-_burn-address-euint64-[`++_burn++`]]
@@ -66,16 +66,16 @@ This set of interfaces, contracts, and utilities are all related to the evolving
 :balanceOf-address: pass:normal[xref:#ConfidentialFungibleToken-balanceOf-address-[`++balanceOf++`]]
 :isOperator-address-address: pass:normal[xref:#ConfidentialFungibleToken-isOperator-address-address-[`++isOperator++`]]
 :setOperator-address-uint48: pass:normal[xref:#ConfidentialFungibleToken-setOperator-address-uint48-[`++setOperator++`]]
-:confidentialTransfer-address-einput-bytes: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransfer-address-einput-bytes-[`++confidentialTransfer++`]]
+:confidentialTransfer-address-externalEuint64-bytes: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransfer-address-externalEuint64-bytes-[`++confidentialTransfer++`]]
 :confidentialTransfer-address-euint64: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransfer-address-euint64-[`++confidentialTransfer++`]]
-:confidentialTransferFrom-address-address-einput-bytes: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferFrom-address-address-einput-bytes-[`++confidentialTransferFrom++`]]
+:confidentialTransferFrom-address-address-externalEuint64-bytes: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferFrom-address-address-externalEuint64-bytes-[`++confidentialTransferFrom++`]]
 :confidentialTransferFrom-address-address-euint64: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferFrom-address-address-euint64-[`++confidentialTransferFrom++`]]
-:confidentialTransferAndCall-address-einput-bytes-bytes: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferAndCall-address-einput-bytes-bytes-[`++confidentialTransferAndCall++`]]
+:confidentialTransferAndCall-address-externalEuint64-bytes-bytes: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferAndCall-address-externalEuint64-bytes-bytes-[`++confidentialTransferAndCall++`]]
 :confidentialTransferAndCall-address-euint64-bytes: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferAndCall-address-euint64-bytes-[`++confidentialTransferAndCall++`]]
-:confidentialTransferFromAndCall-address-address-einput-bytes-bytes: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-einput-bytes-bytes-[`++confidentialTransferFromAndCall++`]]
+:confidentialTransferFromAndCall-address-address-externalEuint64-bytes-bytes: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-externalEuint64-bytes-bytes-[`++confidentialTransferFromAndCall++`]]
 :confidentialTransferFromAndCall-address-address-euint64-bytes: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-euint64-bytes-[`++confidentialTransferFromAndCall++`]]
 :discloseEncryptedAmount-euint64: pass:normal[xref:#ConfidentialFungibleToken-discloseEncryptedAmount-euint64-[`++discloseEncryptedAmount++`]]
-:finalizeDiscloseEncryptedAmount-uint256-uint64: pass:normal[xref:#ConfidentialFungibleToken-finalizeDiscloseEncryptedAmount-uint256-uint64-[`++finalizeDiscloseEncryptedAmount++`]]
+:finalizeDiscloseEncryptedAmount-uint256-uint64-bytes--: pass:normal[xref:#ConfidentialFungibleToken-finalizeDiscloseEncryptedAmount-uint256-uint64-bytes---[`++finalizeDiscloseEncryptedAmount++`]]
 :_setOperator-address-address-uint48: pass:normal[xref:#ConfidentialFungibleToken-_setOperator-address-address-uint48-[`++_setOperator++`]]
 :_mint-address-euint64: pass:normal[xref:#ConfidentialFungibleToken-_mint-address-euint64-[`++_mint++`]]
 :_burn-address-euint64: pass:normal[xref:#ConfidentialFungibleToken-_burn-address-euint64-[`++_burn++`]]
@@ -107,12 +107,6 @@ Key features:
 - Safe overflow/underflow handling for FHE operations
 
 [.contract-index]
-.Modifiers
---
-* `++onlyGateway()++`
---
-
-[.contract-index]
 .Functions
 --
 * `++constructor(name_, symbol_, tokenURI_)++`
@@ -133,7 +127,7 @@ Key features:
 * `++confidentialTransferFromAndCall(from, to, encryptedAmount, inputProof, data)++`
 * `++confidentialTransferFromAndCall(from, to, amount, data)++`
 * `++discloseEncryptedAmount(encryptedAmount)++`
-* `++finalizeDiscloseEncryptedAmount(requestId, amount)++`
+* `++finalizeDiscloseEncryptedAmount(requestId, amount, signatures)++`
 * `++_setOperator(holder, operator, until)++`
 * `++_mint(to, amount)++`
 * `++_burn(from, amount)++`
@@ -173,10 +167,6 @@ Key features:
 .IConfidentialFungibleToken
 
 --
-
-[.contract-item]
-[[ConfidentialFungibleToken-onlyGateway--]]
-==== `[.contract-item-name]#++onlyGateway++#++()++` [.item-kind]#modifier#
 
 [.contract-item]
 [[ConfidentialFungibleToken-constructor-string-string-string-]]
@@ -233,8 +223,8 @@ Sets `operator` as an operator for `holder` until the timestamp `until`.
 NOTE: An operator may transfer any amount of tokens on behalf of a holder while approved.
 
 [.contract-item]
-[[ConfidentialFungibleToken-confidentialTransfer-address-einput-bytes-]]
-==== `[.contract-item-name]#++confidentialTransfer++#++(address to, einput encryptedAmount, bytes inputProof) → euint64++` [.item-kind]#public#
+[[ConfidentialFungibleToken-confidentialTransfer-address-externalEuint64-bytes-]]
+==== `[.contract-item-name]#++confidentialTransfer++#++(address to, externalEuint64 encryptedAmount, bytes inputProof) → euint64++` [.item-kind]#public#
 
 Transfers the encrypted amount `encryptedAmount` to `to` with the given input proof `inputProof`.
 
@@ -244,12 +234,12 @@ Returns the encrypted amount that was actually transferred.
 [[ConfidentialFungibleToken-confidentialTransfer-address-euint64-]]
 ==== `[.contract-item-name]#++confidentialTransfer++#++(address to, euint64 amount) → euint64++` [.item-kind]#public#
 
-Similar to {confidentialTransfer-address-einput-bytes} but without an input proof. The caller
+Similar to {confidentialTransfer-address-externalEuint64-bytes} but without an input proof. The caller
 *must* already be allowed by ACL for the given `amount`.
 
 [.contract-item]
-[[ConfidentialFungibleToken-confidentialTransferFrom-address-address-einput-bytes-]]
-==== `[.contract-item-name]#++confidentialTransferFrom++#++(address from, address to, einput encryptedAmount, bytes inputProof) → euint64 transferred++` [.item-kind]#public#
+[[ConfidentialFungibleToken-confidentialTransferFrom-address-address-externalEuint64-bytes-]]
+==== `[.contract-item-name]#++confidentialTransferFrom++#++(address from, address to, externalEuint64 encryptedAmount, bytes inputProof) → euint64 transferred++` [.item-kind]#public#
 
 Transfers the encrypted amount `encryptedAmount` from `from` to `to` with the given input proof
 `inputProof`. `msg.sender` must be either `from` or an operator for `from`.
@@ -260,14 +250,15 @@ Returns the encrypted amount that was actually transferred.
 [[ConfidentialFungibleToken-confidentialTransferFrom-address-address-euint64-]]
 ==== `[.contract-item-name]#++confidentialTransferFrom++#++(address from, address to, euint64 amount) → euint64 transferred++` [.item-kind]#public#
 
-Similar to {confidentialTransferFrom-address-address-einput-bytes} but without an input proof. The caller
-*must* be already allowed by ACL for the given `amount`.
+Similar to {confidentialTransferFrom-address-address-externalEuint64-bytes} but without an input proof.
+The caller *must* be already allowed by ACL for the given `amount`.
 
 [.contract-item]
-[[ConfidentialFungibleToken-confidentialTransferAndCall-address-einput-bytes-bytes-]]
-==== `[.contract-item-name]#++confidentialTransferAndCall++#++(address to, einput encryptedAmount, bytes inputProof, bytes data) → euint64 transferred++` [.item-kind]#public#
+[[ConfidentialFungibleToken-confidentialTransferAndCall-address-externalEuint64-bytes-bytes-]]
+==== `[.contract-item-name]#++confidentialTransferAndCall++#++(address to, externalEuint64 encryptedAmount, bytes inputProof, bytes data) → euint64 transferred++` [.item-kind]#public#
 
-Similar to {confidentialTransfer-address-einput-bytes} but with a callback to `to` after the transfer.
+Similar to {confidentialTransfer-address-externalEuint64-bytes} but with a callback to `to` after
+the transfer.
 
 The callback is made to the {IConfidentialFungibleTokenReceiver-onConfidentialTransferReceived} function on the
 to address with the actual transferred amount (may differ from the given `encryptedAmount`) and the given
@@ -280,11 +271,11 @@ data `data`.
 Similar to {confidentialTransfer-address-euint64} but with a callback to `to` after the transfer.
 
 [.contract-item]
-[[ConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-einput-bytes-bytes-]]
-==== `[.contract-item-name]#++confidentialTransferFromAndCall++#++(address from, address to, einput encryptedAmount, bytes inputProof, bytes data) → euint64 transferred++` [.item-kind]#public#
+[[ConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-externalEuint64-bytes-bytes-]]
+==== `[.contract-item-name]#++confidentialTransferFromAndCall++#++(address from, address to, externalEuint64 encryptedAmount, bytes inputProof, bytes data) → euint64 transferred++` [.item-kind]#public#
 
-Similar to {confidentialTransferFrom-address-address-einput-bytes} but with a callback to `to` after
-the transfer.
+Similar to {confidentialTransferFrom-address-address-externalEuint64-bytes} but with a callback to `to`
+after the transfer.
 
 [.contract-item]
 [[ConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-euint64-bytes-]]
@@ -297,15 +288,15 @@ after the transfer.
 [[ConfidentialFungibleToken-discloseEncryptedAmount-euint64-]]
 ==== `[.contract-item-name]#++discloseEncryptedAmount++#++(euint64 encryptedAmount)++` [.item-kind]#public#
 
-Discloses an encrypted amount `encryptedAmount` publicly via an {EncryptedAmountDisclosed}
+Discloses an encrypted amount `encryptedAmount` publicly via an {IConfidentialFungibleToken-EncryptedAmountDisclosed}
 event. The caller and this contract must be authorized to use the encrypted amount on the ACL.
 
 NOTE: This is an asynchronous operation where the actual decryption happens off-chain and
 {finalizeDiscloseEncryptedAmount} is called with the result.
 
 [.contract-item]
-[[ConfidentialFungibleToken-finalizeDiscloseEncryptedAmount-uint256-uint64-]]
-==== `[.contract-item-name]#++finalizeDiscloseEncryptedAmount++#++(uint256 requestId, uint64 amount)++` [.item-kind]#public#
+[[ConfidentialFungibleToken-finalizeDiscloseEncryptedAmount-uint256-uint64-bytes---]]
+==== `[.contract-item-name]#++finalizeDiscloseEncryptedAmount++#++(uint256 requestId, uint64 amount, bytes[] signatures)++` [.item-kind]#public#
 
 May only be called by the gateway contract. Finalizes a disclose encrypted amount request.
 
@@ -385,8 +376,8 @@ The given gateway request ID `requestId` is invalid.
 :onTransferReceived: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-onTransferReceived-address-address-uint256-bytes-[`++onTransferReceived++`]]
 :wrap: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-wrap-address-uint256-[`++wrap++`]]
 :unwrap: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-unwrap-address-address-euint64-[`++unwrap++`]]
-:unwrap: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-unwrap-address-address-einput-bytes-[`++unwrap++`]]
-:finalizeUnwrap: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-finalizeUnwrap-uint256-uint64-[`++finalizeUnwrap++`]]
+:unwrap: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-unwrap-address-address-externalEuint64-bytes-[`++unwrap++`]]
+:finalizeUnwrap: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-finalizeUnwrap-uint256-uint64-bytes---[`++finalizeUnwrap++`]]
 :_unwrap: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-_unwrap-address-address-euint64-[`++_unwrap++`]]
 
 :constructor-contract-IERC20: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-constructor-contract-IERC20-[`++constructor++`]]
@@ -396,8 +387,8 @@ The given gateway request ID `requestId` is invalid.
 :onTransferReceived-address-address-uint256-bytes: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-onTransferReceived-address-address-uint256-bytes-[`++onTransferReceived++`]]
 :wrap-address-uint256: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-wrap-address-uint256-[`++wrap++`]]
 :unwrap-address-address-euint64: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-unwrap-address-address-euint64-[`++unwrap++`]]
-:unwrap-address-address-einput-bytes: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-unwrap-address-address-einput-bytes-[`++unwrap++`]]
-:finalizeUnwrap-uint256-uint64: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-finalizeUnwrap-uint256-uint64-[`++finalizeUnwrap++`]]
+:unwrap-address-address-externalEuint64-bytes: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-unwrap-address-address-externalEuint64-bytes-[`++unwrap++`]]
+:finalizeUnwrap-uint256-uint64-bytes--: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-finalizeUnwrap-uint256-uint64-bytes---[`++finalizeUnwrap++`]]
 :_unwrap-address-address-euint64: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-_unwrap-address-address-euint64-[`++_unwrap++`]]
 
 [.contract]
@@ -424,7 +415,7 @@ which allows users to transfer `ERC1363` tokens directly to the wrapper with a c
 * `++wrap(to, amount)++`
 * `++unwrap(from, to, amount)++`
 * `++unwrap(from, to, encryptedAmount, inputProof)++`
-* `++finalizeUnwrap(requestID, amount)++`
+* `++finalizeUnwrap(requestID, amount, signatures)++`
 * `++_unwrap(from, to, amount)++`
 
 [.contract-subindex-inherited]
@@ -448,7 +439,7 @@ which allows users to transfer `ERC1363` tokens directly to the wrapper with a c
 * `++confidentialTransferFromAndCall(from, to, encryptedAmount, inputProof, data)++`
 * `++confidentialTransferFromAndCall(from, to, amount, data)++`
 * `++discloseEncryptedAmount(encryptedAmount)++`
-* `++finalizeDiscloseEncryptedAmount(requestId, amount)++`
+* `++finalizeDiscloseEncryptedAmount(requestId, amount, signatures)++`
 * `++_setOperator(holder, operator, until)++`
 * `++_mint(to, amount)++`
 * `++_burn(from, amount)++`
@@ -552,15 +543,15 @@ tokens.
 NOTE: The caller *must* already be approved by ACL for the given `amount`.
 
 [.contract-item]
-[[ConfidentialFungibleTokenERC20Wrapper-unwrap-address-address-einput-bytes-]]
-==== `[.contract-item-name]#++unwrap++#++(address from, address to, einput encryptedAmount, bytes inputProof)++` [.item-kind]#public#
+[[ConfidentialFungibleTokenERC20Wrapper-unwrap-address-address-externalEuint64-bytes-]]
+==== `[.contract-item-name]#++unwrap++#++(address from, address to, externalEuint64 encryptedAmount, bytes inputProof)++` [.item-kind]#public#
 
 Variant of {unwrap} that passes an `inputProof` which approves the caller for the `encryptedAmount`
 in the ACL.
 
 [.contract-item]
-[[ConfidentialFungibleTokenERC20Wrapper-finalizeUnwrap-uint256-uint64-]]
-==== `[.contract-item-name]#++finalizeUnwrap++#++(uint256 requestID, uint64 amount)++` [.item-kind]#public#
+[[ConfidentialFungibleTokenERC20Wrapper-finalizeUnwrap-uint256-uint64-bytes---]]
+==== `[.contract-item-name]#++finalizeUnwrap++#++(uint256 requestID, uint64 amount, bytes[] signatures)++` [.item-kind]#public#
 
 Called by the fhEVM gateway with the decrypted amount `amount` for a request id `requestId`.
 Fills unwrap requests.

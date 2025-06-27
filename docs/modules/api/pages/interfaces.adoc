@@ -24,13 +24,13 @@ These interfaces are available as `.sol` files and are useful to interact with t
 :balanceOf: pass:normal[xref:#IConfidentialFungibleToken-balanceOf-address-[`++balanceOf++`]]
 :isOperator: pass:normal[xref:#IConfidentialFungibleToken-isOperator-address-address-[`++isOperator++`]]
 :setOperator: pass:normal[xref:#IConfidentialFungibleToken-setOperator-address-uint48-[`++setOperator++`]]
-:confidentialTransfer: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransfer-address-einput-bytes-[`++confidentialTransfer++`]]
+:confidentialTransfer: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransfer-address-externalEuint64-bytes-[`++confidentialTransfer++`]]
 :confidentialTransfer: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransfer-address-euint64-[`++confidentialTransfer++`]]
-:confidentialTransferFrom: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferFrom-address-address-einput-bytes-[`++confidentialTransferFrom++`]]
+:confidentialTransferFrom: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferFrom-address-address-externalEuint64-bytes-[`++confidentialTransferFrom++`]]
 :confidentialTransferFrom: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferFrom-address-address-euint64-[`++confidentialTransferFrom++`]]
-:confidentialTransferAndCall: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferAndCall-address-einput-bytes-bytes-[`++confidentialTransferAndCall++`]]
+:confidentialTransferAndCall: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferAndCall-address-externalEuint64-bytes-bytes-[`++confidentialTransferAndCall++`]]
 :confidentialTransferAndCall: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferAndCall-address-euint64-bytes-[`++confidentialTransferAndCall++`]]
-:confidentialTransferFromAndCall: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-einput-bytes-bytes-[`++confidentialTransferFromAndCall++`]]
+:confidentialTransferFromAndCall: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-externalEuint64-bytes-bytes-[`++confidentialTransferFromAndCall++`]]
 :confidentialTransferFromAndCall: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-euint64-bytes-[`++confidentialTransferFromAndCall++`]]
 
 :name-: pass:normal[xref:#IConfidentialFungibleToken-name--[`++name++`]]
@@ -41,13 +41,13 @@ These interfaces are available as `.sol` files and are useful to interact with t
 :balanceOf-address: pass:normal[xref:#IConfidentialFungibleToken-balanceOf-address-[`++balanceOf++`]]
 :isOperator-address-address: pass:normal[xref:#IConfidentialFungibleToken-isOperator-address-address-[`++isOperator++`]]
 :setOperator-address-uint48: pass:normal[xref:#IConfidentialFungibleToken-setOperator-address-uint48-[`++setOperator++`]]
-:confidentialTransfer-address-einput-bytes: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransfer-address-einput-bytes-[`++confidentialTransfer++`]]
+:confidentialTransfer-address-externalEuint64-bytes: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransfer-address-externalEuint64-bytes-[`++confidentialTransfer++`]]
 :confidentialTransfer-address-euint64: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransfer-address-euint64-[`++confidentialTransfer++`]]
-:confidentialTransferFrom-address-address-einput-bytes: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferFrom-address-address-einput-bytes-[`++confidentialTransferFrom++`]]
+:confidentialTransferFrom-address-address-externalEuint64-bytes: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferFrom-address-address-externalEuint64-bytes-[`++confidentialTransferFrom++`]]
 :confidentialTransferFrom-address-address-euint64: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferFrom-address-address-euint64-[`++confidentialTransferFrom++`]]
-:confidentialTransferAndCall-address-einput-bytes-bytes: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferAndCall-address-einput-bytes-bytes-[`++confidentialTransferAndCall++`]]
+:confidentialTransferAndCall-address-externalEuint64-bytes-bytes: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferAndCall-address-externalEuint64-bytes-bytes-[`++confidentialTransferAndCall++`]]
 :confidentialTransferAndCall-address-euint64-bytes: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferAndCall-address-euint64-bytes-[`++confidentialTransferAndCall++`]]
-:confidentialTransferFromAndCall-address-address-einput-bytes-bytes: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-einput-bytes-bytes-[`++confidentialTransferFromAndCall++`]]
+:confidentialTransferFromAndCall-address-address-externalEuint64-bytes-bytes: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-externalEuint64-bytes-bytes-[`++confidentialTransferFromAndCall++`]]
 :confidentialTransferFromAndCall-address-address-euint64-bytes: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-euint64-bytes-[`++confidentialTransferFromAndCall++`]]
 
 [.contract]
@@ -143,8 +143,8 @@ Sets `operator` as an operator for `holder` until the timestamp `until`.
 NOTE: An operator may transfer any amount of tokens on behalf of a holder while approved.
 
 [.contract-item]
-[[IConfidentialFungibleToken-confidentialTransfer-address-einput-bytes-]]
-==== `[.contract-item-name]#++confidentialTransfer++#++(address to, einput encryptedAmount, bytes inputProof) → euint64++` [.item-kind]#external#
+[[IConfidentialFungibleToken-confidentialTransfer-address-externalEuint64-bytes-]]
+==== `[.contract-item-name]#++confidentialTransfer++#++(address to, externalEuint64 encryptedAmount, bytes inputProof) → euint64++` [.item-kind]#external#
 
 Transfers the encrypted amount `encryptedAmount` to `to` with the given input proof `inputProof`.
 
@@ -154,12 +154,12 @@ Returns the encrypted amount that was actually transferred.
 [[IConfidentialFungibleToken-confidentialTransfer-address-euint64-]]
 ==== `[.contract-item-name]#++confidentialTransfer++#++(address to, euint64 amount) → euint64 transferred++` [.item-kind]#external#
 
-Similar to {confidentialTransfer-address-einput-bytes} but without an input proof. The caller
+Similar to {confidentialTransfer-address-externalEuint64-bytes} but without an input proof. The caller
 *must* already be allowed by ACL for the given `amount`.
 
 [.contract-item]
-[[IConfidentialFungibleToken-confidentialTransferFrom-address-address-einput-bytes-]]
-==== `[.contract-item-name]#++confidentialTransferFrom++#++(address from, address to, einput encryptedAmount, bytes inputProof) → euint64++` [.item-kind]#external#
+[[IConfidentialFungibleToken-confidentialTransferFrom-address-address-externalEuint64-bytes-]]
+==== `[.contract-item-name]#++confidentialTransferFrom++#++(address from, address to, externalEuint64 encryptedAmount, bytes inputProof) → euint64++` [.item-kind]#external#
 
 Transfers the encrypted amount `encryptedAmount` from `from` to `to` with the given input proof
 `inputProof`. `msg.sender` must be either `from` or an operator for `from`.
@@ -170,14 +170,15 @@ Returns the encrypted amount that was actually transferred.
 [[IConfidentialFungibleToken-confidentialTransferFrom-address-address-euint64-]]
 ==== `[.contract-item-name]#++confidentialTransferFrom++#++(address from, address to, euint64 amount) → euint64 transferred++` [.item-kind]#external#
 
-Similar to {confidentialTransferFrom-address-address-einput-bytes} but without an input proof. The caller
-*must* be already allowed by ACL for the given `amount`.
+Similar to {confidentialTransferFrom-address-address-externalEuint64-bytes} but without an input proof.
+The caller *must* be already allowed by ACL for the given `amount`.
 
 [.contract-item]
-[[IConfidentialFungibleToken-confidentialTransferAndCall-address-einput-bytes-bytes-]]
-==== `[.contract-item-name]#++confidentialTransferAndCall++#++(address to, einput encryptedAmount, bytes inputProof, bytes data) → euint64 transferred++` [.item-kind]#external#
+[[IConfidentialFungibleToken-confidentialTransferAndCall-address-externalEuint64-bytes-bytes-]]
+==== `[.contract-item-name]#++confidentialTransferAndCall++#++(address to, externalEuint64 encryptedAmount, bytes inputProof, bytes data) → euint64 transferred++` [.item-kind]#external#
 
-Similar to {confidentialTransfer-address-einput-bytes} but with a callback to `to` after the transfer.
+Similar to {confidentialTransfer-address-externalEuint64-bytes} but with a callback to `to` after
+the transfer.
 
 The callback is made to the {IConfidentialFungibleTokenReceiver-onConfidentialTransferReceived} function on the
 to address with the actual transferred amount (may differ from the given `encryptedAmount`) and the given
@@ -190,11 +191,11 @@ data `data`.
 Similar to {confidentialTransfer-address-euint64} but with a callback to `to` after the transfer.
 
 [.contract-item]
-[[IConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-einput-bytes-bytes-]]
-==== `[.contract-item-name]#++confidentialTransferFromAndCall++#++(address from, address to, einput encryptedAmount, bytes inputProof, bytes data) → euint64 transferred++` [.item-kind]#external#
+[[IConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-externalEuint64-bytes-bytes-]]
+==== `[.contract-item-name]#++confidentialTransferFromAndCall++#++(address from, address to, externalEuint64 encryptedAmount, bytes inputProof, bytes data) → euint64 transferred++` [.item-kind]#external#
 
-Similar to {confidentialTransferFrom-address-address-einput-bytes} but with a callback to `to` after
-the transfer.
+Similar to {confidentialTransferFrom-address-address-externalEuint64-bytes} but with a callback to `to`
+after the transfer.
 
 [.contract-item]
 [[IConfidentialFungibleToken-confidentialTransferFromAndCall-address-address-euint64-bytes-]]
