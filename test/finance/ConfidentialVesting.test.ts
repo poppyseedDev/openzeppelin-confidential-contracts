@@ -1,9 +1,8 @@
-import { createInstance } from '../_template/instance';
-import { reencryptEuint64 } from '../_template/reencrypt';
+import { FhevmType } from '@fhevm/hardhat-plugin';
 import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
+import { ethers, fhevm } from 'hardhat';
 
 const name = 'ConfidentialFungibleToken';
 const symbol = 'CFT';
@@ -20,11 +19,11 @@ describe('VestingConfidential', function () {
     this.recipient = recipient;
     this.token = token;
     this.operator = operator;
-    this.fhevm = await createInstance();
 
-    const input = this.fhevm.createEncryptedInput(this.token.target, this.holder.address);
-    input.add64(1000);
-    const encryptedInput = await input.encrypt();
+    const encryptedInput = await fhevm
+      .createEncryptedInput(this.token.target, this.holder.address)
+      .add64(1000)
+      .encrypt();
 
     await this.token
       .connect(this.holder)
@@ -35,11 +34,11 @@ describe('VestingConfidential', function () {
   });
 
   it('create vesting', async function () {
-    const input = this.fhevm.createEncryptedInput(this.vesting.target, this.holder.address);
+    const input = fhevm.createEncryptedInput(this.vesting.target, this.holder.address);
     input.add64(500);
     const totalVestingAmount = await input.encrypt();
 
-    const input2 = this.fhevm.createEncryptedInput(this.vesting.target, this.holder.address);
+    const input2 = fhevm.createEncryptedInput(this.vesting.target, this.holder.address);
     input2.add64(5);
     const vestingPerSecond = await input2.encrypt();
 
@@ -58,13 +57,15 @@ describe('VestingConfidential', function () {
   describe('with stream vesting', function () {
     beforeEach(async function () {
       const vestingStartTime = (await time.latest()) + 10;
-      const input = this.fhevm.createEncryptedInput(this.vesting.target, this.holder.address);
-      input.add64(500);
-      const totalVestingAmount = await input.encrypt();
+      const totalVestingAmount = await fhevm
+        .createEncryptedInput(this.vesting.target, this.holder.address)
+        .add64(500)
+        .encrypt();
 
-      const input2 = this.fhevm.createEncryptedInput(this.vesting.target, this.holder.address);
-      input2.add64(5);
-      const vestingPerSecond = await input2.encrypt();
+      const vestingPerSecond = await fhevm
+        .createEncryptedInput(this.vesting.target, this.holder.address)
+        .add64(5)
+        .encrypt();
 
       await this.vesting
         .connect(this.holder)
@@ -93,7 +94,7 @@ describe('VestingConfidential', function () {
 
         let recipientBalanceHandle = await this.token.balanceOf(this.recipient);
         await expect(
-          reencryptEuint64(this.recipient, this.fhevm, recipientBalanceHandle, this.token.target),
+          fhevm.userDecryptEuint(FhevmType.euint64, recipientBalanceHandle, this.token.target, this.recipient),
         ).to.eventually.equal(this.vestingStream.vestingPerSecond * 10);
 
         await time.setNextBlockTimestamp(this.vestingStream.startTime + 11);
@@ -101,7 +102,7 @@ describe('VestingConfidential', function () {
 
         recipientBalanceHandle = await this.token.balanceOf(this.recipient);
         await expect(
-          reencryptEuint64(this.recipient, this.fhevm, recipientBalanceHandle, this.token.target),
+          fhevm.userDecryptEuint(FhevmType.euint64, recipientBalanceHandle, this.token.target, this.recipient),
         ).to.eventually.equal(this.vestingStream.vestingPerSecond * 11);
       });
 
@@ -123,7 +124,7 @@ describe('VestingConfidential', function () {
         );
 
         await expect(
-          reencryptEuint64(this.recipient, this.fhevm, BigInt(transferEvent.topics[3]), this.token.target),
+          fhevm.userDecryptEuint(FhevmType.euint64, transferEvent.topics[3], this.token.target, this.recipient),
         ).to.eventually.equal(this.vestingStream.vestingPerSecond * 10);
       });
     });

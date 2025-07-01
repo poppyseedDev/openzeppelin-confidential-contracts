@@ -127,7 +127,7 @@ contract VestingConfidential {
             recipient: recipient,
             totalAmount: amountTransferredIn,
             amountPerSecond: amountPerSecond,
-            claimed: FHE.asEuint64(0)
+            claimed: euint64.wrap(0)
         });
     }
 
