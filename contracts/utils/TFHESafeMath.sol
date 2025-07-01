@@ -24,28 +24,12 @@ library TFHESafeMath {
         }
     }
 
-    function tryIncrease(euint64 oldValue, uint64 delta) internal returns (ebool success, euint64 updated) {
-        if (euint64.unwrap(oldValue) == 0) {
-            success = FHE.asEbool(true);
-            updated = FHE.asEuint64(delta);
-        } else {
-            euint64 newValue = FHE.add(oldValue, delta);
-            success = FHE.ge(newValue, oldValue);
-            updated = FHE.select(success, newValue, oldValue);
-        }
-    }
-
     /**
      * @dev Try to decrease the encrypted value `oldValue` by `delta`. If the operation is successful,
      * `success` will be true and `updated` will be the new value. Otherwise, `success` will be false
      * and `updated` will be the original value.
      */
     function tryDecrease(euint64 oldValue, euint64 delta) internal returns (ebool success, euint64 updated) {
-        success = FHE.ge(oldValue, delta);
-        updated = FHE.select(success, FHE.sub(oldValue, delta), oldValue);
-    }
-
-    function tryDecrease(euint64 oldValue, uint64 delta) internal returns (ebool success, euint64 updated) {
         success = FHE.ge(oldValue, delta);
         updated = FHE.select(success, FHE.sub(oldValue, delta), oldValue);
     }
