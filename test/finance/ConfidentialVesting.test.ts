@@ -127,6 +127,10 @@ describe('VestingConfidential', function () {
           fhevm.userDecryptEuint(FhevmType.euint64, transferEvent.topics[3], this.token.target, this.recipient),
         ).to.eventually.equal(this.vestingStream.vestingPerSecond * 10);
       });
+
+      it('only stream recipient can claim', async function () {
+        await expect(this.vesting.connect(this.operator).claim(this.vestingStream.id)).to.be.reverted;
+      });
     });
 
     describe('managed vault', async function () {
