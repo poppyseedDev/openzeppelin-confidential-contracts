@@ -22,6 +22,7 @@ contract VestingConfidential {
     event VestingConfidentialManagedVaultCreated(uint256 vestingStreamId, address managedVault);
 
     error VestingConfidentialOnlyRecipient(address recipient);
+    error VestingConfidentialVaultNotDeployed(uint256 vestingId);
 
     address private immutable _managedVaultImplementation;
     ConfidentialFungibleToken private immutable _token;
@@ -79,7 +80,6 @@ contract VestingConfidential {
 
     function _doTransferOut(address from, address to, euint64 amount) internal virtual returns (euint64) {
         amount.allowTransient(address(token()));
-
         return token().confidentialTransferFrom(from, to, amount);
     }
 
@@ -98,8 +98,8 @@ contract VestingConfidential {
 
         emit VestingConfidentialManagedVaultCreated(streamId, vault);
 
-        // Set this contract as operator for the vault
-        ManagedVault(vault).call(
+        _managedVaultExecute(
+            streamId,
             address(token()),
             0,
             abi.encodeCall(ConfidentialFungibleToken.setOperator, (address(this), type(uint48).max))
@@ -156,5 +156,12 @@ contract VestingConfidential {
 
     function _createManagedVaultImplementation() internal virtual returns (address) {
         return address(new ManagedVault());
+    }
+
+    function _managedVaultExecute(uint256 streamId, address target, uint256 value, bytes memory data) internal virtual {
+        address managedVault = getManagedVault(streamId);
+        require(managedVault != address(0), VestingConfidentialVaultNotDeployed(streamId));
+
+        ManagedVault(managedVault).call(target, value, data);
     }
 }
