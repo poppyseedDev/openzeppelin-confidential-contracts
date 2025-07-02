@@ -23,7 +23,7 @@ contract VestingConfidential {
 
     error VestingConfidentialOnlyRecipient(address recipient);
 
-    address private immutable _managedVaultImplementation = _createManagedVaultImplementation();
+    address private immutable _managedVaultImplementation;
     ConfidentialFungibleToken private immutable _token;
     mapping(uint256 => VestingStream) private _vestingStreams;
     mapping(uint256 vestingId => address managedVault) private _managedVaults;
@@ -31,6 +31,7 @@ contract VestingConfidential {
 
     constructor(ConfidentialFungibleToken token_) {
         _token = token_;
+        _managedVaultImplementation = _createManagedVaultImplementation();
     }
 
     function claim(uint256 streamId) public virtual {
