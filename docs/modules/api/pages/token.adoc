@@ -188,7 +188,7 @@ Returns the symbol of the token.
 [[ConfidentialFungibleToken-decimals--]]
 ==== `[.contract-item-name]#++decimals++#++() → uint8++` [.item-kind]#public#
 
-Returns the number of decimals of the token. Recommended to be 9.
+Returns the number of decimals of the token. Recommended to be 6.
 
 [.contract-item]
 [[ConfidentialFungibleToken-tokenURI--]]
@@ -500,7 +500,7 @@ which allows users to transfer `ERC1363` tokens directly to the wrapper with a c
 [[ConfidentialFungibleTokenERC20Wrapper-decimals--]]
 ==== `[.contract-item-name]#++decimals++#++() → uint8++` [.item-kind]#public#
 
-Returns the number of decimals of the token. Recommended to be 9.
+Returns the number of decimals of the token. Recommended to be 6.
 
 [.contract-item]
 [[ConfidentialFungibleTokenERC20Wrapper-rate--]]

@@ -108,7 +108,7 @@ Returns the symbol of the token.
 [[IConfidentialFungibleToken-decimals--]]
 ==== `[.contract-item-name]#++decimals++#++() → uint8++` [.item-kind]#external#
 
-Returns the number of decimals of the token. Recommended to be 9.
+Returns the number of decimals of the token. Recommended to be 6.
 
 [.contract-item]
 [[IConfidentialFungibleToken-tokenURI--]]
