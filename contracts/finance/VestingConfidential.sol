@@ -19,22 +19,23 @@ contract VestingConfidential {
         euint64 claimed;
     }
 
-    error VestingBaseOnlyRecipient(address recipient);
+    error VestingConfidentialOnlyRecipient(address recipient);
 
-    event VestingBaseManagedVaultCreated(uint256 vestingStreamId, address managedVault);
+    event VestingConfidentialManagedVaultCreated(uint256 vestingStreamId, address managedVault);
 
     mapping(uint256 => VestingStream) private _vestingStreams;
     mapping(uint256 vestingId => address managedVault) private _managedVaults;
     address private immutable _managedVaultImplementation = address(new ManagedVault());
     uint256 private _numVestingStreams;
-    ConfidentialFungibleToken immutable token;
+    ConfidentialFungibleToken private immutable _token;
 
     constructor(ConfidentialFungibleToken token_) {
-        token = token_;
+        _token = token_;
     }
 
     function claim(uint256 streamId) public virtual {
-        require(msg.sender == _vestingStreams[streamId].recipient);
+        address recipient = _vestingStreams[streamId].recipient;
+        require(msg.sender == recipient, VestingConfidentialOnlyRecipient(recipient));
         _claim(streamId);
     }
 
@@ -43,7 +44,7 @@ contract VestingConfidential {
         if (existingVault != address(0)) {
             return existingVault;
         }
-        // claim(streamId);
+        claim(streamId);
         return _setUpManagedVault(streamId);
     }
 
@@ -71,10 +72,14 @@ contract VestingConfidential {
         );
     }
 
-    function _doTransferIn(address from, euint64 amount) internal virtual returns (euint64) {
-        amount.allowTransient(address(token));
+    function token() public view virtual returns (ConfidentialFungibleToken) {
+        return _token;
+    }
 
-        return token.confidentialTransferFrom(from, address(this), amount);
+    function _doTransferIn(address from, euint64 amount) internal virtual returns (euint64) {
+        amount.allowTransient(address(token()));
+
+        return token().confidentialTransferFrom(from, address(this), amount);
     }
 
     function _doTransferOut(address to, euint64 amount) internal virtual returns (euint64) {
@@ -82,14 +87,14 @@ contract VestingConfidential {
     }
 
     function _doTransferOut(address from, address to, euint64 amount) internal virtual returns (euint64) {
-        amount.allowTransient(address(token));
+        amount.allowTransient(address(token()));
 
-        return token.confidentialTransferFrom(from, to, amount);
+        return token().confidentialTransferFrom(from, to, amount);
     }
 
     function _setUpManagedVault(uint256 streamId) internal virtual returns (address) {
         address recipient = _vestingStreams[streamId].recipient;
-        require(recipient == msg.sender, VestingBaseOnlyRecipient(recipient));
+        require(recipient == msg.sender, VestingConfidentialOnlyRecipient(recipient));
 
         address vault = Clones.clone(managedVaultImplementation());
         _managedVaults[streamId] = vault;
@@ -100,11 +105,11 @@ contract VestingConfidential {
         );
         _doTransferOut(vault, amountToTransfer);
 
-        emit VestingBaseManagedVaultCreated(streamId, vault);
+        emit VestingConfidentialManagedVaultCreated(streamId, vault);
 
         // Set this contract as operator for the vault
         ManagedVault(vault).call(
-            address(token),
+            address(token()),
             0,
             abi.encodeCall(ConfidentialFungibleToken.setOperator, (address(this), type(uint48).max))
         );
@@ -133,6 +138,8 @@ contract VestingConfidential {
 
     function _claim(uint256 streamId) internal virtual {
         VestingStream storage stream = _vestingStreams[streamId];
+        if (block.timestamp <= stream.startTime) return;
+
         (ebool success, euint64 claimAmount) = TFHESafeMath.tryDecrease(
             FHE.min(FHE.mul(stream.amountPerSecond, uint64(block.timestamp - stream.startTime)), stream.totalAmount),
             stream.claimed

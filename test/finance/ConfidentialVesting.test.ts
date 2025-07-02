@@ -109,7 +109,7 @@ describe('VestingConfidential', function () {
       it('from managed vault', async function () {
         await expect(this.vesting.connect(this.recipient).getOrCreateManagedVault(this.vestingStream.id)).to.emit(
           this.vesting,
-          'VestingBaseManagedVaultCreated',
+          'VestingConfidentialManagedVaultCreated',
         );
 
         await time.setNextBlockTimestamp(this.vestingStream.startTime + 10);
@@ -141,7 +141,7 @@ describe('VestingConfidential', function () {
           (log: any) => log.address === this.vesting.target,
         )[0];
 
-        expect(tx).to.emit(this.vesting, 'VestingBaseManagedVaultCreated');
+        expect(tx).to.emit(this.vesting, 'VestingConfidentialManagedVaultCreated');
         expect(tx)
           .to.emit(this.token, 'ConfidentialTransfer')
           .withArgs(this.vesting, managedVaultCreationEvent.args[1], anyValue);
@@ -152,13 +152,13 @@ describe('VestingConfidential', function () {
         await this.vesting.connect(this.recipient).getOrCreateManagedVault(this.vestingStream.id);
         await expect(this.vesting.connect(this.recipient).getOrCreateManagedVault(this.vestingStream.id)).to.not.emit(
           this.vesting,
-          'VestingBaseManagedVaultCreated',
+          'VestingConfidentialManagedVaultCreated',
         );
       });
 
       it('only stream recipient can create', async function () {
         await expect(this.vesting.connect(this.operator).getOrCreateManagedVault(this.vestingStream.id))
-          .to.be.revertedWithCustomError(this.vesting, 'VestingBaseOnlyRecipient')
+          .to.be.revertedWithCustomError(this.vesting, 'VestingConfidentialOnlyRecipient')
           .withArgs(this.recipient);
       });
     });
