@@ -30,7 +30,7 @@ describe('VestingConfidential', function () {
       ['$_mint(address,bytes32,bytes)'](this.holder, encryptedInput.handles[0], encryptedInput.inputProof);
 
     this.vesting = await ethers.deployContract('$VestingConfidentialMock', [this.token]);
-    await this.token.$_setOperator(this.holder, this.vesting, Math.round(Date.now() / 1000) + 100);
+    await this.token.$_setOperator(this.holder, this.vesting, Math.round(Date.now() / 1000) + 10000);
   });
 
   it('create vesting', async function () {
