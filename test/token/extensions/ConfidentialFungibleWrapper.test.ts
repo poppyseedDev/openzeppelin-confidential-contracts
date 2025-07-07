@@ -1,6 +1,7 @@
 import { FhevmType } from '@fhevm/hardhat-plugin';
+import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
-import hre, { ethers, fhevm } from 'hardhat';
+import { ethers, fhevm } from 'hardhat';
 
 const name = 'ConfidentialFungibleToken';
 const symbol = 'CFT';
@@ -180,7 +181,7 @@ describe('ConfidentialFungibleTokenWrapper', function () {
       input.add64(withdrawalAmount);
       const encryptedInput = await input.encrypt();
 
-      await this.wrapper.connect(this.holder).setOperator(this.operator.address, Math.round(Date.now() / 1000) + 1000);
+      await this.wrapper.connect(this.holder).setOperator(this.operator.address, (await time.latest()) + 1000);
 
       await this.wrapper
         .connect(this.operator)
