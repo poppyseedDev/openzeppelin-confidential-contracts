@@ -1,9 +1,8 @@
-import { allowHandle } from '../helpers/accounts';
 import { shouldBehaveLikeVestingConfidential } from './VestingWalletConfidential.behavior';
 import { FhevmType } from '@fhevm/hardhat-plugin';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
-import hre, { ethers, fhevm } from 'hardhat';
+import { ethers, fhevm } from 'hardhat';
 
 const name = 'ConfidentialFungibleToken';
 const symbol = 'CFT';
