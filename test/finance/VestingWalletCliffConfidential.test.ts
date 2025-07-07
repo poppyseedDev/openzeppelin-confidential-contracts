@@ -50,6 +50,7 @@ describe('VestingWalletCliffConfidential', function () {
   it('should fail construction if cliff is longer than duration', async function () {
     await expect(
       ethers.deployContract('$VestingWalletCliffConfidentialMock', [
+        this.operator,
         this.recipient,
         (await time.latest()) + 60,
         60 * 10,
