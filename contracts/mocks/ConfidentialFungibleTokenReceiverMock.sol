@@ -11,7 +11,7 @@ contract ConfidentialFungibleTokenReceiverMock is IConfidentialFungibleTokenRece
     error InvalidInput(uint8 input);
 
     /// Data should contain a success boolean (plaintext). Revert if not.
-    function onConfidentialTransferReceived(address, address, euint64, bytes calldata data) external returns (ebool) {
+    function onTransferReceived(address, address, euint64, bytes calldata data) external returns (ebool) {
         uint8 input = abi.decode(data, (uint8));
 
         if (input > 1) revert InvalidInput(input);

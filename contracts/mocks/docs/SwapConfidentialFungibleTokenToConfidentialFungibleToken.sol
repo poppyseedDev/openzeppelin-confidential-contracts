@@ -16,9 +16,9 @@ contract SwapConfidentialFungibleTokenToConfidentialFungibleToken {
         euint64 amount = FHE.fromExternal(amountInput, inputProof);
 
         FHE.allowTransient(amount, address(fromToken));
-        euint64 amountTransferred = fromToken.confidentialTransferFrom(msg.sender, address(this), amount);
+        euint64 amountTransferred = fromToken.transferFrom(msg.sender, address(this), amount);
 
         FHE.allowTransient(amountTransferred, address(toToken));
-        toToken.confidentialTransfer(msg.sender, amountTransferred);
+        toToken.transfer(msg.sender, amountTransferred);
     }
 }

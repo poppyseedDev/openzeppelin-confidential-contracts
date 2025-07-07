@@ -173,11 +173,7 @@ describe('ConfidentialFungibleTokenVotes', function () {
       const encryptedInput = await input.encrypt();
       await this.token
         .connect(this.holder)
-        ['confidentialTransfer(address,bytes32,bytes)'](
-          this.operator,
-          encryptedInput.handles[0],
-          encryptedInput.inputProof,
-        );
+        ['transfer(address,bytes32,bytes)'](this.operator, encryptedInput.handles[0], encryptedInput.inputProof);
       const afterTransferBlock = await ethers.provider.getBlockNumber();
 
       // Burn total balance
@@ -236,11 +232,7 @@ describe('ConfidentialFungibleTokenVotes', function () {
       const encryptedInput = await input.encrypt();
       await this.token
         .connect(this.holder)
-        ['confidentialTransfer(address,bytes32,bytes)'](
-          this.operator,
-          encryptedInput.handles[0],
-          encryptedInput.inputProof,
-        );
+        ['transfer(address,bytes32,bytes)'](this.operator, encryptedInput.handles[0], encryptedInput.inputProof);
       const afterTransferBlock = await ethers.provider.getBlockNumber();
 
       // Mint to recipient

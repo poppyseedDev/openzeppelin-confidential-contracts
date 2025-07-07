@@ -24,7 +24,7 @@ contract SwapConfidentialToERC20 {
     function swapConfidentialToERC20(externalEuint64 encryptedInput, bytes memory inputProof) public {
         euint64 amount = encryptedInput.fromExternal(inputProof);
         amount.allowTransient(address(_fromToken));
-        euint64 amountTransferred = _fromToken.confidentialTransferFrom(msg.sender, address(this), amount);
+        euint64 amountTransferred = _fromToken.transferFrom(msg.sender, address(this), amount);
 
         bytes32[] memory cts = new bytes32[](1);
         cts[0] = euint64.unwrap(amountTransferred);

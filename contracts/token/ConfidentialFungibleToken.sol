@@ -104,7 +104,7 @@ abstract contract ConfidentialFungibleToken is IConfidentialFungibleToken {
     }
 
     /// @inheritdoc IConfidentialFungibleToken
-    function confidentialTransfer(
+    function transfer(
         address to,
         externalEuint64 encryptedAmount,
         bytes calldata inputProof
@@ -113,7 +113,7 @@ abstract contract ConfidentialFungibleToken is IConfidentialFungibleToken {
     }
 
     /// @inheritdoc IConfidentialFungibleToken
-    function confidentialTransfer(address to, euint64 amount) public virtual returns (euint64) {
+    function transfer(address to, euint64 amount) public virtual returns (euint64) {
         require(
             FHE.isAllowed(amount, msg.sender),
             ConfidentialFungibleTokenUnauthorizedUseOfEncryptedAmount(amount, msg.sender)
@@ -122,7 +122,7 @@ abstract contract ConfidentialFungibleToken is IConfidentialFungibleToken {
     }
 
     /// @inheritdoc IConfidentialFungibleToken
-    function confidentialTransferFrom(
+    function transferFrom(
         address from,
         address to,
         externalEuint64 encryptedAmount,
@@ -134,11 +134,7 @@ abstract contract ConfidentialFungibleToken is IConfidentialFungibleToken {
     }
 
     /// @inheritdoc IConfidentialFungibleToken
-    function confidentialTransferFrom(
-        address from,
-        address to,
-        euint64 amount
-    ) public virtual returns (euint64 transferred) {
+    function transferFrom(address from, address to, euint64 amount) public virtual returns (euint64 transferred) {
         require(
             FHE.isAllowed(amount, msg.sender),
             ConfidentialFungibleTokenUnauthorizedUseOfEncryptedAmount(amount, msg.sender)
@@ -149,7 +145,7 @@ abstract contract ConfidentialFungibleToken is IConfidentialFungibleToken {
     }
 
     /// @inheritdoc IConfidentialFungibleToken
-    function confidentialTransferAndCall(
+    function transferAndCall(
         address to,
         externalEuint64 encryptedAmount,
         bytes calldata inputProof,
@@ -160,7 +156,7 @@ abstract contract ConfidentialFungibleToken is IConfidentialFungibleToken {
     }
 
     /// @inheritdoc IConfidentialFungibleToken
-    function confidentialTransferAndCall(
+    function transferAndCall(
         address to,
         euint64 amount,
         bytes calldata data
@@ -174,7 +170,7 @@ abstract contract ConfidentialFungibleToken is IConfidentialFungibleToken {
     }
 
     /// @inheritdoc IConfidentialFungibleToken
-    function confidentialTransferFromAndCall(
+    function transferFromAndCall(
         address from,
         address to,
         externalEuint64 encryptedAmount,
@@ -187,7 +183,7 @@ abstract contract ConfidentialFungibleToken is IConfidentialFungibleToken {
     }
 
     /// @inheritdoc IConfidentialFungibleToken
-    function confidentialTransferFromAndCall(
+    function transferFromAndCall(
         address from,
         address to,
         euint64 amount,
@@ -231,7 +227,7 @@ abstract contract ConfidentialFungibleToken is IConfidentialFungibleToken {
 
         euint64 requestHandle = _requestHandles[requestId];
         require(euint64.unwrap(requestHandle) != 0, ConfidentialFungibleTokenInvalidGatewayRequest(requestId));
-        emit EncryptedAmountDisclosed(requestHandle, amount);
+        emit AmountDisclosed(requestHandle, amount);
 
         _requestHandles[requestId] = euint64.wrap(0);
     }
@@ -310,6 +306,6 @@ abstract contract ConfidentialFungibleToken is IConfidentialFungibleToken {
         if (from != address(0)) FHE.allow(transferred, from);
         if (to != address(0)) FHE.allow(transferred, to);
         FHE.allowThis(transferred);
-        emit ConfidentialTransfer(from, to, transferred);
+        emit Transfer(from, to, transferred);
     }
 }

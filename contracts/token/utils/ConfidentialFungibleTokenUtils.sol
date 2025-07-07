@@ -14,7 +14,7 @@ library ConfidentialFungibleTokenUtils {
      *
      * The transfer callback is not invoked on the recipient if the recipient has no code (i.e. is an EOA). If the
      * recipient has non-zero code, it must implement
-     * {IConfidentialFungibleTokenReceiver-onConfidentialTransferReceived} and return an `ebool` indicating
+     * {IConfidentialFungibleTokenReceiver-onTransferReceived} and return an `ebool` indicating
      * whether the transfer was accepted or not. If the `ebool` is `false`, the transfer will be reversed.
      */
     function checkOnTransferReceived(
@@ -25,9 +25,9 @@ library ConfidentialFungibleTokenUtils {
         bytes calldata data
     ) internal returns (ebool) {
         if (to.code.length > 0) {
-            try
-                IConfidentialFungibleTokenReceiver(to).onConfidentialTransferReceived(operator, from, amount, data)
-            returns (ebool retval) {
+            try IConfidentialFungibleTokenReceiver(to).onTransferReceived(operator, from, amount, data) returns (
+                ebool retval
+            ) {
                 return retval;
             } catch (bytes memory reason) {
                 if (reason.length == 0) {

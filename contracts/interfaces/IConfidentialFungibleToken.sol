@@ -11,16 +11,16 @@ interface IConfidentialFungibleToken {
      */
     event OperatorSet(address indexed holder, address indexed operator, uint48 until);
 
-    /// @dev Emitted when a confidential transfer is made from `from` to `to` of encrypted amount `amount`.
-    event ConfidentialTransfer(address indexed from, address indexed to, euint64 indexed amount);
+    /// @dev Emitted when a transfer is made from `from` to `to` of amount `amount`.
+    event Transfer(address indexed from, address indexed to, euint64 indexed amount);
 
     /**
-     * @dev Emitted when an encrypted amount is disclosed.
+     * @dev Emitted when an amount is disclosed.
      *
      * Accounts with access to the encrypted amount `encryptedAmount` that is also accessible to this contract
      * should be able to disclose the amount. This functionality is implementation specific.
      */
-    event EncryptedAmountDisclosed(euint64 indexed encryptedAmount, uint64 amount);
+    event AmountDisclosed(euint64 indexed encryptedAmount, uint64 amount);
 
     /// @dev Returns the name of the token.
     function name() external view returns (string memory);
@@ -51,29 +51,25 @@ interface IConfidentialFungibleToken {
     function setOperator(address operator, uint48 until) external;
 
     /**
-     * @dev Transfers the encrypted amount `encryptedAmount` to `to` with the given input proof `inputProof`.
+     * @dev Transfers the amount `amount` to `to` with the given input proof `inputProof`.
      *
-     * Returns the encrypted amount that was actually transferred.
+     * Returns the amount that was actually transferred.
      */
-    function confidentialTransfer(
-        address to,
-        externalEuint64 encryptedAmount,
-        bytes calldata inputProof
-    ) external returns (euint64);
+    function transfer(address to, externalEuint64 amount, bytes calldata inputProof) external returns (euint64);
 
     /**
-     * @dev Similar to {confidentialTransfer-address-externalEuint64-bytes} but without an input proof. The caller
+     * @dev Similar to {transfer-address-euint64-bytes} but without an input proof. The caller
      * *must* already be allowed by ACL for the given `amount`.
      */
-    function confidentialTransfer(address to, euint64 amount) external returns (euint64 transferred);
+    function transfer(address to, euint64 amount) external returns (euint64 transferred);
 
     /**
-     * @dev Transfers the encrypted amount `encryptedAmount` from `from` to `to` with the given input proof
+     * @dev Transfers the amount `amount` from `from` to `to` with the given input proof
      * `inputProof`. `msg.sender` must be either `from` or an operator for `from`.
      *
-     * Returns the encrypted amount that was actually transferred.
+     * Returns the amount that was actually transferred.
      */
-    function confidentialTransferFrom(
+    function transferFrom(
         address from,
         address to,
         externalEuint64 encryptedAmount,
@@ -81,38 +77,34 @@ interface IConfidentialFungibleToken {
     ) external returns (euint64);
 
     /**
-     * @dev Similar to {confidentialTransferFrom-address-address-externalEuint64-bytes} but without an input proof.
+     * @dev Similar to {transferFrom-address-address-externalEuint64-bytes} but without an input proof.
      * The caller *must* be already allowed by ACL for the given `amount`.
      */
-    function confidentialTransferFrom(address from, address to, euint64 amount) external returns (euint64 transferred);
+    function transferFrom(address from, address to, euint64 amount) external returns (euint64 transferred);
 
     /**
-     * @dev Similar to {confidentialTransfer-address-externalEuint64-bytes} but with a callback to `to` after
+     * @dev Similar to {transfer-address-externalEuint64-bytes} but with a callback to `to` after
      * the transfer.
      *
-     * The callback is made to the {IConfidentialFungibleTokenReceiver-onConfidentialTransferReceived} function on the
+     * The callback is made to the {IConfidentialFungibleTokenReceiver-onTransferReceived} function on the
      * to address with the actual transferred amount (may differ from the given `encryptedAmount`) and the given
      * data `data`.
      */
-    function confidentialTransferAndCall(
+    function transferAndCall(
         address to,
         externalEuint64 encryptedAmount,
         bytes calldata inputProof,
         bytes calldata data
     ) external returns (euint64 transferred);
 
-    /// @dev Similar to {confidentialTransfer-address-euint64} but with a callback to `to` after the transfer.
-    function confidentialTransferAndCall(
-        address to,
-        euint64 amount,
-        bytes calldata data
-    ) external returns (euint64 transferred);
+    /// @dev Similar to {transfer-address-euint64} but with a callback to `to` after the transfer.
+    function transferAndCall(address to, euint64 amount, bytes calldata data) external returns (euint64 transferred);
 
     /**
-     * @dev Similar to {confidentialTransferFrom-address-address-externalEuint64-bytes} but with a callback to `to`
+     * @dev Similar to {transferFrom-address-address-externalEuint64-bytes} but with a callback to `to`
      * after the transfer.
      */
-    function confidentialTransferFromAndCall(
+    function transferFromAndCall(
         address from,
         address to,
         externalEuint64 encryptedAmount,
@@ -121,11 +113,11 @@ interface IConfidentialFungibleToken {
     ) external returns (euint64 transferred);
 
     /**
-     * @dev Similar to {confidentialTransferFrom-address-address-euint64} but with a callback to `to`
+     * @dev Similar to {transferFrom-address-address-euint64} but with a callback to `to`
      * after the transfer.
      *
      */
-    function confidentialTransferFromAndCall(
+    function transferFromAndCall(
         address from,
         address to,
         euint64 amount,

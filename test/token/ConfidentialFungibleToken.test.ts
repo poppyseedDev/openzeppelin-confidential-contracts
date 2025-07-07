@@ -191,8 +191,8 @@ describe('ConfidentialFungibleToken', function () {
                     .connect(this.operator)
                     [
                       withCallback
-                        ? 'confidentialTransferFromAndCall(address,address,bytes32,bytes,bytes)'
-                        : 'confidentialTransferFrom(address,address,bytes32,bytes)'
+                        ? 'transferFromAndCall(address,address,bytes32,bytes,bytes)'
+                        : 'transferFrom(address,address,bytes32,bytes)'
                     ](...params),
                 )
                   .to.be.revertedWithCustomError(this.token, 'ConfidentialFungibleTokenUnauthorizedSpender')
@@ -204,8 +204,8 @@ describe('ConfidentialFungibleToken', function () {
                   .connect(this.operator)
                   [
                     withCallback
-                      ? 'confidentialTransferFromAndCall(address,address,bytes32,bytes,bytes)'
-                      : 'confidentialTransferFrom(address,address,bytes32,bytes)'
+                      ? 'transferFromAndCall(address,address,bytes32,bytes,bytes)'
+                      : 'transferFrom(address,address,bytes32,bytes)'
                   ](...params);
               });
             });
@@ -223,7 +223,7 @@ describe('ConfidentialFungibleToken', function () {
             await expect(
               this.token
                 .connect(this.recipient)
-                ['confidentialTransfer(address,bytes32,bytes)'](
+                ['transfer(address,bytes32,bytes)'](
                   this.holder.address,
                   encryptedInput.handles[0],
                   encryptedInput.inputProof,
@@ -242,7 +242,7 @@ describe('ConfidentialFungibleToken', function () {
             await expect(
               this.token
                 .connect(this.holder)
-                ['confidentialTransfer(address,bytes32,bytes)'](
+                ['transfer(address,bytes32,bytes)'](
                   ethers.ZeroAddress,
                   encryptedInput.handles[0],
                   encryptedInput.inputProof,
@@ -266,7 +266,7 @@ describe('ConfidentialFungibleToken', function () {
             if (asSender) {
               tx = await this.token
                 .connect(this.holder)
-                ['confidentialTransfer(address,bytes32,bytes)'](
+                ['transfer(address,bytes32,bytes)'](
                   this.recipient.address,
                   encryptedInput.handles[0],
                   encryptedInput.inputProof,
@@ -274,7 +274,7 @@ describe('ConfidentialFungibleToken', function () {
             } else {
               tx = await this.token
                 .connect(this.operator)
-                ['confidentialTransferFrom(address,address,bytes32,bytes)'](
+                ['transferFrom(address,address,bytes32,bytes)'](
                   this.holder.address,
                   this.recipient.address,
                   encryptedInput.handles[0],
@@ -316,7 +316,7 @@ describe('ConfidentialFungibleToken', function () {
         [val, false],
         [val, true],
       ])) {
-        describe(`using ${usingTransferFrom ? 'confidentialTransferFrom' : 'confidentialTransfer'} ${
+        describe(`using ${usingTransferFrom ? 'transferFrom' : 'transfer'} ${
           withCallback ? 'with callback' : ''
         }`, function () {
           async function callTransfer(contract: any, from: any, to: any, amount: any, sender: any = from) {
@@ -326,16 +326,16 @@ describe('ConfidentialFungibleToken', function () {
               functionParams.push('0x');
               if (usingTransferFrom) {
                 functionParams.unshift(from);
-                await contract.connect(sender).confidentialTransferFromAndCall(...functionParams);
+                await contract.connect(sender).transferFromAndCall(...functionParams);
               } else {
-                await contract.connect(sender).confidentialTransferAndCall(...functionParams);
+                await contract.connect(sender).transferAndCall(...functionParams);
               }
             } else {
               if (usingTransferFrom) {
                 functionParams.unshift(from);
-                await contract.connect(sender).confidentialTransferFrom(...functionParams);
+                await contract.connect(sender).transferFrom(...functionParams);
               } else {
-                await contract.connect(sender).confidentialTransfer(...functionParams);
+                await contract.connect(sender).transfer(...functionParams);
               }
             }
           }
@@ -432,7 +432,7 @@ describe('ConfidentialFungibleToken', function () {
       it(`with callback running ${callbackSuccess ? 'successfully' : 'unsuccessfully'}`, async function () {
         const tx = await this.token
           .connect(this.holder)
-          ['confidentialTransferAndCall(address,bytes32,bytes,bytes)'](
+          ['transferAndCall(address,bytes32,bytes,bytes)'](
             this.recipientContract.target,
             this.encryptedInput.handles[0],
             this.encryptedInput.inputProof,
@@ -473,7 +473,7 @@ describe('ConfidentialFungibleToken', function () {
       await expect(
         this.token
           .connect(this.holder)
-          ['confidentialTransferAndCall(address,bytes32,bytes,bytes)'](
+          ['transferAndCall(address,bytes32,bytes,bytes)'](
             this.recipientContract.target,
             this.encryptedInput.handles[0],
             this.encryptedInput.inputProof,
@@ -488,7 +488,7 @@ describe('ConfidentialFungibleToken', function () {
       await expect(
         this.token
           .connect(this.holder)
-          ['confidentialTransferAndCall(address,bytes32,bytes,bytes)'](
+          ['transferAndCall(address,bytes32,bytes,bytes)'](
             this.recipientContract.target,
             this.encryptedInput.handles[0],
             this.encryptedInput.inputProof,
@@ -502,7 +502,7 @@ describe('ConfidentialFungibleToken', function () {
     it('to an EOA', async function () {
       await this.token
         .connect(this.holder)
-        ['confidentialTransferAndCall(address,bytes32,bytes,bytes)'](
+        ['transferAndCall(address,bytes32,bytes,bytes)'](
           this.recipient,
           this.encryptedInput.handles[0],
           this.encryptedInput.inputProof,
@@ -540,7 +540,7 @@ describe('ConfidentialFungibleToken', function () {
         .add64(400)
         .encrypt();
 
-      const tx = await this.token['confidentialTransfer(address,bytes32,bytes)'](
+      const tx = await this.token['transfer(address,bytes32,bytes)'](
         this.recipient,
         encryptedInput.handles[0],
         encryptedInput.inputProof,
@@ -576,7 +576,7 @@ describe('ConfidentialFungibleToken', function () {
       await fhevm.awaitDecryptionOracle();
 
       // Check that event was correctly emitted
-      const eventFilter = this.token.filters.EncryptedAmountDisclosed();
+      const eventFilter = this.token.filters.AmountDisclosed();
       const discloseEvent = (await this.token.queryFilter(eventFilter))[0];
       expect(discloseEvent.args[0]).to.equal(expectedHandle);
       expect(discloseEvent.args[1]).to.equal(expectedAmount);
