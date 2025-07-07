@@ -23,6 +23,7 @@ describe('VestingWalletCliffConfidential', function () {
     const currentTime = await time.latest();
     const schedule = [currentTime + 60, currentTime + 60 * 121];
     const vesting = await ethers.deployContract('$VestingWalletCliffConfidentialMock', [
+      operator,
       recipient,
       currentTime + 60,
       60 * 60 * 2 /* 2 hours */,

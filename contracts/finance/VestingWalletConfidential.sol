@@ -26,20 +26,32 @@ import {TFHESafeMath} from "../utils/TFHESafeMath.sol";
  */
 contract VestingWalletConfidential is Ownable {
     error VestingWalletConfidentialInvalidDuration();
+    error VestingWalletConfidentialOnlyExecutor();
 
     event ConfidentialFungibleTokenReleased(address indexed token, euint64 amount);
 
     mapping(address token => euint64) private _confidentialFungibleTokenReleased;
     uint64 private immutable _start;
     uint64 private immutable _duration;
+    address private immutable _executor;
 
     /**
      * @dev Sets the beneficiary (owner), the start timestamp and the vesting duration (in seconds) of the vesting
      * wallet.
      */
-    constructor(address beneficiary, uint64 startTimestamp, uint64 durationSeconds) Ownable(beneficiary) {
+    constructor(
+        address executor_,
+        address beneficiary,
+        uint64 startTimestamp,
+        uint64 durationSeconds
+    ) Ownable(beneficiary) {
         _start = startTimestamp;
         _duration = durationSeconds;
+        _executor = executor_;
+    }
+
+    function executor() public view virtual returns (address) {
+        return _executor;
     }
 
     /**
@@ -110,6 +122,7 @@ contract VestingWalletConfidential is Ownable {
     }
 
     function call(address target, uint256 value, bytes memory data) public virtual {
+        require(msg.sender == executor(), VestingWalletConfidentialOnlyExecutor());
         _call(target, value, data);
     }
 

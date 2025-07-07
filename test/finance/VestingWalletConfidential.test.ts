@@ -21,6 +21,7 @@ describe('VestingWalletConfidential', function () {
     const currentTime = await time.latest();
     const schedule = [currentTime + 60, currentTime + 60 * 61];
     const vesting = await ethers.deployContract('$VestingWalletConfidentialMock', [
+      operator,
       recipient,
       currentTime + 60,
       60 * 60 /* 1 hour */,
