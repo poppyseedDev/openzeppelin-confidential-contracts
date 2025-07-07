@@ -86,10 +86,14 @@ contract VestingWalletConfidential is Ownable {
      */
     function release(address token) public virtual {
         euint64 amount = releasable(token);
+        FHE.allowTransient(amount, token);
         euint64 amountSent = IConfidentialFungibleToken(token).confidentialTransfer(owner(), amount);
 
         // TODO: Could theoretically overflow
-        _confidentialFungibleTokenReleased[token] = FHE.add(released(token), amountSent);
+        euint64 newReleasedAmount = FHE.add(released(token), amountSent);
+        FHE.allow(newReleasedAmount, owner());
+        FHE.allowThis(newReleasedAmount);
+        _confidentialFungibleTokenReleased[token] = newReleasedAmount;
         emit ConfidentialFungibleTokenReleased(token, amountSent);
     }
 
@@ -103,6 +107,15 @@ contract VestingWalletConfidential is Ownable {
                 FHE.add(IConfidentialFungibleToken(token).balanceOf(address(this)), released(token)),
                 timestamp
             );
+    }
+
+    function call(address target, uint256 value, bytes memory data) public virtual {
+        _call(target, value, data);
+    }
+
+    function _call(address target, uint256 value, bytes memory data) internal virtual {
+        (bool success, bytes memory res) = target.call{value: value}(data);
+        Address.verifyCallResult(success, res);
     }
 
     /**
