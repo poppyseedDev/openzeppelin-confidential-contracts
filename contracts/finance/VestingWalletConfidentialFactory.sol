@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import {FHE, euint64, ebool} from "@fhevm/solidity/lib/FHE.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {VestingWalletConfidential} from "./VestingWalletConfidential.sol";
 import {IConfidentialFungibleToken} from "../interfaces/IConfidentialFungibleToken.sol";
 
