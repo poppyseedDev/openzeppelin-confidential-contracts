@@ -7,7 +7,7 @@ import {VestingWalletConfidential} from "./VestingWalletConfidential.sol";
 import {IConfidentialFungibleToken} from "../interfaces/IConfidentialFungibleToken.sol";
 
 abstract contract VestingWalletConfidentialFactory {
-    address private vestingWalletConfidentialImplementation;
+    address private _vestingWalletConfidentialImplementation;
 
     error VestingWalletConfidentialInvalidDuration();
     error VestingWalletConfidentialInvalidStartTimestamp(address beneficiary, uint64 startTimestamp);
@@ -34,7 +34,7 @@ abstract contract VestingWalletConfidentialFactory {
      * @dev
      */
     constructor() {
-        vestingWalletConfidentialImplementation = address(new VestingWalletConfidential(address(0), address(0), 0, 0));
+        _vestingWalletConfidentialImplementation = address(new VestingWalletConfidential(address(0), address(0), 0, 0));
     }
 
     /**
@@ -47,7 +47,7 @@ abstract contract VestingWalletConfidentialFactory {
         euint64 totalEncryptedAmount,
         VestingPlan[] calldata vestingPlans,
         uint64 durationSeconds
-    ) internal virtual returns (ebool) {
+    ) external returns (ebool) {
         require(durationSeconds > 0, VestingWalletConfidentialInvalidDuration());
         uint256 vestingPlansLength = vestingPlans.length;
         euint64 totalTransferedAmount = euint64.wrap(0);
@@ -61,8 +61,8 @@ abstract contract VestingWalletConfidentialFactory {
                 VestingWalletConfidentialInvalidStartTimestamp(beneficiary, startTimestamp)
             );
             address vestingWalletConfidential = Clones.predictDeterministicAddress(
-                vestingWalletConfidentialImplementation,
-                getCreate2VestingWalletConfidentialSalt(beneficiary, startTimestamp),
+                _vestingWalletConfidentialImplementation,
+                _getCreate2VestingWalletConfidentialSalt(beneficiary, startTimestamp),
                 address(this)
             );
             euint64 transferredAmount = IConfidentialFungibleToken(confidentialFungibleToken).confidentialTransferFrom(
@@ -89,13 +89,13 @@ abstract contract VestingWalletConfidentialFactory {
         address beneficiary,
         uint64 startTimestamp,
         uint64 durationSeconds
-    ) internal virtual returns (bool) {
+    ) external returns (bool) {
         // TODO: Check params are authorized
         // Will revert if clone already created
         Clones.cloneDeterministicWithImmutableArgs(
-            vestingWalletConfidentialImplementation,
+            _vestingWalletConfidentialImplementation,
             abi.encodePacked(executor, beneficiary, startTimestamp, durationSeconds),
-            getCreate2VestingWalletConfidentialSalt(beneficiary, startTimestamp)
+            _getCreate2VestingWalletConfidentialSalt(beneficiary, startTimestamp)
         );
         emit VestingWalletConfidentialCreated(beneficiary, startTimestamp);
         return true;
@@ -104,7 +104,7 @@ abstract contract VestingWalletConfidentialFactory {
     /**
      * @dev Gets create2 VestingWalletConfidential salt.
      */
-    function getCreate2VestingWalletConfidentialSalt(
+    function _getCreate2VestingWalletConfidentialSalt(
         address beneficiary,
         uint64 startTimestamp
     ) internal virtual returns (bytes32) {
