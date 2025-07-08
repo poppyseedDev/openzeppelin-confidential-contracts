@@ -6,7 +6,7 @@ import {ConfidentialFungibleToken, euint64} from "../ConfidentialFungibleToken.s
 
 abstract contract ConfidentialFungibleTokenERC20Events is ConfidentialFungibleToken {
     function _update(address from, address to, euint64 amount) internal virtual override returns (euint64) {
-        emit IERC20.Transfer(from, to, 0);
+        emit IERC20.Transfer(from, to, 1);
         return super._update(from, to, amount);
     }
 }
