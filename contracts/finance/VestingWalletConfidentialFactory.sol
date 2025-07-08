@@ -7,7 +7,7 @@ import {VestingWalletConfidential} from "./VestingWalletConfidential.sol";
 import {IConfidentialFungibleToken} from "../interfaces/IConfidentialFungibleToken.sol";
 
 abstract contract VestingWalletConfidentialFactory {
-    address private _vestingWalletConfidentialImplementation;
+    address private immutable _vestingWalletConfidentialImplementation;
 
     error VestingWalletConfidentialInvalidDuration();
     error VestingWalletConfidentialInvalidStartTimestamp(address beneficiary, uint64 startTimestamp);
@@ -29,6 +29,7 @@ abstract contract VestingWalletConfidentialFactory {
      * @dev
      */
     struct VestingPlan {
+        address executor;
         address beneficiary;
         euint64 encryptedAmount;
         uint64 startTimestamp;
@@ -38,7 +39,9 @@ abstract contract VestingWalletConfidentialFactory {
      * @dev
      */
     constructor() {
-        _vestingWalletConfidentialImplementation = address(new VestingWalletConfidential(address(0), address(0), 0, 0));
+        _vestingWalletConfidentialImplementation = address(
+            new VestingWalletConfidential(address(0), address(0x0000000000000000000000000000000000000001), 0, 0)
+        );
     }
 
     /**
@@ -58,13 +61,19 @@ abstract contract VestingWalletConfidentialFactory {
         for (uint256 i = 0; i < vestingPlansLength; i++) {
             VestingPlan memory vestingPlan = vestingPlans[i];
             address beneficiary = vestingPlan.beneficiary;
+            address executor = vestingPlan.executor;
             euint64 encryptedAmount = vestingPlan.encryptedAmount;
             uint64 startTimestamp = vestingPlan.startTimestamp;
             require(
                 startTimestamp >= block.timestamp,
                 VestingWalletConfidentialInvalidStartTimestamp(beneficiary, startTimestamp)
             );
-            address vestingWalletConfidential = predictVestingWalletConfidential(beneficiary, startTimestamp);
+            address vestingWalletConfidential = predictVestingWalletConfidential(
+                executor,
+                beneficiary,
+                startTimestamp,
+                durationSeconds
+            );
             euint64 transferredAmount = IConfidentialFungibleToken(confidentialFungibleToken).confidentialTransferFrom(
                 msg.sender,
                 vestingWalletConfidential,
@@ -104,10 +113,16 @@ abstract contract VestingWalletConfidentialFactory {
     /**
      * @dev
      */
-    function predictVestingWalletConfidential(address beneficiary, uint64 startTimestamp) public returns (address) {
+    function predictVestingWalletConfidential(
+        address executor,
+        address beneficiary,
+        uint64 startTimestamp,
+        uint64 durationSeconds
+    ) public view returns (address) {
         return
-            Clones.predictDeterministicAddress(
+            Clones.predictDeterministicAddressWithImmutableArgs(
                 _vestingWalletConfidentialImplementation,
+                abi.encodePacked(executor, beneficiary, startTimestamp, durationSeconds),
                 _getCreate2VestingWalletConfidentialSalt(beneficiary, startTimestamp),
                 address(this)
             );
@@ -119,7 +134,7 @@ abstract contract VestingWalletConfidentialFactory {
     function _getCreate2VestingWalletConfidentialSalt(
         address beneficiary,
         uint64 startTimestamp
-    ) internal virtual returns (bytes32) {
+    ) internal pure virtual returns (bytes32) {
         return keccak256(abi.encodePacked(beneficiary, startTimestamp));
     }
 }
