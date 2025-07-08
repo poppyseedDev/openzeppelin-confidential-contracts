@@ -19,7 +19,11 @@ abstract contract VestingWalletConfidentialFactory {
     /**
      * @dev
      */
-    event VestingWalletConfidentialCreated(address beneficiary, uint64 startTimestamp);
+    event VestingWalletConfidentialCreated(
+        address indexed beneficiary,
+        address indexed vestingWalletConfidential,
+        uint64 startTimestamp
+    );
 
     /**
      * @dev
@@ -60,11 +64,7 @@ abstract contract VestingWalletConfidentialFactory {
                 startTimestamp >= block.timestamp,
                 VestingWalletConfidentialInvalidStartTimestamp(beneficiary, startTimestamp)
             );
-            address vestingWalletConfidential = Clones.predictDeterministicAddress(
-                _vestingWalletConfidentialImplementation,
-                _getCreate2VestingWalletConfidentialSalt(beneficiary, startTimestamp),
-                address(this)
-            );
+            address vestingWalletConfidential = predictVestingWalletConfidential(beneficiary, startTimestamp);
             euint64 transferredAmount = IConfidentialFungibleToken(confidentialFungibleToken).confidentialTransferFrom(
                 msg.sender,
                 vestingWalletConfidential,
@@ -89,16 +89,28 @@ abstract contract VestingWalletConfidentialFactory {
         address beneficiary,
         uint64 startTimestamp,
         uint64 durationSeconds
-    ) external returns (bool) {
+    ) external returns (address) {
         // TODO: Check params are authorized
         // Will revert if clone already created
-        Clones.cloneDeterministicWithImmutableArgs(
+        address vestingWalletConfidential = Clones.cloneDeterministicWithImmutableArgs(
             _vestingWalletConfidentialImplementation,
             abi.encodePacked(executor, beneficiary, startTimestamp, durationSeconds),
             _getCreate2VestingWalletConfidentialSalt(beneficiary, startTimestamp)
         );
-        emit VestingWalletConfidentialCreated(beneficiary, startTimestamp);
-        return true;
+        emit VestingWalletConfidentialCreated(beneficiary, vestingWalletConfidential, startTimestamp);
+        return vestingWalletConfidential;
+    }
+
+    /**
+     * @dev
+     */
+    function predictVestingWalletConfidential(address beneficiary, uint64 startTimestamp) public returns (address) {
+        return
+            Clones.predictDeterministicAddress(
+                _vestingWalletConfidentialImplementation,
+                _getCreate2VestingWalletConfidentialSalt(beneficiary, startTimestamp),
+                address(this)
+            );
     }
 
     /**
