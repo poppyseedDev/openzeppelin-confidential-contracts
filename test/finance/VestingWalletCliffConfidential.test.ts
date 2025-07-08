@@ -26,7 +26,7 @@ for (const useInitializable of [false, true]) {
       const schedule = [currentTime + 60, currentTime + 60 * 121];
 
       let vesting;
-      let factory;
+      let clones;
       let impl;
 
       if (!useInitializable) {
@@ -39,19 +39,19 @@ for (const useInitializable of [false, true]) {
         ]);
       } else {
         impl = await ethers.deployContract('$VestingWalletCliffConfidentialInitializableMock');
-        factory = await ethers.deployContract('Create2Factory');
+        clones = await ethers.deployContract('$Clones');
 
-        const callData = await impl.initialize.populateTransaction(
+        const cloneAddr = await clones['$predictDeterministicAddress(address,bytes32)'](impl, ethers.ZeroHash);
+        await clones.$cloneDeterministic(impl, ethers.ZeroHash);
+
+        vesting = await ethers.getContractAt('$VestingWalletCliffConfidentialInitializableMock', cloneAddr);
+        await vesting.initialize(
           operator,
           recipient,
           currentTime + 60,
           60 * 60 * 2 /* 2 hours */,
           60 * 60 /* 1 hour */,
         );
-        const cloneTx = (await (await factory.create2(impl.target, callData.data)).wait())!;
-        const cloneAddress = (cloneTx.logs[2] as EventLog).args[0];
-
-        vesting = await ethers.getContractAt('$VestingWalletCliffConfidentialInitializableMock', cloneAddress);
       }
 
       await (token as any)
@@ -67,7 +67,7 @@ for (const useInitializable of [false, true]) {
         vesting,
         schedule,
         vestingAmount: 1000,
-        factory,
+        clones,
         impl,
       });
     });
@@ -94,17 +94,17 @@ for (const useInitializable of [false, true]) {
           ]),
         ).to.be.revertedWithCustomError(this.vesting, 'InvalidCliffDuration');
       } else {
-        const callData = await this.impl.initialize.populateTransaction(
-          this.operator,
-          this.recipient,
-          (await time.latest()) + 60,
-          60 * 10,
-          60 * 60,
+        const cloneAddr = await this.clones['$predictDeterministicAddress(address,bytes32)'](
+          this.impl,
+          ethers.zeroPadBytes('0x01', 32),
         );
-        await expect(this.factory.create2(this.impl.target, callData.data)).to.be.revertedWithCustomError(
-          this.vesting,
-          'InvalidCliffDuration',
-        );
+        await this.clones.$cloneDeterministic(this.impl, ethers.zeroPadBytes('0x01', 32));
+
+        const newClone = await ethers.getContractAt('$VestingWalletCliffConfidentialInitializableMock', cloneAddr);
+
+        await expect(
+          newClone.initialize(this.operator, this.recipient, (await time.latest()) + 60, 60 * 10, 60 * 60),
+        ).to.be.revertedWithCustomError(newClone, 'InvalidCliffDuration');
       }
     });
 
