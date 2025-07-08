@@ -47,34 +47,27 @@ abstract contract VestingWalletConfidential is Ownable {
         _executor = executor_;
     }
 
+    /// @dev Address that is able to execute arbitrary calls from the vesting wallet via {call}.
     function executor() public view virtual returns (address) {
         return _executor;
     }
 
-    /**
-     * @dev Getter for the start timestamp.
-     */
+    /// @dev Timestamp at which the vesting starts.
     function start() public view virtual returns (uint64) {
         return _start;
     }
 
-    /**
-     * @dev Getter for the vesting duration.
-     */
+    /// @dev Duration of the vesting in seconds.
     function duration() public view virtual returns (uint64) {
         return _duration;
     }
 
-    /**
-     * @dev Getter for the end timestamp.
-     */
+    /// @dev Timestamp at which the vesting ends.
     function end() public view virtual returns (uint64) {
         return start() + duration();
     }
 
-    /**
-     * @dev Amount of token already released
-     */
+    /// @dev Amount of token already released
     function released(address token) public view virtual returns (euint64) {
         return _tokenReleased[token];
     }
@@ -106,9 +99,7 @@ abstract contract VestingWalletConfidential is Ownable {
         emit VestingWalletConfidentialTokenReleased(token, amountSent);
     }
 
-    /**
-     * @dev Calculates the amount of tokens that has already vested. Default implementation is a linear vesting curve.
-     */
+    /// @dev Calculates the amount of tokens that has already vested. Default implementation is a linear vesting curve.
     function vestedAmount(address token, uint64 timestamp) public virtual returns (euint64) {
         return
             _vestingSchedule(
@@ -118,11 +109,17 @@ abstract contract VestingWalletConfidential is Ownable {
             );
     }
 
+    /**
+     * @dev Execute an arbitrary call from the vesting wallet. Only callable by the {executor}.
+     *
+     * Emits a {VestingWalletCallExecuted} event.
+     */
     function call(address target, uint256 value, bytes memory data) public virtual {
         require(msg.sender == executor(), VestingWalletConfidentialOnlyExecutor());
         _call(target, value, data);
     }
 
+    /// @dev Internal execution of an arbitrary call from the vesting wallet.
     function _call(address target, uint256 value, bytes memory data) internal virtual {
         (bool success, bytes memory res) = target.call{value: value}(data);
         Address.verifyCallResult(success, res);
