@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {FHE, euint64, ebool} from "@fhevm/solidity/lib/FHE.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-import {VestingWalletConfidential} from "./VestingWalletConfidential.sol";
+import {VestingWalletConfidentialUpgradeable} from "./VestingWalletConfidentialUpgradeable.sol";
 import {IConfidentialFungibleToken} from "../interfaces/IConfidentialFungibleToken.sol";
 
 abstract contract VestingWalletConfidentialFactory {
@@ -39,9 +39,7 @@ abstract contract VestingWalletConfidentialFactory {
      * @dev
      */
     constructor() {
-        _vestingWalletConfidentialImplementation = address(
-            new VestingWalletConfidential(address(0), address(0x0000000000000000000000000000000000000001), 0, 0)
-        );
+        _vestingWalletConfidentialImplementation = address(new VestingWalletConfidentialUpgradeable());
     }
 
     /**
