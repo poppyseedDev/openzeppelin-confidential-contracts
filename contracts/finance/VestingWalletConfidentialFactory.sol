@@ -3,8 +3,8 @@ pragma solidity ^0.8.20;
 
 import {FHE, euint64, ebool} from "@fhevm/solidity/lib/FHE.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-import {VestingWalletConfidentialUpgradeable} from "./VestingWalletConfidentialUpgradeable.sol";
 import {IConfidentialFungibleToken} from "../interfaces/IConfidentialFungibleToken.sol";
+import {VestingWalletConfidentialUpgradeable} from "./VestingWalletConfidentialUpgradeable.sol";
 
 abstract contract VestingWalletConfidentialFactory {
     address private immutable _vestingWalletConfidentialImplementation;
@@ -99,13 +99,19 @@ abstract contract VestingWalletConfidentialFactory {
     ) external returns (address) {
         // TODO: Check params are authorized
         // Will revert if clone already created
-        address vestingWalletConfidential = Clones.cloneDeterministicWithImmutableArgs(
+        address vestingWalletConfidentialAddress = Clones.cloneDeterministicWithImmutableArgs(
             _vestingWalletConfidentialImplementation,
             abi.encodePacked(executor, beneficiary, startTimestamp, durationSeconds),
             _getCreate2VestingWalletConfidentialSalt(beneficiary, startTimestamp)
         );
-        emit VestingWalletConfidentialCreated(beneficiary, vestingWalletConfidential, startTimestamp);
-        return vestingWalletConfidential;
+        VestingWalletConfidentialUpgradeable(vestingWalletConfidentialAddress).initialize(
+            executor,
+            beneficiary,
+            startTimestamp,
+            durationSeconds
+        );
+        emit VestingWalletConfidentialCreated(beneficiary, vestingWalletConfidentialAddress, startTimestamp);
+        return vestingWalletConfidentialAddress;
     }
 
     /**
