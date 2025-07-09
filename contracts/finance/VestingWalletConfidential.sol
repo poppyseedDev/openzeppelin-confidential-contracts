@@ -26,8 +26,8 @@ import {TFHESafeMath} from "./../utils/TFHESafeMath.sol";
  */
 abstract contract VestingWalletConfidential is OwnableUpgradeable, ReentrancyGuardTransient {
     mapping(address token => euint64) private _tokenReleased;
-    uint64 private _start;
-    uint64 private _duration;
+    uint48 private _start;
+    uint48 private _duration;
 
     event VestingWalletConfidentialTokenReleased(address indexed token, euint64 amount);
 
@@ -36,8 +36,8 @@ abstract contract VestingWalletConfidential is OwnableUpgradeable, ReentrancyGua
     // solhint-disable-next-line func-name-mixedcase
     function __VestingWalletConfidential_init(
         address beneficiary,
-        uint64 startTimestamp,
-        uint64 durationSeconds
+        uint48 startTimestamp,
+        uint48 durationSeconds
     ) internal onlyInitializing {
         __Ownable_init(beneficiary);
         _start = startTimestamp;
