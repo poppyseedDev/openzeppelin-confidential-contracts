@@ -9,7 +9,7 @@ function shouldBehaveLikeVestingConfidential() {
     it('should release nothing before vesting start', async function () {
       await this.vesting.release(this.token);
 
-      const balanceOfHandle = await this.token.balanceOf(this.recipient);
+      const balanceOfHandle = await this.token.confidentialBalanceOf(this.recipient);
       await expect(
         fhevm.userDecryptEuint(FhevmType.euint64, balanceOfHandle, this.token.target, this.recipient),
       ).to.eventually.equal(0);
@@ -19,7 +19,7 @@ function shouldBehaveLikeVestingConfidential() {
       await time.increaseTo(this.schedule[0]);
       await this.vesting.release(this.token);
 
-      const balanceOfHandle = await this.token.balanceOf(this.recipient);
+      const balanceOfHandle = await this.token.confidentialBalanceOf(this.recipient);
       await expect(
         fhevm.userDecryptEuint(FhevmType.euint64, balanceOfHandle, this.token.target, this.recipient),
       ).to.eventually.equal(0);
@@ -29,7 +29,7 @@ function shouldBehaveLikeVestingConfidential() {
       await time.increaseTo((this.schedule[1] + this.schedule[0]) / 2);
       await this.vesting.release(this.token);
 
-      const balanceOfHandle = await this.token.balanceOf(this.recipient);
+      const balanceOfHandle = await this.token.confidentialBalanceOf(this.recipient);
       await expect(
         fhevm.userDecryptEuint(FhevmType.euint64, balanceOfHandle, this.token.target, this.recipient),
       ).to.eventually.equal(this.vestingAmount / 2);
@@ -39,7 +39,7 @@ function shouldBehaveLikeVestingConfidential() {
       await time.increaseTo(this.schedule[1] + 1000);
       await this.vesting.release(this.token);
 
-      const balanceOfHandle = await this.token.balanceOf(this.recipient);
+      const balanceOfHandle = await this.token.confidentialBalanceOf(this.recipient);
       await expect(
         fhevm.userDecryptEuint(FhevmType.euint64, balanceOfHandle, this.token.target, this.recipient),
       ).to.eventually.equal(this.vestingAmount);
@@ -64,7 +64,7 @@ function shouldBehaveLikeVestingConfidential() {
             (
               await this.token.confidentialTransfer.populateTransaction(
                 this.recipient,
-                await this.token.balanceOf(this.vesting),
+                await this.token.confidentialBalanceOf(this.vesting),
               )
             ).data,
           ),

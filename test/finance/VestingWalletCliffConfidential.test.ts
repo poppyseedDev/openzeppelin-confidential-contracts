@@ -76,7 +76,7 @@ for (const useInitializable of [false, true]) {
       await time.increaseTo(this.schedule[0] + 60);
       await this.vesting.release(this.token);
 
-      const balanceOfHandle = await this.token.balanceOf(this.recipient);
+      const balanceOfHandle = await this.token.confidentialBalanceOf(this.recipient);
       await expect(
         fhevm.userDecryptEuint(FhevmType.euint64, balanceOfHandle, this.token.target, this.recipient),
       ).to.eventually.equal(0);
