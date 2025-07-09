@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {FHE, ebool, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import {IConfidentialFungibleToken} from "./../interfaces/IConfidentialFungibleToken.sol";
 import {TFHESafeMath} from "./../utils/TFHESafeMath.sol";
 
@@ -23,7 +24,7 @@ import {TFHESafeMath} from "./../utils/TFHESafeMath.sol";
  * NOTE: When using this contract with any token whose balance is adjusted automatically (i.e. a rebase token), make
  * sure to account the supply/balance adjustment in the vesting schedule to ensure the vested amount is as intended.
  */
-abstract contract VestingWalletConfidential is Ownable {
+abstract contract VestingWalletConfidential is Ownable, ReentrancyGuardTransient {
     mapping(address token => euint64) private _tokenReleased;
     uint64 private immutable _start;
     uint64 private immutable _duration;
@@ -85,7 +86,7 @@ abstract contract VestingWalletConfidential is Ownable {
      *
      * Emits a {ConfidentialFungibleTokenReleased} event.
      */
-    function release(address token) public virtual {
+    function release(address token) public virtual nonReentrant {
         euint64 amount = releasable(token);
         FHE.allowTransient(amount, token);
         euint64 amountSent = IConfidentialFungibleToken(token).confidentialTransfer(owner(), amount);
