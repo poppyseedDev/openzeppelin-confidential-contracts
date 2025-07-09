@@ -19,7 +19,7 @@ import {TFHESafeMath} from "./../utils/TFHESafeMath.sol";
  * By setting the duration to 0, one can configure this contract to behave like an asset timelock that holds tokens for
  * a beneficiary until a specified time.
  *
- * NOTE: Since the wallet is {Ownable}, and ownership can be transferred, it is possible to sell unvested tokens.
+ * NOTE: Since the wallet is `Ownable`, and ownership can be transferred, it is possible to sell unvested tokens.
  *
  * NOTE: When using this contract with any token whose balance is adjusted automatically (i.e. a rebase token), make
  * sure to account the supply/balance adjustment in the vesting schedule to ensure the vested amount is as intended.
@@ -47,6 +47,10 @@ abstract contract VestingWalletConfidential is OwnableUpgradeable, ReentrancyGua
 
     error VestingWalletConfidentialInvalidDuration();
 
+    /**
+     * @dev Initializes the vesting wallet for a given `beneficiary` with a start time of `startTimestamp`
+     * and an end time of `startTimestamp + durationSeconds`.
+     */
     // solhint-disable-next-line func-name-mixedcase
     function __VestingWalletConfidential_init(
         address beneficiary,
@@ -91,7 +95,7 @@ abstract contract VestingWalletConfidential is OwnableUpgradeable, ReentrancyGua
     /**
      * @dev Release the tokens that have already vested.
      *
-     * Emits a {ConfidentialFungibleTokenReleased} event.
+     * Emits a {VestingWalletConfidentialTokenReleased} event.
      */
     function release(address token) public virtual nonReentrant {
         euint64 amount = releasable(token);
@@ -116,10 +120,7 @@ abstract contract VestingWalletConfidential is OwnableUpgradeable, ReentrancyGua
             );
     }
 
-    /**
-     * @dev Virtual implementation of the vesting formula. This returns the amount vested, as a function of time, for
-     * an asset given its total historical allocation.
-     */
+    /// @dev This returns the amount vested, as a function of time, for an asset given its total historical allocation.
     function _vestingSchedule(euint64 totalAllocation, uint64 timestamp) internal virtual returns (euint64) {
         if (timestamp < start()) {
             return euint64.wrap(0);

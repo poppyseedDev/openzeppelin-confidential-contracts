@@ -27,16 +27,15 @@ abstract contract VestingWalletExecutorConfidential is VestingWalletConfidential
 
     event VestingWalletExecutorConfidentialCallExecuted(address indexed target, uint256 value, bytes data);
 
-    /// @dev Revert thrown when a non-executor attempts to call {call}.
+    /// @dev Thrown when a non-executor attempts to call {call}.
     error VestingWalletExecutorConfidentialOnlyExecutor();
 
     // solhint-disable-next-line func-name-mixedcase
     function __VestingWalletExecutorConfidential_init(address executor_) internal onlyInitializing {
-        VestingWalletExecutorStorage storage $ = _getVestingWalletExecutorStorage();
-        $._executor = executor_;
+        _getVestingWalletExecutorStorage()._executor = executor_;
     }
 
-    /// @dev Address that is able to execute arbitrary calls from the vesting wallet via {call}.
+    /// @dev Trusted address that is able to execute arbitrary calls from the vesting wallet via {call}.
     function executor() public view virtual returns (address) {
         return _getVestingWalletExecutorStorage()._executor;
     }
@@ -51,7 +50,7 @@ abstract contract VestingWalletExecutorConfidential is VestingWalletConfidential
         _call(target, value, data);
     }
 
-    /// @dev Internal execution of an arbitrary call from the vesting wallet.
+    /// @dev Internal function for executing an arbitrary call from the vesting wallet.
     function _call(address target, uint256 value, bytes memory data) internal virtual {
         (bool success, bytes memory res) = target.call{value: value}(data);
         Address.verifyCallResult(success, res);

@@ -30,7 +30,7 @@ abstract contract VestingWalletCliffConfidential is VestingWalletConfidential {
 
     /**
      * @dev Set the duration of the cliff, in seconds. The cliff starts at the vesting
-     * start timestamp (see {VestingWalletConfidential}) and ends `cliffSeconds` later.
+     * start timestamp (see {VestingWalletConfidential-start}) and ends `cliffSeconds` later.
      */
     // solhint-disable-next-line func-name-mixedcase
     function __VestingWalletCliffConfidential_init(uint64 cliffSeconds) internal onlyInitializing {
@@ -40,15 +40,13 @@ abstract contract VestingWalletCliffConfidential is VestingWalletConfidential {
         _getVestingWalletCliffStorage()._cliff = start() + cliffSeconds;
     }
 
-    /**
-     * @dev Getter for the cliff timestamp.
-     */
+    /// @dev The timestamp at which the cliff ends.
     function cliff() public view virtual returns (uint64) {
         return _getVestingWalletCliffStorage()._cliff;
     }
 
     /**
-     * @dev Virtual implementation of the vesting formula. This returns the amount vested, as a function of time, for
+     * @dev This function returns the amount vested, as a function of time, for
      * an asset given its total historical allocation. Returns 0 if the {cliff} timestamp is not met.
      *
      * IMPORTANT: The cliff not only makes the schedule return 0, but it also ignores every possible side
