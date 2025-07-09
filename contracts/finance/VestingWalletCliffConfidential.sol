@@ -4,17 +4,18 @@ pragma solidity ^0.8.24;
 import {euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {VestingWalletConfidential} from "./VestingWalletConfidential.sol";
 
+/**
+ * @dev An extension of {VestingWalletConfidential} that adds a cliff to the vesting schedule. The cliff is `cliffSeconds` long and
+ * starts at the vesting start timestamp (see {VestingWalletConfidential}).
+ */
 abstract contract VestingWalletCliffConfidential is VestingWalletConfidential {
-    uint64 private immutable _cliff;
+    uint64 private _cliff;
 
     /// @dev The specified cliff duration is larger than the vesting duration.
     error InvalidCliffDuration(uint64 cliffSeconds, uint64 durationSeconds);
 
-    /**
-     * @dev Set the duration of the cliff, in seconds. The cliff starts at the vesting
-     * start timestamp (see {VestingWalletConfidential}) and ends `cliffSeconds` later.
-     */
-    constructor(uint64 cliffSeconds) {
+    // solhint-disable-next-line func-name-mixedcase
+    function __VestingWalletCliffConfidential_init(uint64 cliffSeconds) internal onlyInitializing {
         if (cliffSeconds > duration()) {
             revert InvalidCliffDuration(cliffSeconds, duration());
         }

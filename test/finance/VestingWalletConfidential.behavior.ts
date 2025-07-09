@@ -1,5 +1,4 @@
 import { FhevmType } from '@fhevm/hardhat-plugin';
-import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { fhevm } from 'hardhat';
@@ -43,34 +42,6 @@ function shouldBehaveLikeVestingConfidential() {
       await expect(
         fhevm.userDecryptEuint(FhevmType.euint64, balanceOfHandle, this.token.target, this.recipient),
       ).to.eventually.equal(this.vestingAmount);
-    });
-  });
-
-  describe('call', async function () {
-    it('should fail if not called by executor', async function () {
-      await expect(this.vesting.call(this.token, 0, '0x')).to.be.revertedWithCustomError(
-        this.vesting,
-        'VestingWalletConfidentialOnlyExecutor',
-      );
-    });
-
-    it('should call if called by executor', async function () {
-      await expect(
-        this.vesting
-          .connect(this.operator)
-          .call(
-            this.token,
-            0,
-            (
-              await this.token.confidentialTransfer.populateTransaction(
-                this.recipient,
-                await this.token.confidentialBalanceOf(this.vesting),
-              )
-            ).data,
-          ),
-      )
-        .to.emit(this.token, 'ConfidentialTransfer')
-        .withArgs(this.vesting, this.recipient, anyValue);
     });
   });
 }

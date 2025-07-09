@@ -2,8 +2,8 @@
 pragma solidity ^0.8.24;
 
 import {FHE, ebool, euint64} from "@fhevm/solidity/lib/FHE.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import {IConfidentialFungibleToken} from "./../interfaces/IConfidentialFungibleToken.sol";
 import {TFHESafeMath} from "./../utils/TFHESafeMath.sol";
@@ -24,32 +24,24 @@ import {TFHESafeMath} from "./../utils/TFHESafeMath.sol";
  * NOTE: When using this contract with any token whose balance is adjusted automatically (i.e. a rebase token), make
  * sure to account the supply/balance adjustment in the vesting schedule to ensure the vested amount is as intended.
  */
-abstract contract VestingWalletConfidential is Ownable, ReentrancyGuardTransient {
+abstract contract VestingWalletConfidential is OwnableUpgradeable, ReentrancyGuardTransient {
     mapping(address token => euint64) private _tokenReleased;
-    uint64 private immutable _start;
-    uint64 private immutable _duration;
-    address private immutable _executor;
+    uint64 private _start;
+    uint64 private _duration;
 
     event VestingWalletConfidentialTokenReleased(address indexed token, euint64 amount);
-    event VestingWalletCallExecuted(address indexed target, uint256 value, bytes data);
 
     error VestingWalletConfidentialInvalidDuration();
-    error VestingWalletConfidentialOnlyExecutor();
 
-    constructor(
-        address executor_,
+    // solhint-disable-next-line func-name-mixedcase
+    function __VestingWalletConfidential_init(
         address beneficiary,
         uint64 startTimestamp,
         uint64 durationSeconds
-    ) Ownable(beneficiary) {
+    ) internal onlyInitializing {
+        __Ownable_init(beneficiary);
         _start = startTimestamp;
         _duration = durationSeconds;
-        _executor = executor_;
-    }
-
-    /// @dev Address that is able to execute arbitrary calls from the vesting wallet via {call}.
-    function executor() public view virtual returns (address) {
-        return _executor;
     }
 
     /// @dev Timestamp at which the vesting starts.
@@ -107,24 +99,6 @@ abstract contract VestingWalletConfidential is Ownable, ReentrancyGuardTransient
                 FHE.add(IConfidentialFungibleToken(token).confidentialBalanceOf(address(this)), released(token)),
                 timestamp
             );
-    }
-
-    /**
-     * @dev Execute an arbitrary call from the vesting wallet. Only callable by the {executor}.
-     *
-     * Emits a {VestingWalletCallExecuted} event.
-     */
-    function call(address target, uint256 value, bytes memory data) public virtual {
-        require(msg.sender == executor(), VestingWalletConfidentialOnlyExecutor());
-        _call(target, value, data);
-    }
-
-    /// @dev Internal execution of an arbitrary call from the vesting wallet.
-    function _call(address target, uint256 value, bytes memory data) internal virtual {
-        (bool success, bytes memory res) = target.call{value: value}(data);
-        Address.verifyCallResult(success, res);
-
-        emit VestingWalletCallExecuted(target, value, data);
     }
 
     /**

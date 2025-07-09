@@ -9,7 +9,7 @@ const uri = 'https://example.com/metadata';
 describe('VestingWalletConfidential', function () {
   beforeEach(async function () {
     const accounts = (await ethers.getSigners()).slice(3);
-    const [holder, recipient, operator] = accounts;
+    const [holder, recipient] = accounts;
 
     const token = await ethers.deployContract('$ConfidentialFungibleTokenMock', [name, symbol, uri]);
 
@@ -21,7 +21,6 @@ describe('VestingWalletConfidential', function () {
     const currentTime = await time.latest();
     const schedule = [currentTime + 60, currentTime + 60 * 61];
     const vesting = await ethers.deployContract('$VestingWalletConfidentialMock', [
-      operator,
       recipient,
       currentTime + 60,
       60 * 60 /* 1 hour */,
@@ -31,7 +30,7 @@ describe('VestingWalletConfidential', function () {
       .connect(holder)
       ['$_mint(address,bytes32,bytes)'](vesting.target, encryptedInput.handles[0], encryptedInput.inputProof);
 
-    Object.assign(this, { accounts, holder, recipient, operator, token, vesting, schedule, vestingAmount: 1000 });
+    Object.assign(this, { accounts, holder, recipient, token, vesting, schedule, vestingAmount: 1000 });
   });
 
   shouldBehaveLikeVestingConfidential();
