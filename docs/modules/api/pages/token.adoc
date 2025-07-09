@@ -379,6 +379,7 @@ The given gateway request ID `requestId` is invalid.
 :unwrap: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-unwrap-address-address-externalEuint64-bytes-[`++unwrap++`]]
 :finalizeUnwrap: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-finalizeUnwrap-uint256-uint64-bytes---[`++finalizeUnwrap++`]]
 :_unwrap: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-_unwrap-address-address-euint64-[`++_unwrap++`]]
+:_maxDecimals: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-_maxDecimals--[`++_maxDecimals++`]]
 
 :constructor-contract-IERC20: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-constructor-contract-IERC20-[`++constructor++`]]
 :decimals-: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-decimals--[`++decimals++`]]
@@ -390,6 +391,7 @@ The given gateway request ID `requestId` is invalid.
 :unwrap-address-address-externalEuint64-bytes: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-unwrap-address-address-externalEuint64-bytes-[`++unwrap++`]]
 :finalizeUnwrap-uint256-uint64-bytes--: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-finalizeUnwrap-uint256-uint64-bytes---[`++finalizeUnwrap++`]]
 :_unwrap-address-address-euint64: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-_unwrap-address-address-euint64-[`++_unwrap++`]]
+:_maxDecimals-: pass:normal[xref:#ConfidentialFungibleTokenERC20Wrapper-_maxDecimals--[`++_maxDecimals++`]]
 
 [.contract]
 [[ConfidentialFungibleTokenERC20Wrapper]]
@@ -417,6 +419,7 @@ which allows users to transfer `ERC1363` tokens directly to the wrapper with a c
 * `++unwrap(from, to, encryptedAmount, inputProof)++`
 * `++finalizeUnwrap(requestID, amount, signatures)++`
 * `++_unwrap(from, to, amount)++`
+* `++_maxDecimals()++`
 
 [.contract-subindex-inherited]
 .IERC1363Receiver
@@ -559,6 +562,12 @@ Fills unwrap requests.
 [.contract-item]
 [[ConfidentialFungibleTokenERC20Wrapper-_unwrap-address-address-euint64-]]
 ==== `[.contract-item-name]#++_unwrap++#++(address from, address to, euint64 amount)++` [.item-kind]#internal#
+
+[.contract-item]
+[[ConfidentialFungibleTokenERC20Wrapper-_maxDecimals--]]
+==== `[.contract-item-name]#++_maxDecimals++#++() → uint8++` [.item-kind]#internal#
+
+Returns the maximum number that will be used for {decimals} by the wrapper.
 
 == Utilities
 :checkOnTransferReceived: pass:normal[xref:#ConfidentialFungibleTokenUtils-checkOnTransferReceived-address-address-address-euint64-bytes-[`++checkOnTransferReceived++`]]
