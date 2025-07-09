@@ -9,24 +9,42 @@ import {VestingWalletConfidential} from "./VestingWalletConfidential.sol";
  * starts at the vesting start timestamp (see {VestingWalletConfidential}).
  */
 abstract contract VestingWalletCliffConfidential is VestingWalletConfidential {
-    uint64 private _cliff;
+    /// @custom:storage-location erc7201:openzeppelin.storage.VestingWalletCliffConfidential
+    struct VestingWalletCliffStorage {
+        uint64 _cliff;
+    }
+
+    // keccak256(abi.encode(uint256(keccak256("openzeppelin.storage.VestingWalletCliffConfidential")) - 1)) & ~bytes32(uint256(0xff))
+    // solhint-disable-next-line const-name-snakecase
+    bytes32 private constant VestingWalletCliffStorageLocation =
+        0x3c715f77db997bdb68403fafb54820cd57dedce553ed6315028656b0d601c700;
+
+    function _getVestingWalletCliffStorage() private pure returns (VestingWalletCliffStorage storage $) {
+        assembly {
+            $.slot := VestingWalletCliffStorageLocation
+        }
+    }
 
     /// @dev The specified cliff duration is larger than the vesting duration.
     error InvalidCliffDuration(uint64 cliffSeconds, uint64 durationSeconds);
 
+    /**
+     * @dev Set the duration of the cliff, in seconds. The cliff starts at the vesting
+     * start timestamp (see {VestingWalletConfidential}) and ends `cliffSeconds` later.
+     */
     // solhint-disable-next-line func-name-mixedcase
     function __VestingWalletCliffConfidential_init(uint64 cliffSeconds) internal onlyInitializing {
         if (cliffSeconds > duration()) {
             revert InvalidCliffDuration(cliffSeconds, duration());
         }
-        _cliff = start() + cliffSeconds;
+        _getVestingWalletCliffStorage()._cliff = start() + cliffSeconds;
     }
 
     /**
      * @dev Getter for the cliff timestamp.
      */
     function cliff() public view virtual returns (uint64) {
-        return _cliff;
+        return _getVestingWalletCliffStorage()._cliff;
     }
 
     /**
