@@ -7,7 +7,7 @@
 :ConfidentialFungibleToken: pass:normal[xref:token.adoc#ConfidentialFungibleToken[`ConfidentialFungibleToken`]]
 :IConfidentialFungibleToken: pass:normal[xref:interfaces.adoc#IConfidentialFungibleToken[`IConfidentialFungibleToken`]]
 :IConfidentialFungibleTokenReceiver-onConfidentialTransferReceived: pass:normal[xref:interfaces.adoc#IConfidentialFungibleTokenReceiver-onConfidentialTransferReceived-address-address-euint64-bytes-[`IConfidentialFungibleTokenReceiver.onConfidentialTransferReceived`]]
-:IConfidentialFungibleToken-EncryptedAmountDisclosed: pass:normal[xref:interfaces.adoc#IConfidentialFungibleToken-EncryptedAmountDisclosed-euint64-uint64-[`IConfidentialFungibleToken.EncryptedAmountDisclosed`]]
+:IConfidentialFungibleToken-AmountDisclosed: pass:normal[xref:interfaces.adoc#IConfidentialFungibleToken-AmountDisclosed-euint64-uint64-[`IConfidentialFungibleToken.AmountDisclosed`]]
 :ConfidentialFungibleToken: pass:normal[xref:token.adoc#ConfidentialFungibleToken[`ConfidentialFungibleToken`]]
 :ConfidentialFungibleToken: pass:normal[xref:token.adoc#ConfidentialFungibleToken[`ConfidentialFungibleToken`]]
 :ConfidentialFungibleToken: pass:normal[xref:token.adoc#ConfidentialFungibleToken[`ConfidentialFungibleToken`]]
@@ -36,8 +36,8 @@ This set of interfaces, contracts, and utilities are all related to the evolving
 :symbol: pass:normal[xref:#ConfidentialFungibleToken-symbol--[`++symbol++`]]
 :decimals: pass:normal[xref:#ConfidentialFungibleToken-decimals--[`++decimals++`]]
 :tokenURI: pass:normal[xref:#ConfidentialFungibleToken-tokenURI--[`++tokenURI++`]]
-:totalSupply: pass:normal[xref:#ConfidentialFungibleToken-totalSupply--[`++totalSupply++`]]
-:balanceOf: pass:normal[xref:#ConfidentialFungibleToken-balanceOf-address-[`++balanceOf++`]]
+:confidentialTotalSupply: pass:normal[xref:#ConfidentialFungibleToken-confidentialTotalSupply--[`++confidentialTotalSupply++`]]
+:confidentialBalanceOf: pass:normal[xref:#ConfidentialFungibleToken-confidentialBalanceOf-address-[`++confidentialBalanceOf++`]]
 :isOperator: pass:normal[xref:#ConfidentialFungibleToken-isOperator-address-address-[`++isOperator++`]]
 :setOperator: pass:normal[xref:#ConfidentialFungibleToken-setOperator-address-uint48-[`++setOperator++`]]
 :confidentialTransfer: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransfer-address-externalEuint64-bytes-[`++confidentialTransfer++`]]
@@ -62,8 +62,8 @@ This set of interfaces, contracts, and utilities are all related to the evolving
 :symbol-: pass:normal[xref:#ConfidentialFungibleToken-symbol--[`++symbol++`]]
 :decimals-: pass:normal[xref:#ConfidentialFungibleToken-decimals--[`++decimals++`]]
 :tokenURI-: pass:normal[xref:#ConfidentialFungibleToken-tokenURI--[`++tokenURI++`]]
-:totalSupply-: pass:normal[xref:#ConfidentialFungibleToken-totalSupply--[`++totalSupply++`]]
-:balanceOf-address: pass:normal[xref:#ConfidentialFungibleToken-balanceOf-address-[`++balanceOf++`]]
+:confidentialTotalSupply-: pass:normal[xref:#ConfidentialFungibleToken-confidentialTotalSupply--[`++confidentialTotalSupply++`]]
+:confidentialBalanceOf-address: pass:normal[xref:#ConfidentialFungibleToken-confidentialBalanceOf-address-[`++confidentialBalanceOf++`]]
 :isOperator-address-address: pass:normal[xref:#ConfidentialFungibleToken-isOperator-address-address-[`++isOperator++`]]
 :setOperator-address-uint48: pass:normal[xref:#ConfidentialFungibleToken-setOperator-address-uint48-[`++setOperator++`]]
 :confidentialTransfer-address-externalEuint64-bytes: pass:normal[xref:#ConfidentialFungibleToken-confidentialTransfer-address-externalEuint64-bytes-[`++confidentialTransfer++`]]
@@ -114,8 +114,8 @@ Key features:
 * `++symbol()++`
 * `++decimals()++`
 * `++tokenURI()++`
-* `++totalSupply()++`
-* `++balanceOf(account)++`
+* `++confidentialTotalSupply()++`
+* `++confidentialBalanceOf(account)++`
 * `++isOperator(holder, spender)++`
 * `++setOperator(operator, until)++`
 * `++confidentialTransfer(to, encryptedAmount, inputProof)++`
@@ -148,7 +148,7 @@ Key features:
 .IConfidentialFungibleToken
 * `++OperatorSet(holder, operator, until)++`
 * `++ConfidentialTransfer(from, to, amount)++`
-* `++EncryptedAmountDisclosed(encryptedAmount, amount)++`
+* `++AmountDisclosed(encryptedAmount, amount)++`
 
 --
 
@@ -197,16 +197,16 @@ Returns the number of decimals of the token. Recommended to be 6.
 Returns the token URI.
 
 [.contract-item]
-[[ConfidentialFungibleToken-totalSupply--]]
-==== `[.contract-item-name]#++totalSupply++#++() → euint64++` [.item-kind]#public#
+[[ConfidentialFungibleToken-confidentialTotalSupply--]]
+==== `[.contract-item-name]#++confidentialTotalSupply++#++() → euint64++` [.item-kind]#public#
 
-Returns the encrypted total supply of the token.
+Returns the confidential total supply of the token.
 
 [.contract-item]
-[[ConfidentialFungibleToken-balanceOf-address-]]
-==== `[.contract-item-name]#++balanceOf++#++(address account) → euint64++` [.item-kind]#public#
+[[ConfidentialFungibleToken-confidentialBalanceOf-address-]]
+==== `[.contract-item-name]#++confidentialBalanceOf++#++(address account) → euint64++` [.item-kind]#public#
 
-Returns the encrypted balance of the account `account`.
+Returns the confidential balance of the account `account`.
 
 [.contract-item]
 [[ConfidentialFungibleToken-isOperator-address-address-]]
@@ -288,7 +288,7 @@ after the transfer.
 [[ConfidentialFungibleToken-discloseEncryptedAmount-euint64-]]
 ==== `[.contract-item-name]#++discloseEncryptedAmount++#++(euint64 encryptedAmount)++` [.item-kind]#public#
 
-Discloses an encrypted amount `encryptedAmount` publicly via an {IConfidentialFungibleToken-EncryptedAmountDisclosed}
+Discloses an encrypted amount `encryptedAmount` publicly via an {IConfidentialFungibleToken-AmountDisclosed}
 event. The caller and this contract must be authorized to use the encrypted amount on the ACL.
 
 NOTE: This is an asynchronous operation where the actual decryption happens off-chain and
@@ -426,8 +426,8 @@ which allows users to transfer `ERC1363` tokens directly to the wrapper with a c
 * `++name()++`
 * `++symbol()++`
 * `++tokenURI()++`
-* `++totalSupply()++`
-* `++balanceOf(account)++`
+* `++confidentialTotalSupply()++`
+* `++confidentialBalanceOf(account)++`
 * `++isOperator(holder, spender)++`
 * `++setOperator(operator, until)++`
 * `++confidentialTransfer(to, encryptedAmount, inputProof)++`
@@ -466,7 +466,7 @@ which allows users to transfer `ERC1363` tokens directly to the wrapper with a c
 .IConfidentialFungibleToken
 * `++OperatorSet(holder, operator, until)++`
 * `++ConfidentialTransfer(from, to, amount)++`
-* `++EncryptedAmountDisclosed(encryptedAmount, amount)++`
+* `++AmountDisclosed(encryptedAmount, amount)++`
 
 --
 

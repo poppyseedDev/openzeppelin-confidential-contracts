@@ -21,7 +21,7 @@ This directory includes primitives for on-chain confidential governance.
 :getVotes: pass:normal[xref:#VotesConfidential-getVotes-address-[`++getVotes++`]]
 :getPastVotes: pass:normal[xref:#VotesConfidential-getPastVotes-address-uint256-[`++getPastVotes++`]]
 :getPastTotalSupply: pass:normal[xref:#VotesConfidential-getPastTotalSupply-uint256-[`++getPastTotalSupply++`]]
-:totalSupply: pass:normal[xref:#VotesConfidential-totalSupply--[`++totalSupply++`]]
+:confidentialTotalSupply: pass:normal[xref:#VotesConfidential-confidentialTotalSupply--[`++confidentialTotalSupply++`]]
 :delegates: pass:normal[xref:#VotesConfidential-delegates-address-[`++delegates++`]]
 :delegate: pass:normal[xref:#VotesConfidential-delegate-address-[`++delegate++`]]
 :delegateBySig: pass:normal[xref:#VotesConfidential-delegateBySig-address-uint256-uint256-uint8-bytes32-bytes32-[`++delegateBySig++`]]
@@ -36,7 +36,7 @@ This directory includes primitives for on-chain confidential governance.
 :getVotes-address: pass:normal[xref:#VotesConfidential-getVotes-address-[`++getVotes++`]]
 :getPastVotes-address-uint256: pass:normal[xref:#VotesConfidential-getPastVotes-address-uint256-[`++getPastVotes++`]]
 :getPastTotalSupply-uint256: pass:normal[xref:#VotesConfidential-getPastTotalSupply-uint256-[`++getPastTotalSupply++`]]
-:totalSupply-: pass:normal[xref:#VotesConfidential-totalSupply--[`++totalSupply++`]]
+:confidentialTotalSupply-: pass:normal[xref:#VotesConfidential-confidentialTotalSupply--[`++confidentialTotalSupply++`]]
 :delegates-address: pass:normal[xref:#VotesConfidential-delegates-address-[`++delegates++`]]
 :delegate-address: pass:normal[xref:#VotesConfidential-delegate-address-[`++delegate++`]]
 :delegateBySig-address-uint256-uint256-uint8-bytes32-bytes32: pass:normal[xref:#VotesConfidential-delegateBySig-address-uint256-uint256-uint8-bytes32-bytes32-[`++delegateBySig++`]]
@@ -63,7 +63,7 @@ import "@openzeppelin/confidential-contracts/governance/utils/VotesConfidential.
 * `++getVotes(account)++`
 * `++getPastVotes(account, timepoint)++`
 * `++getPastTotalSupply(timepoint)++`
-* `++totalSupply()++`
+* `++confidentialTotalSupply()++`
 * `++delegates(account)++`
 * `++delegate(delegatee)++`
 * `++delegateBySig(delegatee, nonce, expiry, v, r, s)++`
@@ -184,8 +184,8 @@ Requirements:
 - `timepoint` must be in the past. If operating using block numbers, the block must be already mined.
 
 [.contract-item]
-[[VotesConfidential-totalSupply--]]
-==== `[.contract-item-name]#++totalSupply++#++() → euint64++` [.item-kind]#public#
+[[VotesConfidential-confidentialTotalSupply--]]
+==== `[.contract-item-name]#++confidentialTotalSupply++#++() → euint64++` [.item-kind]#public#
 
 Returns the current total supply of votes as an encrypted uint64 (euint64). Must be implemented
 by the derived contract.
@@ -223,7 +223,7 @@ Emits events {IVotes-DelegateChanged} and {IVotes-DelegateVotesChanged}.
 Transfers, mints, or burns voting units. To register a mint, `from` should be zero. To register a burn, `to`
 should be zero. Total supply of voting units will be adjusted with mints and burns.
 
-WARNING: Must be called after {totalSupply} is updated.
+WARNING: Must be called after {confidentialTotalSupply} is updated.
 
 [.contract-item]
 [[VotesConfidential-_moveDelegateVotes-address-address-euint64-]]

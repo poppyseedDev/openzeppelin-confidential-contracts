@@ -15,13 +15,13 @@ These interfaces are available as `.sol` files and are useful to interact with t
 == Core
 :OperatorSet: pass:normal[xref:#IConfidentialFungibleToken-OperatorSet-address-address-uint48-[`++OperatorSet++`]]
 :ConfidentialTransfer: pass:normal[xref:#IConfidentialFungibleToken-ConfidentialTransfer-address-address-euint64-[`++ConfidentialTransfer++`]]
-:EncryptedAmountDisclosed: pass:normal[xref:#IConfidentialFungibleToken-EncryptedAmountDisclosed-euint64-uint64-[`++EncryptedAmountDisclosed++`]]
+:AmountDisclosed: pass:normal[xref:#IConfidentialFungibleToken-AmountDisclosed-euint64-uint64-[`++AmountDisclosed++`]]
 :name: pass:normal[xref:#IConfidentialFungibleToken-name--[`++name++`]]
 :symbol: pass:normal[xref:#IConfidentialFungibleToken-symbol--[`++symbol++`]]
 :decimals: pass:normal[xref:#IConfidentialFungibleToken-decimals--[`++decimals++`]]
 :tokenURI: pass:normal[xref:#IConfidentialFungibleToken-tokenURI--[`++tokenURI++`]]
-:totalSupply: pass:normal[xref:#IConfidentialFungibleToken-totalSupply--[`++totalSupply++`]]
-:balanceOf: pass:normal[xref:#IConfidentialFungibleToken-balanceOf-address-[`++balanceOf++`]]
+:confidentialTotalSupply: pass:normal[xref:#IConfidentialFungibleToken-confidentialTotalSupply--[`++confidentialTotalSupply++`]]
+:confidentialBalanceOf: pass:normal[xref:#IConfidentialFungibleToken-confidentialBalanceOf-address-[`++confidentialBalanceOf++`]]
 :isOperator: pass:normal[xref:#IConfidentialFungibleToken-isOperator-address-address-[`++isOperator++`]]
 :setOperator: pass:normal[xref:#IConfidentialFungibleToken-setOperator-address-uint48-[`++setOperator++`]]
 :confidentialTransfer: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransfer-address-externalEuint64-bytes-[`++confidentialTransfer++`]]
@@ -37,8 +37,8 @@ These interfaces are available as `.sol` files and are useful to interact with t
 :symbol-: pass:normal[xref:#IConfidentialFungibleToken-symbol--[`++symbol++`]]
 :decimals-: pass:normal[xref:#IConfidentialFungibleToken-decimals--[`++decimals++`]]
 :tokenURI-: pass:normal[xref:#IConfidentialFungibleToken-tokenURI--[`++tokenURI++`]]
-:totalSupply-: pass:normal[xref:#IConfidentialFungibleToken-totalSupply--[`++totalSupply++`]]
-:balanceOf-address: pass:normal[xref:#IConfidentialFungibleToken-balanceOf-address-[`++balanceOf++`]]
+:confidentialTotalSupply-: pass:normal[xref:#IConfidentialFungibleToken-confidentialTotalSupply--[`++confidentialTotalSupply++`]]
+:confidentialBalanceOf-address: pass:normal[xref:#IConfidentialFungibleToken-confidentialBalanceOf-address-[`++confidentialBalanceOf++`]]
 :isOperator-address-address: pass:normal[xref:#IConfidentialFungibleToken-isOperator-address-address-[`++isOperator++`]]
 :setOperator-address-uint48: pass:normal[xref:#IConfidentialFungibleToken-setOperator-address-uint48-[`++setOperator++`]]
 :confidentialTransfer-address-externalEuint64-bytes: pass:normal[xref:#IConfidentialFungibleToken-confidentialTransfer-address-externalEuint64-bytes-[`++confidentialTransfer++`]]
@@ -68,8 +68,8 @@ Draft interface for a confidential fungible token standard utilizing the Zama TF
 * `++symbol()++`
 * `++decimals()++`
 * `++tokenURI()++`
-* `++totalSupply()++`
-* `++balanceOf(account)++`
+* `++confidentialTotalSupply()++`
+* `++confidentialBalanceOf(account)++`
 * `++isOperator(holder, spender)++`
 * `++setOperator(operator, until)++`
 * `++confidentialTransfer(to, encryptedAmount, inputProof)++`
@@ -88,7 +88,7 @@ Draft interface for a confidential fungible token standard utilizing the Zama TF
 --
 * `++OperatorSet(holder, operator, until)++`
 * `++ConfidentialTransfer(from, to, amount)++`
-* `++EncryptedAmountDisclosed(encryptedAmount, amount)++`
+* `++AmountDisclosed(encryptedAmount, amount)++`
 
 --
 
@@ -117,16 +117,16 @@ Returns the number of decimals of the token. Recommended to be 6.
 Returns the token URI.
 
 [.contract-item]
-[[IConfidentialFungibleToken-totalSupply--]]
-==== `[.contract-item-name]#++totalSupply++#++() → euint64++` [.item-kind]#external#
+[[IConfidentialFungibleToken-confidentialTotalSupply--]]
+==== `[.contract-item-name]#++confidentialTotalSupply++#++() → euint64++` [.item-kind]#external#
 
-Returns the encrypted total supply of the token.
+Returns the confidential total supply of the token.
 
 [.contract-item]
-[[IConfidentialFungibleToken-balanceOf-address-]]
-==== `[.contract-item-name]#++balanceOf++#++(address account) → euint64++` [.item-kind]#external#
+[[IConfidentialFungibleToken-confidentialBalanceOf-address-]]
+==== `[.contract-item-name]#++confidentialBalanceOf++#++(address account) → euint64++` [.item-kind]#external#
 
-Returns the encrypted balance of the account `account`.
+Returns the confidential balance of the account `account`.
 
 [.contract-item]
 [[IConfidentialFungibleToken-isOperator-address-address-]]
@@ -218,8 +218,8 @@ The operator may move any amount of tokens on behalf of the holder until the tim
 Emitted when a confidential transfer is made from `from` to `to` of encrypted amount `amount`.
 
 [.contract-item]
-[[IConfidentialFungibleToken-EncryptedAmountDisclosed-euint64-uint64-]]
-==== `[.contract-item-name]#++EncryptedAmountDisclosed++#++(euint64 indexed encryptedAmount, uint64 amount)++` [.item-kind]#event#
+[[IConfidentialFungibleToken-AmountDisclosed-euint64-uint64-]]
+==== `[.contract-item-name]#++AmountDisclosed++#++(euint64 indexed encryptedAmount, uint64 amount)++` [.item-kind]#event#
 
 Emitted when an encrypted amount is disclosed.
 
