@@ -3,13 +3,12 @@ pragma solidity ^0.8.24;
 
 import {FHE, ebool, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {IERC6372} from "@openzeppelin/contracts/interfaces/IERC6372.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {Time} from "@openzeppelin/contracts/utils/types/Time.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
-
-import {CheckpointsConfidential} from "../../utils/structs/CheckpointsConfidential.sol";
+import {Time} from "@openzeppelin/contracts/utils/types/Time.sol";
+import {CheckpointsConfidential} from "./../../utils/structs/CheckpointsConfidential.sol";
 
 abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
     using FHE for *;
@@ -163,7 +162,7 @@ abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
      */
     function _moveDelegateVotes(address from, address to, euint64 amount) internal virtual {
         CheckpointsConfidential.TraceEuint64 storage store;
-        if (from != to && euint64.unwrap(amount) != 0) {
+        if (from != to && FHE.isInitialized(amount)) {
             if (from != address(0)) {
                 store = _delegateCheckpoints[from];
                 euint64 newValue = store.latest().sub(amount);

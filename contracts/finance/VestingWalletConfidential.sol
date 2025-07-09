@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {FHE, ebool, euint64} from "@fhevm/solidity/lib/FHE.sol";
-
-import {IConfidentialFungibleToken} from "../interfaces/IConfidentialFungibleToken.sol";
-import {TFHESafeMath} from "../utils/TFHESafeMath.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {IConfidentialFungibleToken} from "./../interfaces/IConfidentialFungibleToken.sol";
+import {TFHESafeMath} from "./../utils/TFHESafeMath.sol";
 
 /**
  * @dev A vesting wallet is an ownable contract that can receive ConfidentialFungibleTokens, and release these
@@ -24,21 +23,18 @@ import {TFHESafeMath} from "../utils/TFHESafeMath.sol";
  * NOTE: When using this contract with any token whose balance is adjusted automatically (i.e. a rebase token), make
  * sure to account the supply/balance adjustment in the vesting schedule to ensure the vested amount is as intended.
  */
-contract VestingWalletConfidential is Ownable {
-    error VestingWalletConfidentialInvalidDuration();
-    error VestingWalletConfidentialOnlyExecutor();
-
-    event ConfidentialFungibleTokenReleased(address indexed token, euint64 amount);
-
-    mapping(address token => euint64) private _confidentialFungibleTokenReleased;
+abstract contract VestingWalletConfidential is Ownable {
+    mapping(address token => euint64) private _tokenReleased;
     uint64 private immutable _start;
     uint64 private immutable _duration;
     address private immutable _executor;
 
-    /**
-     * @dev Sets the beneficiary (owner), the start timestamp and the vesting duration (in seconds) of the vesting
-     * wallet.
-     */
+    event VestingWalletConfidentialTokenReleased(address indexed token, euint64 amount);
+    event VestingWalletCallExecuted(address indexed target, uint256 value, bytes data);
+
+    error VestingWalletConfidentialInvalidDuration();
+    error VestingWalletConfidentialOnlyExecutor();
+
     constructor(
         address executor_,
         address beneficiary,
@@ -50,36 +46,29 @@ contract VestingWalletConfidential is Ownable {
         _executor = executor_;
     }
 
+    /// @dev Address that is able to execute arbitrary calls from the vesting wallet via {call}.
     function executor() public view virtual returns (address) {
         return _executor;
     }
 
-    /**
-     * @dev Getter for the start timestamp.
-     */
+    /// @dev Timestamp at which the vesting starts.
     function start() public view virtual returns (uint64) {
         return _start;
     }
 
-    /**
-     * @dev Getter for the vesting duration.
-     */
+    /// @dev Duration of the vesting in seconds.
     function duration() public view virtual returns (uint64) {
         return _duration;
     }
 
-    /**
-     * @dev Getter for the end timestamp.
-     */
+    /// @dev Timestamp at which the vesting ends.
     function end() public view virtual returns (uint64) {
         return start() + duration();
     }
 
-    /**
-     * @dev Amount of token already released
-     */
+    /// @dev Amount of token already released
     function released(address token) public view virtual returns (euint64) {
-        return _confidentialFungibleTokenReleased[token];
+        return _tokenReleased[token];
     }
 
     /**
@@ -105,13 +94,11 @@ contract VestingWalletConfidential is Ownable {
         euint64 newReleasedAmount = FHE.add(released(token), amountSent);
         FHE.allow(newReleasedAmount, owner());
         FHE.allowThis(newReleasedAmount);
-        _confidentialFungibleTokenReleased[token] = newReleasedAmount;
-        emit ConfidentialFungibleTokenReleased(token, amountSent);
+        _tokenReleased[token] = newReleasedAmount;
+        emit VestingWalletConfidentialTokenReleased(token, amountSent);
     }
 
-    /**
-     * @dev Calculates the amount of tokens that has already vested. Default implementation is a linear vesting curve.
-     */
+    /// @dev Calculates the amount of tokens that has already vested. Default implementation is a linear vesting curve.
     function vestedAmount(address token, uint64 timestamp) public virtual returns (euint64) {
         return
             _vestingSchedule(
@@ -121,14 +108,22 @@ contract VestingWalletConfidential is Ownable {
             );
     }
 
+    /**
+     * @dev Execute an arbitrary call from the vesting wallet. Only callable by the {executor}.
+     *
+     * Emits a {VestingWalletCallExecuted} event.
+     */
     function call(address target, uint256 value, bytes memory data) public virtual {
         require(msg.sender == executor(), VestingWalletConfidentialOnlyExecutor());
         _call(target, value, data);
     }
 
+    /// @dev Internal execution of an arbitrary call from the vesting wallet.
     function _call(address target, uint256 value, bytes memory data) internal virtual {
         (bool success, bytes memory res) = target.call{value: value}(data);
         Address.verifyCallResult(success, res);
+
+        emit VestingWalletCallExecuted(target, value, data);
     }
 
     /**

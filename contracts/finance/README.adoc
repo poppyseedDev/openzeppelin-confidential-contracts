@@ -1,0 +1,16 @@
+
+= Finance
+
+[.readme-notice]
+NOTE: This document is better viewed at https://docs.openzeppelin.com/confidential-contracts/api#finance
+
+This directory includes primitives for on-chain confidential financial systems:
+
+- {VestingWalletConfidential}: Handles the vesting of confidential tokens for a given beneficiary. Custody of multiple tokens can be given to this contract, which will release the token to the beneficiary following a given, customizable, vesting schedule.
+- {VestingWalletCliffConfidential}: Variant of {VestingWalletConfidential} which adds a cliff period to the vesting schedule.
+- {VestingWalletCliffConfidentialInitializable}: Variant of {VestingWalletCliffConfidential} which utilizes an initializer instead of a constructor.
+
+== Contracts
+{{VestingWalletConfidential}}
+{{VestingWalletCliffConfidential}}
+{{VestingWalletCliffConfidentialInitializable}}
