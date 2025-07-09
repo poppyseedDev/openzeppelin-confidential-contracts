@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {VestingWalletConfidential} from "./VestingWalletConfidential.sol";
 import {euint64} from "@fhevm/solidity/lib/FHE.sol";
+import {VestingWalletConfidential} from "./VestingWalletConfidential.sol";
 
 abstract contract VestingWalletCliffConfidential is VestingWalletConfidential {
     uint64 private immutable _cliff;
