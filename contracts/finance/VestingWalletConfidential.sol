@@ -103,7 +103,7 @@ abstract contract VestingWalletConfidential is Ownable {
         return
             _vestingSchedule(
                 // TODO: Could theoretically overflow
-                FHE.add(IConfidentialFungibleToken(token).balanceOf(address(this)), released(token)),
+                FHE.add(IConfidentialFungibleToken(token).confidentialBalanceOf(address(this)), released(token)),
                 timestamp
             );
     }
