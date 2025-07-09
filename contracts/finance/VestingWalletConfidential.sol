@@ -24,16 +24,29 @@ import {TFHESafeMath} from "./../utils/TFHESafeMath.sol";
  * sure to account the supply/balance adjustment in the vesting schedule to ensure the vested amount is as intended.
  */
 abstract contract VestingWalletConfidential is Ownable {
-    mapping(address token => euint64) private _tokenReleased;
-    uint64 private immutable _start;
-    uint64 private immutable _duration;
-    address private immutable _executor;
-
     event VestingWalletConfidentialTokenReleased(address indexed token, euint64 amount);
     event VestingWalletCallExecuted(address indexed target, uint256 value, bytes data);
 
     error VestingWalletConfidentialInvalidDuration();
     error VestingWalletConfidentialOnlyExecutor();
+
+    /// @custom:storage-location erc7201:openzeppelin.storage.VestingWalletConfidential
+    struct VestingWalletStorage {
+        mapping(address token => euint64) _tokenReleased;
+        uint64 _start;
+        uint64 _duration;
+        address _executor;
+    }
+
+    // keccak256(abi.encode(uint256(keccak256("openzeppelin.storage.VestingWalletConfidential")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 private constant VestingWalletStorageLocation =
+        0x78ce9ee9eb65fa0cf5bf10e861c3a95cb7c3c713c96ab1e5323a21e846796800;
+
+    function _getVestingWalletStorage() private pure returns (VestingWalletStorage storage $) {
+        assembly {
+            $.slot := VestingWalletStorageLocation
+        }
+    }
 
     constructor(
         address executor_,
@@ -41,24 +54,37 @@ abstract contract VestingWalletConfidential is Ownable {
         uint64 startTimestamp,
         uint64 durationSeconds
     ) Ownable(beneficiary) {
-        _start = startTimestamp;
-        _duration = durationSeconds;
-        _executor = executor_;
+        __VestingWalletConfidential_init_unchained(executor_, startTimestamp, durationSeconds);
+    }
+
+    // TODO: Should be `onlyInitializing`
+    function __VestingWalletConfidential_init_unchained(
+        address executor_,
+        uint64 startTimestamp,
+        uint64 durationSeconds
+    ) internal {
+        VestingWalletStorage storage $ = _getVestingWalletStorage();
+        $._start = startTimestamp;
+        $._duration = durationSeconds;
+        $._executor = executor_;
     }
 
     /// @dev Address that is able to execute arbitrary calls from the vesting wallet via {call}.
     function executor() public view virtual returns (address) {
-        return _executor;
+        VestingWalletStorage storage $ = _getVestingWalletStorage();
+        return $._executor;
     }
 
     /// @dev Timestamp at which the vesting starts.
     function start() public view virtual returns (uint64) {
-        return _start;
+        VestingWalletStorage storage $ = _getVestingWalletStorage();
+        return $._start;
     }
 
     /// @dev Duration of the vesting in seconds.
     function duration() public view virtual returns (uint64) {
-        return _duration;
+        VestingWalletStorage storage $ = _getVestingWalletStorage();
+        return $._duration;
     }
 
     /// @dev Timestamp at which the vesting ends.
@@ -68,7 +94,8 @@ abstract contract VestingWalletConfidential is Ownable {
 
     /// @dev Amount of token already released
     function released(address token) public view virtual returns (euint64) {
-        return _tokenReleased[token];
+        VestingWalletStorage storage $ = _getVestingWalletStorage();
+        return $._tokenReleased[token];
     }
 
     /**
@@ -86,6 +113,7 @@ abstract contract VestingWalletConfidential is Ownable {
      * Emits a {ConfidentialFungibleTokenReleased} event.
      */
     function release(address token) public virtual {
+        VestingWalletStorage storage $ = _getVestingWalletStorage();
         euint64 amount = releasable(token);
         FHE.allowTransient(amount, token);
         euint64 amountSent = IConfidentialFungibleToken(token).confidentialTransfer(owner(), amount);
@@ -94,7 +122,7 @@ abstract contract VestingWalletConfidential is Ownable {
         euint64 newReleasedAmount = FHE.add(released(token), amountSent);
         FHE.allow(newReleasedAmount, owner());
         FHE.allowThis(newReleasedAmount);
-        _tokenReleased[token] = newReleasedAmount;
+        $._tokenReleased[token] = newReleasedAmount;
         emit VestingWalletConfidentialTokenReleased(token, amountSent);
     }
 
