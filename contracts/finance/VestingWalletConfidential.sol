@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {FHE, ebool, euint64} from "@fhevm/solidity/lib/FHE.sol";
-
-import {IConfidentialFungibleToken} from "../interfaces/IConfidentialFungibleToken.sol";
-import {TFHESafeMath} from "../utils/TFHESafeMath.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {IConfidentialFungibleToken} from "./../interfaces/IConfidentialFungibleToken.sol";
+import {TFHESafeMath} from "./../utils/TFHESafeMath.sol";
 
 /**
  * @dev A vesting wallet is an ownable contract that can receive ConfidentialFungibleTokens, and release these

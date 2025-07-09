@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {VestingWalletConfidential} from "./VestingWalletConfidential.sol";
-import {VestingWalletCliffConfidential} from "./VestingWalletCliffConfidential.sol";
-import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import {VestingWalletCliffConfidential} from "./VestingWalletCliffConfidential.sol";
+import {VestingWalletConfidential} from "./VestingWalletConfidential.sol";
 
 contract VestingWalletCliffConfidentialInitializable is Initializable, VestingWalletCliffConfidential {
     address private _executor;
