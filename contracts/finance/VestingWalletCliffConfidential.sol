@@ -33,7 +33,7 @@ abstract contract VestingWalletCliffConfidential is VestingWalletConfidential {
      * start timestamp (see {VestingWalletConfidential-start}) and ends `cliffSeconds` later.
      */
     // solhint-disable-next-line func-name-mixedcase
-    function __VestingWalletCliffConfidential_init(uint64 cliffSeconds) internal onlyInitializing {
+    function __VestingWalletCliffConfidential_init(uint48 cliffSeconds) internal onlyInitializing {
         if (cliffSeconds > duration()) {
             revert InvalidCliffDuration(cliffSeconds, duration());
         }
