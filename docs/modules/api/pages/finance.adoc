@@ -33,7 +33,7 @@ This directory includes primitives for on-chain confidential financial systems:
 :releasable: pass:normal[xref:#VestingWalletConfidential-releasable-address-[`++releasable++`]]
 :release: pass:normal[xref:#VestingWalletConfidential-release-address-[`++release++`]]
 :vestedAmount: pass:normal[xref:#VestingWalletConfidential-vestedAmount-address-uint64-[`++vestedAmount++`]]
-:_vestingSchedule: pass:normal[xref:#VestingWalletConfidential-_vestingSchedule-euint64-uint64-[`++_vestingSchedule++`]]
+:_vestingSchedule: pass:normal[xref:#VestingWalletConfidential-_vestingSchedule-euint128-uint64-[`++_vestingSchedule++`]]
 
 :__VestingWalletConfidential_init-address-uint48-uint48: pass:normal[xref:#VestingWalletConfidential-__VestingWalletConfidential_init-address-uint48-uint48-[`++__VestingWalletConfidential_init++`]]
 :start-: pass:normal[xref:#VestingWalletConfidential-start--[`++start++`]]
@@ -43,7 +43,7 @@ This directory includes primitives for on-chain confidential financial systems:
 :releasable-address: pass:normal[xref:#VestingWalletConfidential-releasable-address-[`++releasable++`]]
 :release-address: pass:normal[xref:#VestingWalletConfidential-release-address-[`++release++`]]
 :vestedAmount-address-uint64: pass:normal[xref:#VestingWalletConfidential-vestedAmount-address-uint64-[`++vestedAmount++`]]
-:_vestingSchedule-euint64-uint64: pass:normal[xref:#VestingWalletConfidential-_vestingSchedule-euint64-uint64-[`++_vestingSchedule++`]]
+:_vestingSchedule-euint128-uint64: pass:normal[xref:#VestingWalletConfidential-_vestingSchedule-euint128-uint64-[`++_vestingSchedule++`]]
 
 [.contract]
 [[VestingWalletConfidential]]
@@ -68,9 +68,6 @@ NOTE: Since the wallet is `Ownable`, and ownership can be transferred, it is pos
 
 NOTE: When using this contract with any token whose balance is adjusted automatically (i.e. a rebase token), make
 sure to account the supply/balance adjustment in the vesting schedule to ensure the vested amount is as intended.
-
-WARNING: The aggregate value of a single token sent to the vesting wallet must not exceed `type(uint64).max`. Sending
-in excess of this value will result in unexpected behavior and may result in loss of funds.
 
 [.contract-index]
 .Functions
@@ -210,13 +207,13 @@ Emits a {VestingWalletConfidentialTokenReleased} event.
 
 [.contract-item]
 [[VestingWalletConfidential-vestedAmount-address-uint64-]]
-==== `[.contract-item-name]#++vestedAmount++#++(address token, uint64 timestamp) → euint64++` [.item-kind]#public#
+==== `[.contract-item-name]#++vestedAmount++#++(address token, uint64 timestamp) → euint128++` [.item-kind]#public#
 
 Calculates the amount of tokens that has already vested. Default implementation is a linear vesting curve.
 
 [.contract-item]
-[[VestingWalletConfidential-_vestingSchedule-euint64-uint64-]]
-==== `[.contract-item-name]#++_vestingSchedule++#++(euint64 totalAllocation, uint64 timestamp) → euint64++` [.item-kind]#internal#
+[[VestingWalletConfidential-_vestingSchedule-euint128-uint64-]]
+==== `[.contract-item-name]#++_vestingSchedule++#++(euint128 totalAllocation, uint64 timestamp) → euint128++` [.item-kind]#internal#
 
 This returns the amount vested, as a function of time, for an asset given its total historical allocation.
 
@@ -232,11 +229,11 @@ This returns the amount vested, as a function of time, for an asset given its to
 :InvalidCliffDuration: pass:normal[xref:#VestingWalletCliffConfidential-InvalidCliffDuration-uint64-uint64-[`++InvalidCliffDuration++`]]
 :__VestingWalletCliffConfidential_init: pass:normal[xref:#VestingWalletCliffConfidential-__VestingWalletCliffConfidential_init-uint48-[`++__VestingWalletCliffConfidential_init++`]]
 :cliff: pass:normal[xref:#VestingWalletCliffConfidential-cliff--[`++cliff++`]]
-:_vestingSchedule: pass:normal[xref:#VestingWalletCliffConfidential-_vestingSchedule-euint64-uint64-[`++_vestingSchedule++`]]
+:_vestingSchedule: pass:normal[xref:#VestingWalletCliffConfidential-_vestingSchedule-euint128-uint64-[`++_vestingSchedule++`]]
 
 :__VestingWalletCliffConfidential_init-uint48: pass:normal[xref:#VestingWalletCliffConfidential-__VestingWalletCliffConfidential_init-uint48-[`++__VestingWalletCliffConfidential_init++`]]
 :cliff-: pass:normal[xref:#VestingWalletCliffConfidential-cliff--[`++cliff++`]]
-:_vestingSchedule-euint64-uint64: pass:normal[xref:#VestingWalletCliffConfidential-_vestingSchedule-euint64-uint64-[`++_vestingSchedule++`]]
+:_vestingSchedule-euint128-uint64: pass:normal[xref:#VestingWalletCliffConfidential-_vestingSchedule-euint128-uint64-[`++_vestingSchedule++`]]
 
 [.contract]
 [[VestingWalletCliffConfidential]]
@@ -366,8 +363,8 @@ start timestamp (see {VestingWalletConfidential-start}) and ends `cliffSeconds` 
 The timestamp at which the cliff ends.
 
 [.contract-item]
-[[VestingWalletCliffConfidential-_vestingSchedule-euint64-uint64-]]
-==== `[.contract-item-name]#++_vestingSchedule++#++(euint64 totalAllocation, uint64 timestamp) → euint64++` [.item-kind]#internal#
+[[VestingWalletCliffConfidential-_vestingSchedule-euint128-uint64-]]
+==== `[.contract-item-name]#++_vestingSchedule++#++(euint128 totalAllocation, uint64 timestamp) → euint128++` [.item-kind]#internal#
 
 This function returns the amount vested, as a function of time, for
 an asset given its total historical allocation. Returns 0 if the {cliff} timestamp is not met.
