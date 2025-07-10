@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {FHE, euint64, ebool} from "@fhevm/solidity/lib/FHE.sol";
+import {FHE, euint64, externalEuint64, ebool} from "@fhevm/solidity/lib/FHE.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {IConfidentialFungibleToken} from "../interfaces/IConfidentialFungibleToken.sol";
 import {VestingWalletConfidentialUpgradeable} from "./VestingWalletConfidentialUpgradeable.sol";
@@ -31,7 +31,7 @@ abstract contract VestingWalletConfidentialFactory {
     struct VestingPlan {
         address executor;
         address beneficiary;
-        euint64 encryptedAmount;
+        externalEuint64 encryptedAmount;
         uint64 startTimestamp;
     }
 
@@ -49,29 +49,28 @@ abstract contract VestingWalletConfidentialFactory {
      */
     function batchFundVestingWalletConfidential(
         address confidentialFungibleToken,
-        euint64 totalEncryptedAmount,
+        externalEuint64 totalEncryptedAmount,
+        bytes calldata inputProof,
         VestingPlan[] calldata vestingPlans,
         uint64 durationSeconds
     ) external returns (ebool) {
         require(durationSeconds > 0, VestingWalletConfidentialInvalidDuration());
-        uint256 vestingPlansLength = vestingPlans.length;
         euint64 totalTransferedAmount = euint64.wrap(0);
+        uint256 vestingPlansLength = vestingPlans.length;
         for (uint256 i = 0; i < vestingPlansLength; i++) {
             VestingPlan memory vestingPlan = vestingPlans[i];
-            address beneficiary = vestingPlan.beneficiary;
-            address executor = vestingPlan.executor;
-            euint64 encryptedAmount = vestingPlan.encryptedAmount;
-            uint64 startTimestamp = vestingPlan.startTimestamp;
+            euint64 encryptedAmount = FHE.fromExternal(vestingPlan.encryptedAmount, inputProof);
             require(
-                startTimestamp >= block.timestamp,
-                VestingWalletConfidentialInvalidStartTimestamp(beneficiary, startTimestamp)
+                vestingPlan.startTimestamp >= block.timestamp,
+                VestingWalletConfidentialInvalidStartTimestamp(vestingPlan.beneficiary, vestingPlan.startTimestamp)
             );
             address vestingWalletConfidential = predictVestingWalletConfidential(
-                executor,
-                beneficiary,
-                startTimestamp,
+                vestingPlan.executor,
+                vestingPlan.beneficiary,
+                vestingPlan.startTimestamp,
                 durationSeconds
             );
+            FHE.allow(encryptedAmount, confidentialFungibleToken);
             euint64 transferredAmount = IConfidentialFungibleToken(confidentialFungibleToken).confidentialTransferFrom(
                 msg.sender,
                 vestingWalletConfidential,
@@ -83,9 +82,9 @@ abstract contract VestingWalletConfidentialFactory {
                 FHE.asEuint64(0)
             );
         }
-        ebool success = FHE.eq(totalTransferedAmount, totalEncryptedAmount);
+        // Revert batch if one failed?
+        ebool success = FHE.eq(totalTransferedAmount, FHE.fromExternal(totalEncryptedAmount, inputProof));
         emit VestingWalletConfidentialBatchFunded(success);
-        return success;
     }
 
     /**
