@@ -1,6 +1,7 @@
 import { shouldBehaveLikeVestingConfidential } from './VestingWalletConfidential.behavior';
 import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
+import { encodeMode, encodeBatch, CALL_TYPE_BATCH } from '@openzeppelin/contracts/test/helpers/erc7579';
 import { expect } from 'chai';
 import { ethers, fhevm } from 'hardhat';
 
@@ -36,28 +37,35 @@ describe('VestingWalletExecutorConfidential', function () {
     Object.assign(this, { accounts, holder, recipient, executor, token, vesting, schedule, vestingAmount: 1000 });
   });
 
-  describe('call', async function () {
+  describe('execute', async function () {
     it('should fail if not called by executor', async function () {
-      await expect(this.vesting.call(this.token, 0, '0x')).to.be.revertedWithCustomError(
-        this.vesting,
-        'VestingWalletExecutorConfidentialOnlyExecutor',
-      );
+      await expect(
+        this.vesting
+          .connect(this.holder)
+          .execute(
+            encodeMode({ callType: CALL_TYPE_BATCH }),
+            encodeBatch({ target: this.token, value: 0n, data: '0x' }),
+          ),
+      )
+        .to.be.revertedWithCustomError(this.vesting, 'AccountUnauthorized')
+        .withArgs(this.holder);
     });
 
     it('should call if called by executor', async function () {
+      const balance = await this.token.confidentialBalanceOf(this.vesting);
+
       await expect(
-        this.vesting
-          .connect(this.executor)
-          .call(
-            this.token,
-            0,
-            (
-              await this.token.confidentialTransfer.populateTransaction(
-                this.recipient,
-                await this.token.confidentialBalanceOf(this.vesting),
-              )
-            ).data,
-          ),
+        this.vesting.connect(this.executor).execute(
+          encodeMode({ callType: CALL_TYPE_BATCH }),
+          encodeBatch({
+            target: this.token,
+            value: 0n,
+            data: this.token.interface.encodeFunctionData('confidentialTransfer(address,bytes32)', [
+              this.recipient.address,
+              balance,
+            ]),
+          }),
+        ),
       )
         .to.emit(this.token, 'ConfidentialTransfer')
         .withArgs(this.vesting, this.recipient, anyValue);
