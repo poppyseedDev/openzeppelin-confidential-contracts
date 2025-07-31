@@ -18,20 +18,23 @@ abstract contract VestingWalletConfidentialFactoryMock is VestingWalletConfident
         uint48 startTimestamp,
         uint48 durationSeconds,
         uint48 cliffSeconds,
-        address executor
+        address executor,
+        bytes memory extraData
     ) internal virtual override {
         VestingWalletCliffExecutorConfidential(vestingWalletAddress).initialize(
             beneficiary,
             startTimestamp,
             durationSeconds,
             cliffSeconds,
-            executor
+            executor,
+            extraData
         );
     }
 }
 
 // slither-disable-next-line locked-ether
 contract VestingWalletCliffExecutorConfidential is VestingWalletCliffConfidential, ERC7821WithExecutor, SepoliaConfig {
+    bytes public extraData;
     constructor() {
         _disableInitializers();
     }
@@ -41,11 +44,13 @@ contract VestingWalletCliffExecutorConfidential is VestingWalletCliffConfidentia
         uint48 startTimestamp,
         uint48 durationSeconds,
         uint48 cliffSeconds,
-        address executor
+        address executor,
+        bytes memory extraData_
     ) public initializer {
         __VestingWalletConfidential_init(beneficiary, startTimestamp, durationSeconds);
         __VestingWalletCliffConfidential_init(cliffSeconds);
         __ERC7821WithExecutor_init(executor);
+        extraData = extraData_;
 
         FHE.setCoprocessor(ZamaConfig.getSepoliaConfig());
         FHE.setDecryptionOracle(ZamaConfig.getSepoliaOracleAddress());
