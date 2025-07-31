@@ -145,8 +145,8 @@ abstract contract VestingWalletConfidentialFactory {
             extraData
         );
         emit VestingWalletConfidentialCreated(
-            beneficiary,
             vestingWalletConfidentialAddress,
+            beneficiary,
             startTimestamp,
             durationSeconds,
             cliffSeconds,

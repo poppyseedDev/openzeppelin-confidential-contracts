@@ -97,7 +97,7 @@ describe('VestingWalletCliffExecutorConfidentialFactory', function () {
       ),
     )
       .to.emit(this.factory, 'VestingWalletConfidentialCreated')
-      .withArgs(this.recipient, vestingWalletAddress, startTimestamp, duration, cliff, this.executor, extraData);
+      .withArgs(vestingWalletAddress, this.recipient, startTimestamp, duration, cliff, this.executor, extraData);
     const vestingWallet = await ethers.getContractAt('VestingWalletCliffExecutorConfidential', vestingWalletAddress);
     await expect(vestingWallet.owner()).to.eventually.equal(this.recipient);
     await expect(vestingWallet.start()).to.eventually.equal(startTimestamp);
