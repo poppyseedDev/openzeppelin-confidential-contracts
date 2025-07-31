@@ -63,11 +63,11 @@ abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
         return _delegateCheckpoints[account].latest();
     }
 
-    function getVotesWithAllowance(address account, bool transient) public virtual returns (euint64) {
+    function getVotesWithAllowance(address account, bool persistent) public virtual returns (euint64) {
         _validateVotesAccess(account);
 
         euint64 votes = getVotes(account);
-        _setACLAllowance(votes, msg.sender, transient);
+        _setACLAllowance(votes, msg.sender, persistent);
         return votes;
     }
 
@@ -83,11 +83,15 @@ abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
         return _delegateCheckpoints[account].upperLookupRecent(_validateTimepoint(timepoint));
     }
 
-    function getPastVotesWithAllowance(address account, uint256 timepoint, bool transient) public virtual returns (euint64) {
+    function getPastVotesWithAllowance(
+        address account,
+        uint256 timepoint,
+        bool persistent
+    ) public virtual returns (euint64) {
         _validateVotesAccess(account);
 
         euint64 pastVotes = getPastVotes(account, timepoint);
-        _setACLAllowance(pastVotes, msg.sender, transient);
+        _setACLAllowance(pastVotes, msg.sender, persistent);
         return pastVotes;
     }
 
@@ -107,11 +111,11 @@ abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
         return _totalCheckpoints.upperLookupRecent(_validateTimepoint(timepoint));
     }
 
-    function getPastTotalSupplyWithAllowance(uint256 timepoint, bool transient) public virtual returns (euint64) {
+    function getPastTotalSupplyWithAllowance(uint256 timepoint, bool persistent) public virtual returns (euint64) {
         _validateVotesAccess(address(0));
 
         euint64 pastTotalSupply = getPastTotalSupply(timepoint);
-        _setACLAllowance(pastTotalSupply, msg.sender, transient);
+        _setACLAllowance(pastTotalSupply, msg.sender, persistent);
         return pastTotalSupply;
     }
 
@@ -211,12 +215,15 @@ abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
         return SafeCast.toUint48(timepoint);
     }
 
-    /// @dev Set the ACL allowance for the given value, account, and transient flag.
-    function _setACLAllowance(euint64 value, address account, bool transient) internal virtual {
-        if (transient) {
-            FHE.allowTransient(value, account);
-        } else {
+    /**
+     * @dev Set the ACL allowance for the given value, account, and persistent flag. If the flag is true,
+     * the allowance will be persistent, otherwise it will be transient.
+     */
+    function _setACLAllowance(euint64 value, address account, bool persistent) internal virtual {
+        if (persistent) {
             FHE.allow(value, account);
+        } else {
+            FHE.allowTransient(value, account);
         }
     }
 
