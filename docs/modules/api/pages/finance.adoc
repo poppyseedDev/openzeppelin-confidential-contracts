@@ -178,7 +178,7 @@ Timestamp at which the vesting ends.
 
 [.contract-item]
 [[VestingWalletConfidential-released-address-]]
-==== `[.contract-item-name]#++released++#++(address token) → euint64++` [.item-kind]#public#
+==== `[.contract-item-name]#++released++#++(address token) → euint128++` [.item-kind]#public#
 
 Amount of token already released
 
