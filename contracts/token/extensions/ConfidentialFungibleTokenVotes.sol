@@ -13,7 +13,7 @@ abstract contract ConfidentialFungibleTokenVotes is ConfidentialFungibleToken, V
         override(VotesConfidential, ConfidentialFungibleToken)
         returns (euint64)
     {
-        return super.confidentialTotalSupply();
+        return ConfidentialFungibleToken.confidentialTotalSupply();
     }
 
     function _update(address from, address to, euint64 amount) internal virtual override returns (euint64 transferred) {
