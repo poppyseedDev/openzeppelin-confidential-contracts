@@ -63,6 +63,14 @@ abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
         return _delegateCheckpoints[account].latest();
     }
 
+    function getVotesWithAllowance(address account, bool transient) public virtual returns (euint64) {
+        _validateVotesAccess(account);
+
+        euint64 votes = getVotes(account);
+        _setACLAllowance(votes, msg.sender, transient);
+        return votes;
+    }
+
     /**
      * @dev Returns the amount of votes that `account` had at a specific moment in the past. If the {clock} is
      * configured to use block numbers, this will return the value at the end of the corresponding block.
@@ -73,6 +81,14 @@ abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
      */
     function getPastVotes(address account, uint256 timepoint) public view virtual returns (euint64) {
         return _delegateCheckpoints[account].upperLookupRecent(_validateTimepoint(timepoint));
+    }
+
+    function getPastVotesWithAllowance(address account, uint256 timepoint, bool transient) public virtual returns (euint64) {
+        _validateVotesAccess(account);
+
+        euint64 pastVotes = getPastVotes(account, timepoint);
+        _setACLAllowance(pastVotes, msg.sender, transient);
+        return pastVotes;
     }
 
     /**
@@ -89,6 +105,14 @@ abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
      */
     function getPastTotalSupply(uint256 timepoint) public view virtual returns (euint64) {
         return _totalCheckpoints.upperLookupRecent(_validateTimepoint(timepoint));
+    }
+
+    function getPastTotalSupplyWithAllowance(uint256 timepoint, bool transient) public virtual returns (euint64) {
+        _validateVotesAccess(address(0));
+
+        euint64 pastTotalSupply = getPastTotalSupply(timepoint);
+        _setACLAllowance(pastTotalSupply, msg.sender, transient);
+        return pastTotalSupply;
     }
 
     /**
@@ -167,7 +191,6 @@ abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
                 store = _delegateCheckpoints[from];
                 euint64 newValue = store.latest().sub(amount);
                 newValue.allowThis();
-                newValue.allow(from);
                 euint64 oldValue = _push(store, newValue);
                 emit DelegateVotesChanged(from, oldValue, newValue);
             }
@@ -175,7 +198,6 @@ abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
                 store = _delegateCheckpoints[to];
                 euint64 newValue = store.latest().add(amount);
                 newValue.allowThis();
-                newValue.allow(to);
                 euint64 oldValue = _push(store, newValue);
                 emit DelegateVotesChanged(to, oldValue, newValue);
             }
@@ -189,10 +211,26 @@ abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
         return SafeCast.toUint48(timepoint);
     }
 
+    /// @dev Set the ACL allowance for the given value, account, and transient flag.
+    function _setACLAllowance(euint64 value, address account, bool transient) internal virtual {
+        if (transient) {
+            FHE.allowTransient(value, account);
+        } else {
+            FHE.allow(value, account);
+        }
+    }
+
     /**
      * @dev Must return the voting units held by an account.
      */
     function _getVotingUnits(address) internal view virtual returns (euint64);
+
+    /**
+     * @dev Must revert if `msg.sender` is not allowed to get ACL access to the votes of the given account `account`.
+     *
+     * NOTE: A validation to access the votes of the 0 address indicates total supply.
+     */
+    function _validateVotesAccess(address account) internal view virtual;
 
     function _push(CheckpointsConfidential.TraceEuint64 storage store, euint64 value) private returns (euint64) {
         (euint64 oldValue, ) = store.push(clock(), value);
