@@ -66,7 +66,7 @@ abstract contract VestingWalletCliffConfidential is VestingWalletConfidential {
     }
 
     function _getVestingWalletCliffStorage() private pure returns (VestingWalletCliffStorage storage $) {
-        assembly {
+        assembly ("memory-safe") {
             $.slot := VestingWalletCliffStorageLocation
         }
     }
