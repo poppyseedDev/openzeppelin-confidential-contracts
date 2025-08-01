@@ -33,6 +33,7 @@ For convenience, this directory also includes:
 :release: pass:normal[xref:#VestingWalletConfidential-release-address-[`++release++`]]
 :vestedAmount: pass:normal[xref:#VestingWalletConfidential-vestedAmount-address-uint64-[`++vestedAmount++`]]
 :__VestingWalletConfidential_init: pass:normal[xref:#VestingWalletConfidential-__VestingWalletConfidential_init-address-uint48-uint48-[`++__VestingWalletConfidential_init++`]]
+:__VestingWalletConfidential_init_unchained: pass:normal[xref:#VestingWalletConfidential-__VestingWalletConfidential_init_unchained-uint48-uint48-[`++__VestingWalletConfidential_init_unchained++`]]
 :_vestingSchedule: pass:normal[xref:#VestingWalletConfidential-_vestingSchedule-euint128-uint64-[`++_vestingSchedule++`]]
 
 :start-: pass:normal[xref:#VestingWalletConfidential-start--[`++start++`]]
@@ -43,6 +44,7 @@ For convenience, this directory also includes:
 :release-address: pass:normal[xref:#VestingWalletConfidential-release-address-[`++release++`]]
 :vestedAmount-address-uint64: pass:normal[xref:#VestingWalletConfidential-vestedAmount-address-uint64-[`++vestedAmount++`]]
 :__VestingWalletConfidential_init-address-uint48-uint48: pass:normal[xref:#VestingWalletConfidential-__VestingWalletConfidential_init-address-uint48-uint48-[`++__VestingWalletConfidential_init++`]]
+:__VestingWalletConfidential_init_unchained-uint48-uint48: pass:normal[xref:#VestingWalletConfidential-__VestingWalletConfidential_init_unchained-uint48-uint48-[`++__VestingWalletConfidential_init_unchained++`]]
 :_vestingSchedule-euint128-uint64: pass:normal[xref:#VestingWalletConfidential-_vestingSchedule-euint128-uint64-[`++_vestingSchedule++`]]
 
 [.contract]
@@ -80,6 +82,7 @@ sure to account the supply/balance adjustment in the vesting schedule to ensure 
 * `++release(token)++`
 * `++vestedAmount(token, timestamp)++`
 * `++__VestingWalletConfidential_init(beneficiary, startTimestamp, durationSeconds)++`
+* `++__VestingWalletConfidential_init_unchained(startTimestamp, durationSeconds)++`
 * `++_vestingSchedule(totalAllocation, timestamp)++`
 
 [.contract-subindex-inherited]
@@ -211,6 +214,10 @@ Initializes the vesting wallet for a given `beneficiary` with a start time of `s
 and an end time of `startTimestamp + durationSeconds`.
 
 [.contract-item]
+[[VestingWalletConfidential-__VestingWalletConfidential_init_unchained-uint48-uint48-]]
+==== `[.contract-item-name]#++__VestingWalletConfidential_init_unchained++#++(uint48 startTimestamp, uint48 durationSeconds)++` [.item-kind]#internal#
+
+[.contract-item]
 [[VestingWalletConfidential-_vestingSchedule-euint128-uint64-]]
 ==== `[.contract-item-name]#++_vestingSchedule++#++(euint128 totalAllocation, uint64 timestamp) → euint128++` [.item-kind]#internal#
 
@@ -223,11 +230,13 @@ This returns the amount vested, as a function of time, for an asset given its to
 :VestingWalletCliffStorage: pass:normal[xref:#VestingWalletCliffConfidential-VestingWalletCliffStorage[`++VestingWalletCliffStorage++`]]
 :VestingWalletCliffConfidentialInvalidCliffDuration: pass:normal[xref:#VestingWalletCliffConfidential-VestingWalletCliffConfidentialInvalidCliffDuration-uint64-uint64-[`++VestingWalletCliffConfidentialInvalidCliffDuration++`]]
 :cliff: pass:normal[xref:#VestingWalletCliffConfidential-cliff--[`++cliff++`]]
-:__VestingWalletCliffConfidential_init: pass:normal[xref:#VestingWalletCliffConfidential-__VestingWalletCliffConfidential_init-uint48-[`++__VestingWalletCliffConfidential_init++`]]
+:__VestingWalletCliffConfidential_init: pass:normal[xref:#VestingWalletCliffConfidential-__VestingWalletCliffConfidential_init-address-uint48-uint48-uint48-[`++__VestingWalletCliffConfidential_init++`]]
+:__VestingWalletCliffConfidential_init_unchained: pass:normal[xref:#VestingWalletCliffConfidential-__VestingWalletCliffConfidential_init_unchained-uint48-[`++__VestingWalletCliffConfidential_init_unchained++`]]
 :_vestingSchedule: pass:normal[xref:#VestingWalletCliffConfidential-_vestingSchedule-euint128-uint64-[`++_vestingSchedule++`]]
 
 :cliff-: pass:normal[xref:#VestingWalletCliffConfidential-cliff--[`++cliff++`]]
-:__VestingWalletCliffConfidential_init-uint48: pass:normal[xref:#VestingWalletCliffConfidential-__VestingWalletCliffConfidential_init-uint48-[`++__VestingWalletCliffConfidential_init++`]]
+:__VestingWalletCliffConfidential_init-address-uint48-uint48-uint48: pass:normal[xref:#VestingWalletCliffConfidential-__VestingWalletCliffConfidential_init-address-uint48-uint48-uint48-[`++__VestingWalletCliffConfidential_init++`]]
+:__VestingWalletCliffConfidential_init_unchained-uint48: pass:normal[xref:#VestingWalletCliffConfidential-__VestingWalletCliffConfidential_init_unchained-uint48-[`++__VestingWalletCliffConfidential_init_unchained++`]]
 :_vestingSchedule-euint128-uint64: pass:normal[xref:#VestingWalletCliffConfidential-_vestingSchedule-euint128-uint64-[`++_vestingSchedule++`]]
 
 [.contract]
@@ -246,7 +255,8 @@ starts at the vesting start timestamp (see {VestingWalletConfidential}).
 .Functions
 --
 * `++cliff()++`
-* `++__VestingWalletCliffConfidential_init(cliffSeconds)++`
+* `++__VestingWalletCliffConfidential_init(beneficiary, startTimestamp, durationSeconds, cliffSeconds)++`
+* `++__VestingWalletCliffConfidential_init_unchained(cliffSeconds)++`
 * `++_vestingSchedule(totalAllocation, timestamp)++`
 
 [.contract-subindex-inherited]
@@ -259,6 +269,7 @@ starts at the vesting start timestamp (see {VestingWalletConfidential}).
 * `++release(token)++`
 * `++vestedAmount(token, timestamp)++`
 * `++__VestingWalletConfidential_init(beneficiary, startTimestamp, durationSeconds)++`
+* `++__VestingWalletConfidential_init_unchained(startTimestamp, durationSeconds)++`
 
 [.contract-subindex-inherited]
 .ReentrancyGuardTransient
@@ -350,11 +361,15 @@ starts at the vesting start timestamp (see {VestingWalletConfidential}).
 The timestamp at which the cliff ends.
 
 [.contract-item]
-[[VestingWalletCliffConfidential-__VestingWalletCliffConfidential_init-uint48-]]
-==== `[.contract-item-name]#++__VestingWalletCliffConfidential_init++#++(uint48 cliffSeconds)++` [.item-kind]#internal#
+[[VestingWalletCliffConfidential-__VestingWalletCliffConfidential_init-address-uint48-uint48-uint48-]]
+==== `[.contract-item-name]#++__VestingWalletCliffConfidential_init++#++(address beneficiary, uint48 startTimestamp, uint48 durationSeconds, uint48 cliffSeconds)++` [.item-kind]#internal#
 
 Set the duration of the cliff, in seconds. The cliff starts at the vesting
 start timestamp (see {VestingWalletConfidential-start}) and ends `cliffSeconds` later.
+
+[.contract-item]
+[[VestingWalletCliffConfidential-__VestingWalletCliffConfidential_init_unchained-uint48-]]
+==== `[.contract-item-name]#++__VestingWalletCliffConfidential_init_unchained++#++(uint48 cliffSeconds)++` [.item-kind]#internal#
 
 [.contract-item]
 [[VestingWalletCliffConfidential-_vestingSchedule-euint128-uint64-]]
