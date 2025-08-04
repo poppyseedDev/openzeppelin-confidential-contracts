@@ -160,7 +160,7 @@ abstract contract ConfidentialFungibleTokenERC20Wrapper is ConfidentialFungibleT
      * Used as a default fallback when {_tryGetAssetDecimals} fails to fetch decimals of the underlying
      * ERC-20 token.
      */
-    function _defaultUnderlyingDecimals() internal pure virtual returns (uint8) {
+    function _fallbackUnderlyingDecimals() internal pure virtual returns (uint8) {
         return 18;
     }
 
@@ -178,6 +178,6 @@ abstract contract ConfidentialFungibleTokenERC20Wrapper is ConfidentialFungibleT
         if (success && encodedDecimals.length == 32) {
             return abi.decode(encodedDecimals, (uint8));
         }
-        return _defaultUnderlyingDecimals();
+        return _fallbackUnderlyingDecimals();
     }
 }
