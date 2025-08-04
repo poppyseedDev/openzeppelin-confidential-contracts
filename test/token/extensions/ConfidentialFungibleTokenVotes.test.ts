@@ -272,6 +272,7 @@ describe('ConfidentialFungibleTokenVotes', function () {
 
       // Check total supply for each block
       const afterFirstMintSupplyHandle = await this.token.getPastTotalSupply(afterFirstMintBlock);
+      await this.token.connect(this.holder).getPastTotalSupplyAccess(afterFirstMintBlock);
       await expect(
         fhevm.userDecryptEuint(FhevmType.euint64, afterFirstMintSupplyHandle, this.token.target, this.holder),
       ).to.eventually.equal(1000);
@@ -279,6 +280,7 @@ describe('ConfidentialFungibleTokenVotes', function () {
       await expect(this.token.getPastTotalSupply(afterTransferBlock)).to.eventually.eq(afterFirstMintSupplyHandle);
 
       const afterSecondMintSupplyHandle = await this.token.getPastTotalSupply(afterSecondMintBlock);
+      await this.token.connect(this.holder).getPastTotalSupplyAccess(afterSecondMintBlock);
       await expect(
         fhevm.userDecryptEuint(FhevmType.euint64, afterSecondMintSupplyHandle, this.token.target, this.holder),
       ).to.eventually.equal(2000);
@@ -291,11 +293,26 @@ describe('ConfidentialFungibleTokenVotes', function () {
     });
   });
 
-  it('should not get confidential total supply access', async function () {
-    await expect(this.token.connect(this.recipient).confidentialTotalSupplyAccess()).to.be.revertedWithCustomError(
-      this.token,
-      'InvalidAccess',
-    );
+  describe('Total supply', async function () {
+    it('should get confidential total supply', async function () {
+      await this.token['$_mint(address,bytes32,bytes)'](
+        this.holder,
+        this.encryptedInput.handles[0],
+        this.encryptedInput.inputProof,
+      );
+      const totalSupply = await this.token.confidentialTotalSupply();
+      await this.token.connect(this.holder).confidentialTotalSupplyAccess();
+      await expect(
+        fhevm.userDecryptEuint(FhevmType.euint64, totalSupply, this.token.target, this.holder),
+      ).to.eventually.equal(1000);
+    });
+
+    it('should not get confidential total supply access', async function () {
+      await expect(this.token.connect(this.recipient).confidentialTotalSupplyAccess()).to.be.revertedWithCustomError(
+        this.token,
+        'InvalidAccess',
+      );
+    });
   });
 
   describe('Clock', async function () {

@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {FHE, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {ConfidentialFungibleTokenVotes, ConfidentialFungibleToken, VotesConfidential} from "../../token/extensions/ConfidentialFungibleTokenVotes.sol";
 import {ConfidentialFungibleTokenMock} from "./ConfidentialFungibleTokenMock.sol";
 
-abstract contract ConfidentialFungibleTokenVotesMock is ConfidentialFungibleTokenMock, ConfidentialFungibleTokenVotes {
+// solhint-disable func-name-mixedcase
+abstract contract ConfidentialFungibleTokenVotesMock is
+    ConfidentialFungibleToken,
+    ConfidentialFungibleTokenVotes,
+    SepoliaConfig
+{
     address private immutable _OWNER;
 
     uint48 private _clockOverrideVal;
@@ -17,7 +23,7 @@ abstract contract ConfidentialFungibleTokenVotesMock is ConfidentialFungibleToke
         string memory name_,
         string memory symbol_,
         string memory tokenURI_
-    ) ConfidentialFungibleTokenMock(name_, symbol_, tokenURI_) EIP712(name_, "1.0.0") {
+    ) ConfidentialFungibleToken(name_, symbol_, tokenURI_) EIP712(name_, "1.0.0") {
         _OWNER = msg.sender;
     }
 
@@ -26,6 +32,14 @@ abstract contract ConfidentialFungibleTokenVotesMock is ConfidentialFungibleToke
             return _clockOverrideVal;
         }
         return super.clock();
+    }
+
+    function $_mint(
+        address to,
+        externalEuint64 encryptedAmount,
+        bytes calldata inputProof
+    ) public returns (euint64 transferred) {
+        return _mint(to, FHE.fromExternal(encryptedAmount, inputProof));
     }
 
     function confidentialTotalSupply()
@@ -42,7 +56,7 @@ abstract contract ConfidentialFungibleTokenVotesMock is ConfidentialFungibleToke
         address from,
         address to,
         euint64 amount
-    ) internal virtual override(ConfidentialFungibleTokenMock, ConfidentialFungibleTokenVotes) returns (euint64) {
+    ) internal virtual override(ConfidentialFungibleToken, ConfidentialFungibleTokenVotes) returns (euint64) {
         return super._update(from, to, amount);
     }
 
