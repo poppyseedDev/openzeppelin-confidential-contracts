@@ -63,6 +63,13 @@ abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
         return _delegateCheckpoints[account].latest();
     }
 
+    /// @dev Get access to the current amount of votes the `account` has.
+    function getVotesAccess(address account) public virtual returns (euint64 votes) {
+        address authorized = _validateVotesAccess(account);
+        votes = getVotes(account);
+        FHE.allow(votes, authorized);
+    }
+
     /**
      * @dev Returns the amount of votes that `account` had at a specific moment in the past. If the {clock} is
      * configured to use block numbers, this will return the value at the end of the corresponding block.
@@ -73,6 +80,13 @@ abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
      */
     function getPastVotes(address account, uint256 timepoint) public view virtual returns (euint64) {
         return _delegateCheckpoints[account].upperLookupRecent(_validateTimepoint(timepoint));
+    }
+
+    /// @dev Get access to the amount of votes the `account` had at a specific moment in the past.
+    function getPastVotesAccess(address account, uint256 timepoint) public virtual returns (euint64 votes) {
+        address authorized = _validateVotesAccess(account);
+        votes = getPastVotes(account, timepoint);
+        FHE.allow(votes, authorized);
     }
 
     /**
@@ -91,11 +105,25 @@ abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
         return _totalCheckpoints.upperLookupRecent(_validateTimepoint(timepoint));
     }
 
+    /// @dev Get access to the total supply of votes available at a specific moment in the past.
+    function getPastTotalSupplyAccess(uint256 timepoint) public virtual returns (euint64 totalSupply) {
+        address authorized = _validateTotalSupplyAccess();
+        totalSupply = getPastTotalSupply(timepoint);
+        FHE.allow(totalSupply, authorized);
+    }
+
     /**
      * @dev Returns the current total supply of votes as an encrypted uint64 (euint64). Must be implemented
      * by the derived contract.
      */
     function confidentialTotalSupply() public view virtual returns (euint64);
+
+    /// @dev Get access to the total supply of votes.
+    function confidentialTotalSupplyAccess() public virtual returns (euint64 totalSupply) {
+        address authorized = _validateTotalSupplyAccess();
+        totalSupply = confidentialTotalSupply();
+        FHE.allow(totalSupply, authorized);
+    }
 
     /// @dev Returns the delegate that `account` has chosen.
     function delegates(address account) public view virtual returns (address) {
@@ -193,6 +221,12 @@ abstract contract VotesConfidential is Nonces, EIP712, IERC6372 {
      * @dev Must return the voting units held by an account.
      */
     function _getVotingUnits(address) internal view virtual returns (euint64);
+
+    /// Validate access to votes handle. Returns authorized account.
+    function _validateVotesAccess(address account) internal view virtual returns (address authorized);
+
+    /// Validate access to total supply handle. Returns authorized account.
+    function _validateTotalSupplyAccess() internal view virtual returns (address authorized);
 
     function _push(CheckpointsConfidential.TraceEuint64 storage store, euint64 value) private returns (euint64) {
         (euint64 oldValue, ) = store.push(clock(), value);

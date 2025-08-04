@@ -111,7 +111,7 @@ describe('ConfidentialFungibleTokenVotes', function () {
       await this.token.connect(this.holder).delegate(this.holder);
 
       const votesHandle = await this.token.getVotes(this.holder);
-      await this.token.$_allowVotes(this.holder);
+      await this.token.connect(this.holder).getVotesAccess(this.holder);
       await expect(
         fhevm.userDecryptEuint(FhevmType.euint64, votesHandle, this.token.target, this.holder),
       ).to.eventually.equal(1000);
@@ -128,6 +128,13 @@ describe('ConfidentialFungibleTokenVotes', function () {
       const votesHandle = await this.token.getVotes(this.holder);
       await expect(fhevm.userDecryptEuint(FhevmType.euint64, votesHandle, this.token.target, this.operator)).to
         .eventually.rejected;
+    });
+
+    it('should not get votes access', async function () {
+      await expect(this.token.connect(this.recipient).getVotesAccess(this.holder)).to.be.revertedWithCustomError(
+        this.token,
+        'InvalidAccess',
+      );
     });
   });
 
@@ -195,13 +202,13 @@ describe('ConfidentialFungibleTokenVotes', function () {
       ).to.eventually.equal(1000);
 
       const afterTransferVotesHandle = await this.token.getPastVotes(this.holder, afterTransferBlock);
-      await this.token.$_allowPastVotes(this.holder, afterTransferBlock);
+      await this.token.connect(this.holder).getPastVotesAccess(this.holder, afterTransferBlock);
       await expect(
         fhevm.userDecryptEuint(FhevmType.euint64, afterTransferVotesHandle, this.token.target, this.holder),
       ).to.eventually.equal(800);
 
       const afterBurnVotesHandle = await this.token.getPastVotes(this.holder, afterBurnBlock);
-      await this.token.$_allowPastVotes(this.holder, afterBurnBlock);
+      await this.token.connect(this.holder).getPastVotesAccess(this.holder, afterBurnBlock);
       await expect(
         fhevm.userDecryptEuint(FhevmType.euint64, afterBurnVotesHandle, this.token.target, this.holder),
       ).to.eventually.equal(0);
@@ -211,6 +218,12 @@ describe('ConfidentialFungibleTokenVotes', function () {
       await expect(this.token.getPastVotes(this.holder, this.blockNumber + 10))
         .to.be.revertedWithCustomError(this.token, 'ERC5805FutureLookup')
         .withArgs(this.blockNumber + 10, this.blockNumber);
+    });
+
+    it('should not get past votes access', async function () {
+      await expect(
+        this.token.connect(this.recipient).getPastVotesAccess(this.holder, this.blockNumber),
+      ).to.be.revertedWithCustomError(this.token, 'InvalidAccess');
     });
   });
 
@@ -270,6 +283,19 @@ describe('ConfidentialFungibleTokenVotes', function () {
         fhevm.userDecryptEuint(FhevmType.euint64, afterSecondMintSupplyHandle, this.token.target, this.holder),
       ).to.eventually.equal(2000);
     });
+
+    it('should not get past total supply access', async function () {
+      await expect(
+        this.token.connect(this.recipient).getPastTotalSupplyAccess(this.blockNumber),
+      ).to.be.revertedWithCustomError(this.token, 'InvalidAccess');
+    });
+  });
+
+  it('should not get confidential total supply access', async function () {
+    await expect(this.token.connect(this.recipient).confidentialTotalSupplyAccess()).to.be.revertedWithCustomError(
+      this.token,
+      'InvalidAccess',
+    );
   });
 
   describe('Clock', async function () {

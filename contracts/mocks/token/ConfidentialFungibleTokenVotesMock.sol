@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.26;
 
 import {FHE, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
@@ -10,6 +10,8 @@ abstract contract ConfidentialFungibleTokenVotesMock is ConfidentialFungibleToke
     address private immutable _OWNER;
 
     uint48 private _clockOverrideVal;
+
+    error InvalidAccess();
 
     constructor(
         string memory name_,
@@ -51,13 +53,19 @@ abstract contract ConfidentialFungibleTokenVotesMock is ConfidentialFungibleToke
     /**
      * @dev Decision of how delegatees can see their votes without revaling balance
      * of their delegators is up to the final contract.
-     * Choosing a simple approach here for mocking purposes.
+     * One approach is allowing a delegatee to see their aggregated number of votes.
      */
-    function _allowVotes(address account) internal {
-        FHE.allow(super.getVotes(account), account);
+    function _validateVotesAccess(address account) internal view override returns (address) {
+        if (msg.sender == account) {
+            return account;
+        }
+        revert InvalidAccess();
     }
 
-    function _allowPastVotes(address account, uint256 timepoint) internal {
-        FHE.allow(super.getPastVotes(account, timepoint), account);
+    function _validateTotalSupplyAccess() internal view override returns (address) {
+        if (msg.sender == _OWNER) {
+            return _OWNER;
+        }
+        revert InvalidAccess();
     }
 }
