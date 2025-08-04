@@ -25,7 +25,7 @@ import {IConfidentialFungibleToken} from "./../interfaces/IConfidentialFungibleT
 abstract contract VestingWalletConfidential is OwnableUpgradeable, ReentrancyGuardTransient {
     /// @custom:storage-location erc7201:openzeppelin.storage.VestingWalletConfidential
     struct VestingWalletStorage {
-        mapping(address token => euint64) _tokenReleased;
+        mapping(address token => euint128) _tokenReleased;
         uint64 _start;
         uint64 _duration;
     }
@@ -53,7 +53,7 @@ abstract contract VestingWalletConfidential is OwnableUpgradeable, ReentrancyGua
     }
 
     /// @dev Amount of token already released
-    function released(address token) public view virtual returns (euint64) {
+    function released(address token) public view virtual returns (euint128) {
         return _getVestingWalletStorage()._tokenReleased[token];
     }
 
@@ -75,7 +75,7 @@ abstract contract VestingWalletConfidential is OwnableUpgradeable, ReentrancyGua
         FHE.allowTransient(amount, token);
         euint64 amountSent = IConfidentialFungibleToken(token).confidentialTransfer(owner(), amount);
 
-        euint64 newReleasedAmount = FHE.add(released(token), amountSent);
+        euint128 newReleasedAmount = FHE.add(released(token), amountSent);
         FHE.allow(newReleasedAmount, owner());
         FHE.allowThis(newReleasedAmount);
         _getVestingWalletStorage()._tokenReleased[token] = newReleasedAmount;
@@ -105,6 +105,14 @@ abstract contract VestingWalletConfidential is OwnableUpgradeable, ReentrancyGua
         uint48 durationSeconds
     ) internal onlyInitializing {
         __Ownable_init(beneficiary);
+        __VestingWalletConfidential_init_unchained(startTimestamp, durationSeconds);
+    }
+
+    // solhint-disable-next-line func-name-mixedcase
+    function __VestingWalletConfidential_init_unchained(
+        uint48 startTimestamp,
+        uint48 durationSeconds
+    ) internal onlyInitializing {
         VestingWalletStorage storage $ = _getVestingWalletStorage();
         $._start = startTimestamp;
         $._duration = durationSeconds;
@@ -122,7 +130,7 @@ abstract contract VestingWalletConfidential is OwnableUpgradeable, ReentrancyGua
     }
 
     function _getVestingWalletStorage() private pure returns (VestingWalletStorage storage $) {
-        assembly {
+        assembly ("memory-safe") {
             $.slot := VestingWalletStorageLocation
         }
     }

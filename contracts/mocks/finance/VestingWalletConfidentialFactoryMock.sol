@@ -47,8 +47,7 @@ contract VestingWalletCliffExecutorConfidential is VestingWalletCliffConfidentia
         address executor,
         bytes memory extraData_
     ) public initializer {
-        __VestingWalletConfidential_init(beneficiary, startTimestamp, durationSeconds);
-        __VestingWalletCliffConfidential_init(cliffSeconds);
+        __VestingWalletCliffConfidential_init(beneficiary, startTimestamp, durationSeconds, cliffSeconds);
         __ERC7821WithExecutor_init(executor);
         extraData = extraData_;
 
