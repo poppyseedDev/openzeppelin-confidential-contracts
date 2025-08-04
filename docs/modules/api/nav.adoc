@@ -2,5 +2,5 @@
 * xref:finance.adoc[Finance]
 * xref:governance.adoc[Governance]
 * xref:interfaces.adoc[Interfaces]
-* Token
+* xref:token.adoc[Token]
 * xref:utils.adoc[Utils]
