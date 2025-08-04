@@ -14,6 +14,9 @@ import {ConfidentialFungibleToken} from "./../ConfidentialFungibleToken.sol";
  * @dev A wrapper contract built on top of {ConfidentialFungibleToken} that allows wrapping an `ERC20` token
  * into a confidential fungible token. The wrapper contract implements the `IERC1363Receiver` interface
  * which allows users to transfer `ERC1363` tokens directly to the wrapper with a callback to wrap the tokens.
+ *
+ * WARNING: Minting assumes the full amount of the underlying token transfer has been received, hence some non-standard
+ * tokens such as fee-on-transfer or other deflationary-type tokens are not supported by this wrapper.
  */
 abstract contract ConfidentialFungibleTokenERC20Wrapper is ConfidentialFungibleToken, IERC1363Receiver {
     IERC20 private immutable _underlying;
@@ -85,8 +88,6 @@ abstract contract ConfidentialFungibleTokenERC20Wrapper is ConfidentialFungibleT
      * @dev Wraps amount `amount` of the underlying token into a confidential token and sends it to
      * `to`. Tokens are exchanged at a fixed rate specified by {rate} such that `amount / rate()` confidential
      * tokens are sent. Amount transferred in is rounded down to the nearest multiple of {rate}.
-     * WARNING: Minting assumes the full amount of the underlying token transfer has been received, hence non-standard
-     * tokens such as fee-on-transfer or other deflationary-type tokens are not supported by this wrapper.
      */
     function wrap(address to, uint256 amount) public virtual {
         // take ownership of the tokens
