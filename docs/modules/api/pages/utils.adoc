@@ -58,7 +58,6 @@ and `updated` will be the original value.
 
 == Structs
 
-:CheckpointUnorderedInsertion: pass:normal[xref:#CheckpointsConfidential-CheckpointUnorderedInsertion--[`++CheckpointUnorderedInsertion++`]]
 :TraceEuint32: pass:normal[xref:#CheckpointsConfidential-TraceEuint32[`++TraceEuint32++`]]
 :push: pass:normal[xref:#CheckpointsConfidential-push-struct-CheckpointsConfidential-TraceEuint32-uint256-euint32-[`++push++`]]
 :lowerLookup: pass:normal[xref:#CheckpointsConfidential-lowerLookup-struct-CheckpointsConfidential-TraceEuint32-uint256-[`++lowerLookup++`]]
@@ -129,13 +128,6 @@ checkpoint for the current transaction block using the {push} function.
 * `++latestCheckpoint(self)++`
 * `++length(self)++`
 * `++at(self, pos)++`
-
---
-
-[.contract-index]
-.Errors
---
-* `++CheckpointUnorderedInsertion()++`
 
 --
 
@@ -258,10 +250,4 @@ Returns the number of checkpoints.
 ==== `[.contract-item-name]#++at++#++(struct CheckpointsConfidential.TraceEuint64 self, uint32 pos) → uint256 key, euint64 value++` [.item-kind]#internal#
 
 Returns checkpoint at given position.
-
-[.contract-item]
-[[CheckpointsConfidential-CheckpointUnorderedInsertion--]]
-==== `[.contract-item-name]#++CheckpointUnorderedInsertion++#++()++` [.item-kind]#error#
-
-A value was attempted to be inserted on a past checkpoint.
 
