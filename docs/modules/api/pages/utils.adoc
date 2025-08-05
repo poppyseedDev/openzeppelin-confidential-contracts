@@ -1,6 +1,7 @@
 :github-icon: pass:[<svg class="icon"><use href="#github-icon"/></svg>]
 :FHESafeMath: pass:normal[xref:utils.adoc#FHESafeMath[`FHESafeMath`]]
 :CheckpointsConfidential: pass:normal[xref:utils.adoc#CheckpointsConfidential[`CheckpointsConfidential`]]
+:HandleAccessManager: pass:normal[xref:utils.adoc#HandleAccessManager[`HandleAccessManager`]]
 
 = Utils
 
@@ -11,6 +12,7 @@ Miscellaneous contracts and libraries containing utility functions you can use t
 
 - {FHESafeMath}: Implementation of safe math operations for encrypted values.
 - {CheckpointsConfidential}: Implementation of checkpoints for encrypted values.
+- {HandleAccessManager}: Minimal contract that adds a function to give allowance to callers for a given ciphertext handle.
 
 == Math
 
@@ -250,4 +252,45 @@ Returns the number of checkpoints.
 ==== `[.contract-item-name]#++at++#++(struct CheckpointsConfidential.TraceEuint64 self, uint32 pos) → uint256 key, euint64 value++` [.item-kind]#internal#
 
 Returns checkpoint at given position.
+
+== Other
+:getHandleAllowance: pass:normal[xref:#HandleAccessManager-getHandleAllowance-bytes32-address-bool-[`++getHandleAllowance++`]]
+:_validateHandleAllowance: pass:normal[xref:#HandleAccessManager-_validateHandleAllowance-bytes32-[`++_validateHandleAllowance++`]]
+
+:getHandleAllowance-bytes32-address-bool: pass:normal[xref:#HandleAccessManager-getHandleAllowance-bytes32-address-bool-[`++getHandleAllowance++`]]
+:_validateHandleAllowance-bytes32: pass:normal[xref:#HandleAccessManager-_validateHandleAllowance-bytes32-[`++_validateHandleAllowance++`]]
+
+[.contract]
+[[HandleAccessManager]]
+=== `++HandleAccessManager++` link:https://github.com/OpenZeppelin/openzeppelin-confidential-contracts/blob/master/contracts/utils/HandleAccessManager.sol[{github-icon},role=heading-link]
+
+[.hljs-theme-light.nopadding]
+```solidity
+import "@openzeppelin/confidential-contracts/utils/HandleAccessManager.sol";
+```
+
+[.contract-index]
+.Functions
+--
+* `++getHandleAllowance(handle, account, persistent)++`
+* `++_validateHandleAllowance(handle)++`
+
+--
+
+[.contract-item]
+[[HandleAccessManager-getHandleAllowance-bytes32-address-bool-]]
+==== `[.contract-item-name]#++getHandleAllowance++#++(bytes32 handle, address account, bool persistent)++` [.item-kind]#public#
+
+Get handle access for the given handle `handle`. Access will be given to the
+account `account` with the given persistence flag.
+
+NOTE: This function call is gated by `msg.sender` and validated by the
+{_validateHandleAllowance} function.
+
+[.contract-item]
+[[HandleAccessManager-_validateHandleAllowance-bytes32-]]
+==== `[.contract-item-name]#++_validateHandleAllowance++#++(bytes32 handle)++` [.item-kind]#internal#
+
+Unimplemented function that must revert if the message sender is not allowed to call
+{getHandleAllowance} for the given handle.
 

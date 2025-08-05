@@ -1,5 +1,6 @@
 :github-icon: pass:[<svg class="icon"><use href="#github-icon"/></svg>]
 :VotesConfidential: pass:normal[xref:governance.adoc#VotesConfidential[`VotesConfidential`]]
+:HandleAccessManager-_validateHandleAllowance: pass:normal[xref:utils.adoc#HandleAccessManager-_validateHandleAllowance-bytes32-[`HandleAccessManager._validateHandleAllowance`]]
 
 = Governance
 
@@ -62,7 +63,8 @@ This contract keeps a history (checkpoints) of each account's confidential vote 
 voting power can be delegated either by calling the {delegate} function directly, or by providing
 a signature to be used with {delegateBySig}. Confidential voting power handles can be queried
 through the public accessors {getVotes} and {getPastVotes} but can only be decrypted by accounts
-allowed to access them. Ensure that `_validateACLAllowance` is implemented properly, allowing all necessary addresses to access voting power handles.
+allowed to access them. Ensure that {HandleAccessManager-_validateHandleAllowance} is implemented properly, allowing all 
+necessary addresses to access voting power handles.
 
 By default, voting units does not account for voting power. This makes transfers of underlying
 voting units cheaper. The downside is that it requires users to delegate to themselves in order
@@ -85,6 +87,11 @@ to activate checkpoints and have their voting power tracked.
 * `++_moveDelegateVotes(from, to, amount)++`
 * `++_validateTimepoint(timepoint)++`
 * `++_getVotingUnits()++`
+
+[.contract-subindex-inherited]
+.HandleAccessManager
+* `++getHandleAllowance(handle, account, persistent)++`
+* `++_validateHandleAllowance(handle)++`
 
 [.contract-subindex-inherited]
 .IERC6372
@@ -115,6 +122,9 @@ to activate checkpoints and have their voting power tracked.
 * `++DelegateChanged(delegator, fromDelegate, toDelegate)++`
 
 [.contract-subindex-inherited]
+.HandleAccessManager
+
+[.contract-subindex-inherited]
 .IERC6372
 
 [.contract-subindex-inherited]
@@ -135,6 +145,9 @@ to activate checkpoints and have their voting power tracked.
 * `++VotesExpiredSignature(expiry)++`
 * `++ERC6372InconsistentClock()++`
 * `++ERC5805FutureLookup(timepoint, clock)++`
+
+[.contract-subindex-inherited]
+.HandleAccessManager
 
 [.contract-subindex-inherited]
 .IERC6372
