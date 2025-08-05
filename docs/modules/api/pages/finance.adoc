@@ -389,23 +389,25 @@ this caveat if the overridden implementation of this function has any (e.g. writ
 The specified cliff duration is larger than the vesting duration.
 
 :VestingPlan: pass:normal[xref:#VestingWalletConfidentialFactory-VestingPlan[`++VestingPlan++`]]
-:VestingWalletConfidentialFunded: pass:normal[xref:#VestingWalletConfidentialFactory-VestingWalletConfidentialFunded-address-address-address-euint64-uint48-uint48-uint48-address-[`++VestingWalletConfidentialFunded++`]]
-:VestingWalletConfidentialCreated: pass:normal[xref:#VestingWalletConfidentialFactory-VestingWalletConfidentialCreated-address-address-uint48-uint48-uint48-address-[`++VestingWalletConfidentialCreated++`]]
+:VestingWalletConfidentialFunded: pass:normal[xref:#VestingWalletConfidentialFactory-VestingWalletConfidentialFunded-address-address-euint64-bytes-[`++VestingWalletConfidentialFunded++`]]
+:VestingWalletConfidentialCreated: pass:normal[xref:#VestingWalletConfidentialFactory-VestingWalletConfidentialCreated-address-bytes-[`++VestingWalletConfidentialCreated++`]]
 :constructor: pass:normal[xref:#VestingWalletConfidentialFactory-constructor--[`++constructor++`]]
-:batchFundVestingWalletConfidential: pass:normal[xref:#VestingWalletConfidentialFactory-batchFundVestingWalletConfidential-address-struct-VestingWalletConfidentialFactory-VestingPlan---address-bytes-[`++batchFundVestingWalletConfidential++`]]
-:createVestingWalletConfidential: pass:normal[xref:#VestingWalletConfidentialFactory-createVestingWalletConfidential-address-uint48-uint48-uint48-address-[`++createVestingWalletConfidential++`]]
-:predictVestingWalletConfidential: pass:normal[xref:#VestingWalletConfidentialFactory-predictVestingWalletConfidential-address-uint48-uint48-uint48-address-[`++predictVestingWalletConfidential++`]]
-:_initializeVestingWallet: pass:normal[xref:#VestingWalletConfidentialFactory-_initializeVestingWallet-address-address-uint48-uint48-uint48-address-[`++_initializeVestingWallet++`]]
+:batchFundVestingWalletConfidential: pass:normal[xref:#VestingWalletConfidentialFactory-batchFundVestingWalletConfidential-address-struct-VestingWalletConfidentialFactory-VestingPlan---bytes-[`++batchFundVestingWalletConfidential++`]]
+:createVestingWalletConfidential: pass:normal[xref:#VestingWalletConfidentialFactory-createVestingWalletConfidential-bytes-[`++createVestingWalletConfidential++`]]
+:predictVestingWalletConfidential: pass:normal[xref:#VestingWalletConfidentialFactory-predictVestingWalletConfidential-bytes-[`++predictVestingWalletConfidential++`]]
+:_validateVestingWalletInitArgs: pass:normal[xref:#VestingWalletConfidentialFactory-_validateVestingWalletInitArgs-bytes-[`++_validateVestingWalletInitArgs++`]]
+:_initializeVestingWallet: pass:normal[xref:#VestingWalletConfidentialFactory-_initializeVestingWallet-address-bytes-[`++_initializeVestingWallet++`]]
 :_deployVestingWalletImplementation: pass:normal[xref:#VestingWalletConfidentialFactory-_deployVestingWalletImplementation--[`++_deployVestingWalletImplementation++`]]
-:_getCreate2VestingWalletConfidentialSalt: pass:normal[xref:#VestingWalletConfidentialFactory-_getCreate2VestingWalletConfidentialSalt-address-uint48-uint48-uint48-address-[`++_getCreate2VestingWalletConfidentialSalt++`]]
+:_getCreate2VestingWalletConfidentialSalt: pass:normal[xref:#VestingWalletConfidentialFactory-_getCreate2VestingWalletConfidentialSalt-bytes-[`++_getCreate2VestingWalletConfidentialSalt++`]]
 
 :constructor-: pass:normal[xref:#VestingWalletConfidentialFactory-constructor--[`++constructor++`]]
-:batchFundVestingWalletConfidential-address-struct-VestingWalletConfidentialFactory-VestingPlan---address-bytes: pass:normal[xref:#VestingWalletConfidentialFactory-batchFundVestingWalletConfidential-address-struct-VestingWalletConfidentialFactory-VestingPlan---address-bytes-[`++batchFundVestingWalletConfidential++`]]
-:createVestingWalletConfidential-address-uint48-uint48-uint48-address: pass:normal[xref:#VestingWalletConfidentialFactory-createVestingWalletConfidential-address-uint48-uint48-uint48-address-[`++createVestingWalletConfidential++`]]
-:predictVestingWalletConfidential-address-uint48-uint48-uint48-address: pass:normal[xref:#VestingWalletConfidentialFactory-predictVestingWalletConfidential-address-uint48-uint48-uint48-address-[`++predictVestingWalletConfidential++`]]
-:_initializeVestingWallet-address-address-uint48-uint48-uint48-address: pass:normal[xref:#VestingWalletConfidentialFactory-_initializeVestingWallet-address-address-uint48-uint48-uint48-address-[`++_initializeVestingWallet++`]]
+:batchFundVestingWalletConfidential-address-struct-VestingWalletConfidentialFactory-VestingPlan---bytes: pass:normal[xref:#VestingWalletConfidentialFactory-batchFundVestingWalletConfidential-address-struct-VestingWalletConfidentialFactory-VestingPlan---bytes-[`++batchFundVestingWalletConfidential++`]]
+:createVestingWalletConfidential-bytes: pass:normal[xref:#VestingWalletConfidentialFactory-createVestingWalletConfidential-bytes-[`++createVestingWalletConfidential++`]]
+:predictVestingWalletConfidential-bytes: pass:normal[xref:#VestingWalletConfidentialFactory-predictVestingWalletConfidential-bytes-[`++predictVestingWalletConfidential++`]]
+:_validateVestingWalletInitArgs-bytes: pass:normal[xref:#VestingWalletConfidentialFactory-_validateVestingWalletInitArgs-bytes-[`++_validateVestingWalletInitArgs++`]]
+:_initializeVestingWallet-address-bytes: pass:normal[xref:#VestingWalletConfidentialFactory-_initializeVestingWallet-address-bytes-[`++_initializeVestingWallet++`]]
 :_deployVestingWalletImplementation-: pass:normal[xref:#VestingWalletConfidentialFactory-_deployVestingWalletImplementation--[`++_deployVestingWalletImplementation++`]]
-:_getCreate2VestingWalletConfidentialSalt-address-uint48-uint48-uint48-address: pass:normal[xref:#VestingWalletConfidentialFactory-_getCreate2VestingWalletConfidentialSalt-address-uint48-uint48-uint48-address-[`++_getCreate2VestingWalletConfidentialSalt++`]]
+:_getCreate2VestingWalletConfidentialSalt-bytes: pass:normal[xref:#VestingWalletConfidentialFactory-_getCreate2VestingWalletConfidentialSalt-bytes-[`++_getCreate2VestingWalletConfidentialSalt++`]]
 
 [.contract]
 [[VestingWalletConfidentialFactory]]
@@ -425,20 +427,21 @@ to allow for custom implementations of the vesting wallet to be used.
 .Functions
 --
 * `++constructor()++`
-* `++batchFundVestingWalletConfidential(confidentialFungibleToken, vestingPlans, executor, inputProof)++`
-* `++createVestingWalletConfidential(beneficiary, startTimestamp, durationSeconds, cliffSeconds, executor)++`
-* `++predictVestingWalletConfidential(beneficiary, startTimestamp, durationSeconds, cliffSeconds, executor)++`
-* `++_initializeVestingWallet(vestingWalletAddress, beneficiary, startTimestamp, durationSeconds, cliffSeconds, executor)++`
+* `++batchFundVestingWalletConfidential(confidentialFungibleToken, vestingPlans, inputProof)++`
+* `++createVestingWalletConfidential(initArgs)++`
+* `++predictVestingWalletConfidential(initArgs)++`
+* `++_validateVestingWalletInitArgs(initArgs)++`
+* `++_initializeVestingWallet(vestingWalletAddress, initArgs)++`
 * `++_deployVestingWalletImplementation()++`
-* `++_getCreate2VestingWalletConfidentialSalt(beneficiary, startTimestamp, durationSeconds, cliffSeconds, executor)++`
+* `++_getCreate2VestingWalletConfidentialSalt(initArgs)++`
 
 --
 
 [.contract-index]
 .Events
 --
-* `++VestingWalletConfidentialFunded(vestingWalletConfidential, beneficiary, confidentialFungibleToken, encryptedAmount, startTimestamp, durationSeconds, cliffSeconds, executor)++`
-* `++VestingWalletConfidentialCreated(vestingWalletConfidential, beneficiary, startTimestamp, durationSeconds, cliffSeconds, executor)++`
+* `++VestingWalletConfidentialFunded(vestingWalletConfidential, confidentialFungibleToken, transferredAmount, initArgs)++`
+* `++VestingWalletConfidentialCreated(vestingWalletConfidential, initArgs)++`
 
 --
 
@@ -447,8 +450,8 @@ to allow for custom implementations of the vesting wallet to be used.
 ==== `[.contract-item-name]#++constructor++#++()++` [.item-kind]#internal#
 
 [.contract-item]
-[[VestingWalletConfidentialFactory-batchFundVestingWalletConfidential-address-struct-VestingWalletConfidentialFactory-VestingPlan---address-bytes-]]
-==== `[.contract-item-name]#++batchFundVestingWalletConfidential++#++(address confidentialFungibleToken, struct VestingWalletConfidentialFactory.VestingPlan[] vestingPlans, address executor, bytes inputProof)++` [.item-kind]#public#
+[[VestingWalletConfidentialFactory-batchFundVestingWalletConfidential-address-struct-VestingWalletConfidentialFactory-VestingPlan---bytes-]]
+==== `[.contract-item-name]#++batchFundVestingWalletConfidential++#++(address confidentialFungibleToken, struct VestingWalletConfidentialFactory.VestingPlan[] vestingPlans, bytes inputProof)++` [.item-kind]#public#
 
 Batches the funding of multiple confidential vesting wallets.
 
@@ -458,22 +461,28 @@ before or after this operation.
 Emits a {VestingWalletConfidentialFunded} event for each funded vesting plan.
 
 [.contract-item]
-[[VestingWalletConfidentialFactory-createVestingWalletConfidential-address-uint48-uint48-uint48-address-]]
-==== `[.contract-item-name]#++createVestingWalletConfidential++#++(address beneficiary, uint48 startTimestamp, uint48 durationSeconds, uint48 cliffSeconds, address executor) → address++` [.item-kind]#public#
+[[VestingWalletConfidentialFactory-createVestingWalletConfidential-bytes-]]
+==== `[.contract-item-name]#++createVestingWalletConfidential++#++(bytes initArgs) → address++` [.item-kind]#public#
 
 Creates a confidential vesting wallet.
 
 Emits a {VestingWalletConfidentialCreated}.
 
 [.contract-item]
-[[VestingWalletConfidentialFactory-predictVestingWalletConfidential-address-uint48-uint48-uint48-address-]]
-==== `[.contract-item-name]#++predictVestingWalletConfidential++#++(address beneficiary, uint48 startTimestamp, uint48 durationSeconds, uint48 cliffSeconds, address executor) → address++` [.item-kind]#public#
+[[VestingWalletConfidentialFactory-predictVestingWalletConfidential-bytes-]]
+==== `[.contract-item-name]#++predictVestingWalletConfidential++#++(bytes initArgs) → address++` [.item-kind]#public#
 
 Predicts the deterministic address for a confidential vesting wallet.
 
 [.contract-item]
-[[VestingWalletConfidentialFactory-_initializeVestingWallet-address-address-uint48-uint48-uint48-address-]]
-==== `[.contract-item-name]#++_initializeVestingWallet++#++(address vestingWalletAddress, address beneficiary, uint48 startTimestamp, uint48 durationSeconds, uint48 cliffSeconds, address executor)++` [.item-kind]#internal#
+[[VestingWalletConfidentialFactory-_validateVestingWalletInitArgs-bytes-]]
+==== `[.contract-item-name]#++_validateVestingWalletInitArgs++#++(bytes initArgs)++` [.item-kind]#internal#
+
+Virtual function that must be implemented to validate the initArgs bytes.
+
+[.contract-item]
+[[VestingWalletConfidentialFactory-_initializeVestingWallet-address-bytes-]]
+==== `[.contract-item-name]#++_initializeVestingWallet++#++(address vestingWalletAddress, bytes initArgs)++` [.item-kind]#internal#
 
 Virtual function that must be implemented to initialize the vesting wallet at `vestingWalletAddress`.
 
@@ -486,16 +495,16 @@ Internal function that is called once to deploy the vesting wallet implementatio
 Vesting wallet clones will be initialized by calls to the {_initializeVestingWallet} function.
 
 [.contract-item]
-[[VestingWalletConfidentialFactory-_getCreate2VestingWalletConfidentialSalt-address-uint48-uint48-uint48-address-]]
-==== `[.contract-item-name]#++_getCreate2VestingWalletConfidentialSalt++#++(address beneficiary, uint48 startTimestamp, uint48 durationSeconds, uint48 cliffSeconds, address executor) → bytes32++` [.item-kind]#internal#
+[[VestingWalletConfidentialFactory-_getCreate2VestingWalletConfidentialSalt-bytes-]]
+==== `[.contract-item-name]#++_getCreate2VestingWalletConfidentialSalt++#++(bytes initArgs) → bytes32++` [.item-kind]#internal#
 
 Gets create2 salt for a confidential vesting wallet.
 
 [.contract-item]
-[[VestingWalletConfidentialFactory-VestingWalletConfidentialFunded-address-address-address-euint64-uint48-uint48-uint48-address-]]
-==== `[.contract-item-name]#++VestingWalletConfidentialFunded++#++(address indexed vestingWalletConfidential, address indexed beneficiary, address indexed confidentialFungibleToken, euint64 encryptedAmount, uint48 startTimestamp, uint48 durationSeconds, uint48 cliffSeconds, address executor)++` [.item-kind]#event#
+[[VestingWalletConfidentialFactory-VestingWalletConfidentialFunded-address-address-euint64-bytes-]]
+==== `[.contract-item-name]#++VestingWalletConfidentialFunded++#++(address indexed vestingWalletConfidential, address indexed confidentialFungibleToken, euint64 transferredAmount, bytes initArgs)++` [.item-kind]#event#
 
 [.contract-item]
-[[VestingWalletConfidentialFactory-VestingWalletConfidentialCreated-address-address-uint48-uint48-uint48-address-]]
-==== `[.contract-item-name]#++VestingWalletConfidentialCreated++#++(address indexed vestingWalletConfidential, address indexed beneficiary, uint48 startTimestamp, uint48 durationSeconds, uint48 cliffSeconds, address indexed executor)++` [.item-kind]#event#
+[[VestingWalletConfidentialFactory-VestingWalletConfidentialCreated-address-bytes-]]
+==== `[.contract-item-name]#++VestingWalletConfidentialCreated++#++(address indexed vestingWalletConfidential, bytes initArgs)++` [.item-kind]#event#
 
