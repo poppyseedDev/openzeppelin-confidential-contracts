@@ -1,5 +1,5 @@
 :github-icon: pass:[<svg class="icon"><use href="#github-icon"/></svg>]
-:TFHESafeMath: pass:normal[xref:utils.adoc#TFHESafeMath[`TFHESafeMath`]]
+:FHESafeMath: pass:normal[xref:utils.adoc#FHESafeMath[`FHESafeMath`]]
 :CheckpointsConfidential: pass:normal[xref:utils.adoc#CheckpointsConfidential[`CheckpointsConfidential`]]
 
 = Utils
@@ -9,24 +9,24 @@ NOTE: This document is better viewed at https://docs.openzeppelin.com/confidenti
 
 Miscellaneous contracts and libraries containing utility functions you can use to improve security, and ease integrations when working with confidential contracts.
 
-- {TFHESafeMath}: Implementation of safe math operations for encrypted values.
+- {FHESafeMath}: Implementation of safe math operations for encrypted values.
 - {CheckpointsConfidential}: Implementation of checkpoints for encrypted values.
 
 == Math
 
-:tryIncrease: pass:normal[xref:#TFHESafeMath-tryIncrease-euint64-euint64-[`++tryIncrease++`]]
-:tryDecrease: pass:normal[xref:#TFHESafeMath-tryDecrease-euint64-euint64-[`++tryDecrease++`]]
+:tryIncrease: pass:normal[xref:#FHESafeMath-tryIncrease-euint64-euint64-[`++tryIncrease++`]]
+:tryDecrease: pass:normal[xref:#FHESafeMath-tryDecrease-euint64-euint64-[`++tryDecrease++`]]
 
-:tryIncrease-euint64-euint64: pass:normal[xref:#TFHESafeMath-tryIncrease-euint64-euint64-[`++tryIncrease++`]]
-:tryDecrease-euint64-euint64: pass:normal[xref:#TFHESafeMath-tryDecrease-euint64-euint64-[`++tryDecrease++`]]
+:tryIncrease-euint64-euint64: pass:normal[xref:#FHESafeMath-tryIncrease-euint64-euint64-[`++tryIncrease++`]]
+:tryDecrease-euint64-euint64: pass:normal[xref:#FHESafeMath-tryDecrease-euint64-euint64-[`++tryDecrease++`]]
 
 [.contract]
-[[TFHESafeMath]]
-=== `++TFHESafeMath++` link:https://github.com/OpenZeppelin/openzeppelin-confidential-contracts/blob/master/contracts/utils/TFHESafeMath.sol[{github-icon},role=heading-link]
+[[FHESafeMath]]
+=== `++FHESafeMath++` link:https://github.com/OpenZeppelin/openzeppelin-confidential-contracts/blob/master/contracts/utils/FHESafeMath.sol[{github-icon},role=heading-link]
 
 [.hljs-theme-light.nopadding]
 ```solidity
-import "@openzeppelin/confidential-contracts/utils/TFHESafeMath.sol";
+import "@openzeppelin/confidential-contracts/utils/FHESafeMath.sol";
 ```
 
 Library providing safe arithmetic operations for encrypted values
@@ -41,7 +41,7 @@ to handle potential overflows in FHE operations.
 --
 
 [.contract-item]
-[[TFHESafeMath-tryIncrease-euint64-euint64-]]
+[[FHESafeMath-tryIncrease-euint64-euint64-]]
 ==== `[.contract-item-name]#++tryIncrease++#++(euint64 oldValue, euint64 delta) → ebool success, euint64 updated++` [.item-kind]#internal#
 
 Try to increase the encrypted value `oldValue` by `delta`. If the operation is successful,
@@ -49,7 +49,7 @@ Try to increase the encrypted value `oldValue` by `delta`. If the operation is s
 and `updated` will be the original value.
 
 [.contract-item]
-[[TFHESafeMath-tryDecrease-euint64-euint64-]]
+[[FHESafeMath-tryDecrease-euint64-euint64-]]
 ==== `[.contract-item-name]#++tryDecrease++#++(euint64 oldValue, euint64 delta) → ebool success, euint64 updated++` [.item-kind]#internal#
 
 Try to decrease the encrypted value `oldValue` by `delta`. If the operation is successful,

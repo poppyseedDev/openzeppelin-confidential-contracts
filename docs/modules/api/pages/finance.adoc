@@ -3,6 +3,7 @@
 :VestingWalletCliffConfidential: pass:normal[xref:finance.adoc#VestingWalletCliffConfidential[`VestingWalletCliffConfidential`]]
 :VestingWalletConfidential: pass:normal[xref:finance.adoc#VestingWalletConfidential[`VestingWalletConfidential`]]
 :VestingWalletConfidentialFactory: pass:normal[xref:finance.adoc#VestingWalletConfidentialFactory[`VestingWalletConfidentialFactory`]]
+:VestingWalletConfidentialFactory: pass:normal[xref:finance.adoc#VestingWalletConfidentialFactory[`VestingWalletConfidentialFactory`]]
 :IConfidentialFungibleToken: pass:normal[xref:interfaces.adoc#IConfidentialFungibleToken[`IConfidentialFungibleToken`]]
 :VestingWalletConfidential: pass:normal[xref:finance.adoc#VestingWalletConfidential[`VestingWalletConfidential`]]
 :VestingWalletConfidential: pass:normal[xref:finance.adoc#VestingWalletConfidential[`VestingWalletConfidential`]]
@@ -70,6 +71,8 @@ NOTE: Since the wallet is `Ownable`, and ownership can be transferred, it is pos
 
 NOTE: When using this contract with any token whose balance is adjusted automatically (i.e. a rebase token), make
 sure to account the supply/balance adjustment in the vesting schedule to ensure the vested amount is as intended.
+
+Confidential vesting wallet contracts can be deployed (as clones) using the {VestingWalletConfidentialFactory}.
 
 [.contract-index]
 .Functions
@@ -204,7 +207,8 @@ Emits a {VestingWalletConfidentialTokenReleased} event.
 [[VestingWalletConfidential-vestedAmount-address-uint64-]]
 ==== `[.contract-item-name]#++vestedAmount++#++(address token, uint64 timestamp) → euint128++` [.item-kind]#public#
 
-Calculates the amount of tokens that have already vested. Default implementation is a linear vesting curve.
+Calculates the amount of tokens that have been vested at the given timestamp.
+Default implementation is a linear vesting curve.
 
 [.contract-item]
 [[VestingWalletConfidential-__VestingWalletConfidential_init-address-uint48-uint48-]]
@@ -226,6 +230,8 @@ This returns the amount vested, as a function of time, for an asset given its to
 [.contract-item]
 [[VestingWalletConfidential-VestingWalletConfidentialTokenReleased-address-euint64-]]
 ==== `[.contract-item-name]#++VestingWalletConfidentialTokenReleased++#++(address indexed token, euint64 amount)++` [.item-kind]#event#
+
+Emitted when releasable vested tokens are released.
 
 :VestingWalletCliffStorage: pass:normal[xref:#VestingWalletCliffConfidential-VestingWalletCliffStorage[`++VestingWalletCliffStorage++`]]
 :VestingWalletCliffConfidentialInvalidCliffDuration: pass:normal[xref:#VestingWalletCliffConfidential-VestingWalletCliffConfidentialInvalidCliffDuration-uint64-uint64-[`++VestingWalletCliffConfidentialInvalidCliffDuration++`]]
@@ -504,7 +510,11 @@ Gets create2 salt for a confidential vesting wallet.
 [[VestingWalletConfidentialFactory-VestingWalletConfidentialFunded-address-address-euint64-bytes-]]
 ==== `[.contract-item-name]#++VestingWalletConfidentialFunded++#++(address indexed vestingWalletConfidential, address indexed confidentialFungibleToken, euint64 transferredAmount, bytes initArgs)++` [.item-kind]#event#
 
+Emitted for each vesting wallet funded within a batch.
+
 [.contract-item]
 [[VestingWalletConfidentialFactory-VestingWalletConfidentialCreated-address-bytes-]]
 ==== `[.contract-item-name]#++VestingWalletConfidentialCreated++#++(address indexed vestingWalletConfidential, bytes initArgs)++` [.item-kind]#event#
+
+Emitted when a vesting wallet is deployed.
 

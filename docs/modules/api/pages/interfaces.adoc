@@ -59,7 +59,7 @@ These interfaces are available as `.sol` files and are useful to interact with t
 import "@openzeppelin/confidential-contracts/interfaces/IConfidentialFungibleToken.sol";
 ```
 
-Draft interface for a confidential fungible token standard utilizing the Zama TFHE library.
+Draft interface for a confidential fungible token standard utilizing the Zama FHE library.
 
 [.contract-index]
 .Functions
