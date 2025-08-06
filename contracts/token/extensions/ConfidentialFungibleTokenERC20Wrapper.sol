@@ -14,6 +14,9 @@ import {ConfidentialFungibleToken} from "./../ConfidentialFungibleToken.sol";
  * @dev A wrapper contract built on top of {ConfidentialFungibleToken} that allows wrapping an `ERC20` token
  * into a confidential fungible token. The wrapper contract implements the `IERC1363Receiver` interface
  * which allows users to transfer `ERC1363` tokens directly to the wrapper with a callback to wrap the tokens.
+ *
+ * WARNING: Minting assumes the full amount of the underlying token transfer has been received, hence some non-standard
+ * tokens such as fee-on-transfer or other deflationary-type tokens are not supported by this wrapper.
  */
 abstract contract ConfidentialFungibleTokenERC20Wrapper is ConfidentialFungibleToken, IERC1363Receiver {
     IERC20 private immutable _underlying;
@@ -69,13 +72,13 @@ abstract contract ConfidentialFungibleTokenERC20Wrapper is ConfidentialFungibleT
         // check caller is the token contract
         require(address(underlying()) == msg.sender, ConfidentialFungibleTokenUnauthorizedCaller(msg.sender));
 
-        // transfer excess back to the sender
-        uint256 excess = amount % rate();
-        if (excess > 0) SafeERC20.safeTransfer(underlying(), from, excess);
-
         // mint confidential token
         address to = data.length < 20 ? from : address(bytes20(data));
         _mint(to, FHE.asEuint64(SafeCast.toUint64(amount / rate())));
+
+        // transfer excess back to the sender
+        uint256 excess = amount % rate();
+        if (excess > 0) SafeERC20.safeTransfer(underlying(), from, excess);
 
         // return magic value
         return IERC1363Receiver.onTransferReceived.selector;
@@ -124,8 +127,7 @@ abstract contract ConfidentialFungibleTokenERC20Wrapper is ConfidentialFungibleT
     }
 
     /**
-     * @dev Called by the fhEVM gateway with the decrypted amount `amount` for a request id `requestId`.
-     * Fills unwrap requests.
+     * @dev Fills an unwrap request for a given request id related to a decrypted unwrap amount.
      */
     function finalizeUnwrap(uint256 requestID, uint64 amount, bytes[] memory signatures) public virtual {
         FHE.checkSignatures(requestID, signatures);
@@ -156,6 +158,15 @@ abstract contract ConfidentialFungibleTokenERC20Wrapper is ConfidentialFungibleT
     }
 
     /**
+     * @dev Returns the default number of decimals of the underlying ERC-20 token that is being wrapped.
+     * Used as a default fallback when {_tryGetAssetDecimals} fails to fetch decimals of the underlying
+     * ERC-20 token.
+     */
+    function _fallbackUnderlyingDecimals() internal pure virtual returns (uint8) {
+        return 18;
+    }
+
+    /**
      * @dev Returns the maximum number that will be used for {decimals} by the wrapper.
      */
     function _maxDecimals() internal pure virtual returns (uint8) {
@@ -169,6 +180,6 @@ abstract contract ConfidentialFungibleTokenERC20Wrapper is ConfidentialFungibleT
         if (success && encodedDecimals.length == 32) {
             return abi.decode(encodedDecimals, (uint8));
         }
-        return 18;
+        return _fallbackUnderlyingDecimals();
     }
 }
