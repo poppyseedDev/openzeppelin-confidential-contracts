@@ -43,34 +43,4 @@ contract ERC7984FreezableMock is ERC7984Freezable, AccessControl, HandleAccessMa
     }
 
     function _checkFreezer() internal override onlyRole(FREEZER_ROLE) {}
-
-    //TODO: Move
-    /**
-     * HandleAccessManager
-     */
-
-    /*
-    //TODO: Use storage namespace
-    mapping(bytes4 handleFunctionSelector => bytes4) private accessFunctionSelectors;
-
-    function getHandleAccessFunctionSelector(bytes4 handleFunctionSelector) public view virtual returns (bytes4) {
-        return accessFunctionSelectors[handleFunctionSelector];
-    }
-
-    error UnallowedHandleAccess(bytes32 handle, address account);
-
-    modifier onlySenderAccess(bytes32 handle, address account) {
-        require(msg.sender == account, UnallowedHandleAccess(handle, account));
-        _;
-    }
-
-    function allowHandleAccess(euint64 handle, address account) private {
-        allowHandleAccess(euint64.unwrap(handle), account);
-    }
-
-    function allowHandleAccess(bytes32 handle, address account) private {
-        _validateHandleAccess(handle, account);
-        Impl.allow(handle, account);
-    }
-*/
 }
