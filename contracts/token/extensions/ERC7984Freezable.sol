@@ -3,8 +3,8 @@
 pragma solidity ^0.8.27;
 
 import {FHE, ebool, euint64, externalEuint64} from "@fhevm/solidity/lib/FHE.sol";
+import {FHESafeMath} from "../../utils/FHESafeMath.sol";
 import {ConfidentialFungibleToken} from "../ConfidentialFungibleToken.sol";
-import {TFHESafeMath} from "../../utils/TFHESafeMath.sol";
 
 /**
  * Inspired by https://github.com/OpenZeppelin/openzeppelin-community-contracts/pull/186.
@@ -33,36 +33,42 @@ abstract contract ERC7984Freezable is ConfidentialFungibleToken {
 
     /// @dev Returns the available (unfrozen) balance of an account. Up to {confidentialBalanceOf}.
     function confidentialAvailable(address account) public virtual returns (euint64) {
-        (ebool success, euint64 unfrozen) = TFHESafeMath.tryDecrease(
+        (ebool success, euint64 unfrozen) = FHESafeMath.tryDecrease(
             confidentialBalanceOf(account),
             confidentialFrozen(account)
         );
+        unfrozen = FHE.select(success, unfrozen, FHE.asEuint64(0));
         FHE.allowThis(unfrozen);
-        return FHE.select(success, unfrozen, FHE.asEuint64(0));
+        return unfrozen;
     }
 
     /// @dev Internal function to set the frozen token amount for an account.
-    function _setConfidentialFrozen(address account, euint64 encryptedAmount) internal virtual returns (euint64) {
+    function setConfidentialFrozen(
+        address account,
+        externalEuint64 encryptedAmount,
+        bytes calldata inputProof
+    ) public virtual {
+        return setConfidentialFrozen(account, FHE.fromExternal(encryptedAmount, inputProof));
+    }
+
+    /// @dev Internal function to set the frozen token amount for an account.
+    function setConfidentialFrozen(address account, euint64 encryptedAmount) public virtual {
         require(
             FHE.isAllowed(encryptedAmount, msg.sender),
             ERC7984UnauthorizedUseOfEncryptedAmount(encryptedAmount, msg.sender)
         );
-        return __setConfidentialFrozen(account, encryptedAmount);
+        return _setConfidentialFrozen(account, encryptedAmount);
     }
 
-    /// @dev Internal function to set the frozen token amount for an account.
-    function _setConfidentialFrozen(
-        address account,
-        externalEuint64 encryptedAmount,
-        bytes calldata inputProof
-    ) internal virtual returns (euint64) {
-        return __setConfidentialFrozen(account, FHE.fromExternal(encryptedAmount, inputProof));
-    }
-
-    function __setConfidentialFrozen(address account, euint64 encryptedAmount) internal virtual returns (euint64) {
+    function _setConfidentialFrozen(address account, euint64 encryptedAmount) internal virtual {
+        _checkFreezer();
+        FHE.allowThis(encryptedAmount);
+        FHE.allow(encryptedAmount, account);
         _frozenBalances[account] = encryptedAmount;
         emit Frozen(account, encryptedAmount);
     }
+
+    function _checkFreezer() internal virtual;
 
     /**
      * @dev See {ERC7984-_update}.
@@ -71,14 +77,10 @@ abstract contract ERC7984Freezable is ConfidentialFungibleToken {
      *
      * * `from` must have sufficient unfrozen balance.
      */
-    function _update(
-        address from,
-        address to,
-        euint64 encryptedAmount
-    ) internal virtual override returns (euint64 transferred) {
+    function _update(address from, address to, euint64 encryptedAmount) internal virtual override returns (euint64) {
         if (from != address(0)) {
             euint64 unfrozen = confidentialAvailable(from);
-            encryptedAmount = FHE.select(FHE.le(encryptedAmount, unfrozen), encryptedAmount, euint64.wrap(0));
+            encryptedAmount = FHE.select(FHE.le(encryptedAmount, unfrozen), encryptedAmount, FHE.asEuint64(0));
         }
         return super._update(from, to, encryptedAmount);
     }
