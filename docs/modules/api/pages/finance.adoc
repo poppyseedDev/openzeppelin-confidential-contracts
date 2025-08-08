@@ -426,8 +426,8 @@ import "@openzeppelin/confidential-contracts/finance/VestingWalletConfidentialFa
 
 A factory which enables batch funding of vesting wallets.
 
-The {_deployVestingWalletImplementation} and {_initializeVestingWallet} functions remain unimplemented
-to allow for custom implementations of the vesting wallet to be used.
+The {_deployVestingWalletImplementation}, {_initializeVestingWallet}, and {_validateVestingWalletInitArgs}
+functions remain unimplemented to allow for custom implementations of the vesting wallet to be used.
 
 [.contract-index]
 .Functions
