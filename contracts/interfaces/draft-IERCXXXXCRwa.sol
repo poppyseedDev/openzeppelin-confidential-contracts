@@ -7,11 +7,11 @@ import {IConfidentialFungibleToken} from "./IConfidentialFungibleToken.sol";
 
 /// @dev Interface for confidential RWA contracts.
 interface IERCXXXXCRwa is IConfidentialFungibleToken, IERC165 {
-    /// @dev Emmited when the ownership of the contract changes.
+    /// @dev Emitted when the ownership of the contract changes.
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-    /// @dev Emmited when the contract is paused.
+    /// @dev Emitted when the contract is paused.
     event Paused(address account);
-    /// @dev Emmited when the contract is unpaused.
+    /// @dev Emitted when the contract is unpaused.
     event Unpaused(address account);
 
     /// @dev The caller account is not authorized to perform an operation.
@@ -34,11 +34,15 @@ interface IERCXXXXCRwa is IConfidentialFungibleToken, IERC165 {
     /// @dev Unpauses contract.
     function unpause() external;
     /// @dev Returns the confidential frozen balance of an account.
-    function confidentialFrozen(address acount) external view returns (euint64);
+    function confidentialFrozen(address account) external view returns (euint64);
     /// @dev Sets confidential amount of token for an account as frozen with proof.
-    function setConfidentialFrozen(address acount, externalEuint64 encryptedAmount, bytes calldata inputProof) external;
+    function setConfidentialFrozen(
+        address account,
+        externalEuint64 encryptedAmount,
+        bytes calldata inputProof
+    ) external;
     /// @dev Sets confidential amount of token for an account as frozen.
-    function setConfidentialFrozen(address acount, euint64 encryptedAmount) external;
+    function setConfidentialFrozen(address account, euint64 encryptedAmount) external;
     /// @dev Receives and executes a batch of function calls on this contract.
     function multicall(bytes[] calldata data) external returns (bytes[] memory results);
     /// @dev Mints confidential amount of tokens to account with proof.
