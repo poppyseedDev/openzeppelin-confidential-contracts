@@ -2,13 +2,12 @@
 pragma solidity ^0.8.24;
 
 import {FHE, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {IConfidentialFungibleToken} from "./IConfidentialFungibleToken.sol";
 
 /// @dev Interface for confidential RWA contracts.
-interface IERCXXXXCRwa is IConfidentialFungibleToken, IERC165 {
-    /// @dev Emitted when the ownership of the contract changes.
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+interface IERCXXXXCRwa is IConfidentialFungibleToken, IERC165, IAccessControl {
     /// @dev Emitted when the contract is paused.
     event Paused(address account);
     /// @dev Emitted when the contract is unpaused.
@@ -23,10 +22,6 @@ interface IERCXXXXCRwa is IConfidentialFungibleToken, IERC165 {
     /// @dev The operation failed because the contract is not paused.
     error ExpectedPause();
 
-    /// @dev Gets the address of the owner
-    function owner() external view returns (address);
-    /// @dev Transfers contract ownership to an account.
-    function transferOwnership(address _newOwner) external;
     /// @dev Returns true if the contract is paused, and false otherwise.
     function paused() external view returns (bool);
     /// @dev Pauses contract.
@@ -35,6 +30,8 @@ interface IERCXXXXCRwa is IConfidentialFungibleToken, IERC165 {
     function unpause() external;
     /// @dev Returns the confidential frozen balance of an account.
     function confidentialFrozen(address account) external view returns (euint64);
+    /// @dev Returns the available (unfrozen) balance of an account. Up to {confidentialBalanceOf}.
+    function confidentialAvailable(address account) external returns (euint64);
     /// @dev Sets confidential amount of token for an account as frozen with proof.
     function setConfidentialFrozen(
         address account,
@@ -66,4 +63,10 @@ interface IERCXXXXCRwa is IConfidentialFungibleToken, IERC165 {
     ) external returns (euint64);
     /// @dev Forces transfer of confidential amount of tokens from account to account by skipping compliance checks.
     function forceTransfer(address from, address to, euint64 encryptedAmount) external returns (euint64);
+}
+
+/// @dev Interface for confidential RWA compliance.
+interface IERCXXXXCRWACompliance {
+    /// @dev Checks if a transfer follows token compliance.
+    function isCompliantTransfer(address from, address to, euint64 encryptedAmount) external returns (bool);
 }
