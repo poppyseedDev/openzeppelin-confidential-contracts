@@ -161,7 +161,7 @@ abstract contract ERC7984Rwa is
         euint64 encryptedAmount
     ) internal override whenNotPaused returns (euint64) {
         require(_isCompliantTransfer(from, to, encryptedAmount), UncompliantTransfer(from, to, encryptedAmount));
-        // frozen check perfomed through inheritance
+        // frozen check performed through inheritance
         return super._update(from, to, encryptedAmount);
     }
 
