@@ -71,12 +71,12 @@ abstract contract ERC7984Rwa is
     }
 
     /// @dev Returns true if has admin role, false otherwise.
-    function isAdmin(address account) public virtual returns (bool) {
+    function isAdmin(address account) public view virtual returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, account);
     }
 
     /// @dev Returns true if agent, false otherwise.
-    function isAgent(address account) public virtual returns (bool) {
+    function isAgent(address account) public view virtual returns (bool) {
         return hasRole(AGENT_ROLE, account);
     }
 
@@ -146,13 +146,13 @@ abstract contract ERC7984Rwa is
     }
 
     /// @dev Adds an agent.
-    function _addAgent(address account) internal virtual {
+    function _addAgent(address account) internal virtual onlyAdminOrAgent {
         _grantRole(AGENT_ROLE, account);
     }
 
     /// @dev Removes an agent.
-    function _removeAgent(address account) internal virtual {
-        _grantRole(AGENT_ROLE, account);
+    function _removeAgent(address account) internal virtual onlyAdminOrAgent {
+        _revokeRole(AGENT_ROLE, account);
     }
 
     function _update(
