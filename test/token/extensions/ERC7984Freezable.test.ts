@@ -44,15 +44,11 @@ describe('ERC7984Freezable', function () {
     expect(
       await fhevm.userDecryptEuint(FhevmType.euint64, balanceHandle, await token.getAddress(), recipient),
     ).to.equal(1000);
-    const confidentialAvailableFunction = 'confidentialAvailable';
     const confidentialAvailableArgs = recipient.address;
-    const availableHandle = await token[confidentialAvailableFunction].staticCall(confidentialAvailableArgs);
-    const confidentialAvailableAccessFunctionSelector = await token.getHandleAccessFunctionSelector(
-      token.interface.getFunction(confidentialAvailableFunction).selector,
-    );
+    const availableHandle = await token.confidentialAvailable.staticCall(confidentialAvailableArgs);
     await (token as any)
       .connect(recipient)
-      [confidentialAvailableAccessFunctionSelector](confidentialAvailableArgs)
+      .confidentialAvailableAccess(confidentialAvailableArgs)
       .then(tx => tx.wait());
     expect(
       await fhevm.userDecryptEuint(FhevmType.euint64, availableHandle, await token.getAddress(), recipient),
@@ -98,15 +94,11 @@ describe('ERC7984Freezable', function () {
         encryptedInput.inputProof,
       )
       .then(tx => tx.wait());
-    const confidentialAvailableFunction = 'confidentialAvailable';
     const confidentialAvailableArgs = recipient.address;
-    const availableHandle = await token[confidentialAvailableFunction].staticCall(confidentialAvailableArgs);
-    const confidentialAvailableAccessFunctionSelector = await token.getHandleAccessFunctionSelector(
-      token.interface.getFunction(confidentialAvailableFunction).selector,
-    );
+    const availableHandle = await token.confidentialAvailable.staticCall(confidentialAvailableArgs);
     await (token as any)
       .connect(recipient)
-      [confidentialAvailableAccessFunctionSelector](confidentialAvailableArgs)
+      .confidentialAvailableAccess(confidentialAvailableArgs)
       .then(tx => tx.wait());
     expect(
       await fhevm.userDecryptEuint(FhevmType.euint64, availableHandle, await token.getAddress(), recipient),
@@ -122,10 +114,6 @@ describe('ERC7984Freezable', function () {
         encryptedInput2.handles[0],
         encryptedInput2.inputProof,
       )
-      .then(tx => tx.wait());
-    await token
-      .connect(recipient)
-      .confidentialBalanceAccess(recipient.address)
       .then(tx => tx.wait());
     expect(
       await fhevm.userDecryptEuint(
@@ -166,10 +154,6 @@ describe('ERC7984Freezable', function () {
         encryptedInput2.handles[0],
         encryptedInput2.inputProof,
       )
-      .then(tx => tx.wait());
-    await token
-      .connect(recipient)
-      .confidentialBalanceAccess(recipient.address)
       .then(tx => tx.wait());
     expect(
       await fhevm.userDecryptEuint(

@@ -14,6 +14,8 @@ import {HandleAccessManager} from "../../utils/HandleAccessManager.sol";
 contract ERC7984FreezableMock is ERC7984Freezable, AccessControl, HandleAccessManager, SepoliaConfig {
     bytes32 public constant FREEZER_ROLE = keccak256("FREEZER_ROLE");
 
+    error UnallowedHandleAccess(bytes32 handle, address account);
+
     constructor(
         string memory name,
         string memory symbol,
@@ -21,22 +23,15 @@ contract ERC7984FreezableMock is ERC7984Freezable, AccessControl, HandleAccessMa
         address freezer
     ) ConfidentialFungibleToken(name, symbol, tokenUri) {
         _grantRole(FREEZER_ROLE, freezer);
-        setHandleAccessFunctionSelector(this.confidentialBalanceOf.selector, this.confidentialBalanceAccess.selector);
-        setHandleAccessFunctionSelector(this.confidentialAvailable.selector, this.confidentialAvailableAccess.selector);
-    }
-
-    function confidentialBalanceAccess(address account) public {
-        _getHandleAllowance(confidentialBalanceOf(account), account);
     }
 
     function confidentialAvailableAccess(address account) public {
-        _getHandleAllowance(confidentialAvailable(account), account);
+        getHandleAllowance(euint64.unwrap(confidentialAvailable(account)), account, true);
     }
 
-    function _validateHandleAllowance(
-        bytes32 handle,
-        address account
-    ) internal view override onlySenderAccess(handle, account) {}
+    function _validateHandleAllowance(bytes32 handle, address account) internal view override {
+        require(msg.sender == account, UnallowedHandleAccess(handle, account));
+    }
 
     function $_mint(address to, uint64 amount) public returns (euint64 transferred) {
         return _mint(to, FHE.asEuint64(amount));
