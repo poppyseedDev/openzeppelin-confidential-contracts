@@ -118,6 +118,7 @@ abstract contract ERC7984Rwa is
         return _burn(account, encryptedAmount);
     }
 
+    //TODO: Rename all to confidential
     /// @dev Forces transfer of confidential amount of tokens from account to account with proof by skipping compliance checks.
     function forceTransfer(
         address from,
@@ -134,14 +135,11 @@ abstract contract ERC7984Rwa is
         address to,
         euint64 encryptedAmount
     ) public virtual onlyAdminOrAgent returns (euint64 transferred) {
+        euint64 available = confidentialAvailable(from);
         transferred = ConfidentialFungibleToken._update(from, to, encryptedAmount); // bypass frozen & compliance checks
         setConfidentialFrozen(
             from,
-            FHE.select(
-                FHE.gt(transferred, confidentialAvailable((from))),
-                confidentialBalanceOf(from),
-                confidentialFrozen(from)
-            )
+            FHE.select(FHE.gt(transferred, available), confidentialBalanceOf(from), confidentialFrozen(from))
         );
     }
 
