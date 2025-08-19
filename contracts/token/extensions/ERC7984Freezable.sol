@@ -9,29 +9,30 @@ import {ConfidentialFungibleToken} from "../ConfidentialFungibleToken.sol";
 /**
  * Inspired by https://github.com/OpenZeppelin/openzeppelin-community-contracts/pull/186.
  *
- * @dev Extension of {ERC7984} that allows to implement a freezing
- * mechanism that can be managed by an authorized account with the
- * {_setConfidentialFrozen} function.
+ * @dev Extension of {ERC7984} that allows to implement a confidential
+ * freezing mechanism that can be managed by an authorized account with
+ * the {_setConfidentialFrozen} function.
  *
  * The freezing mechanism provides the guarantee to the contract owner
- * (e.g. a DAO or a well-configured multisig) that a specific amount
- * of tokens held by an account won't be transferable until those
+ * (e.g. a DAO or a well-configured multisig) that a specific confidential
+ * amount of tokens held by an account won't be transferable until those
  * tokens are unfrozen.
  */
 abstract contract ERC7984Freezable is ConfidentialFungibleToken {
-    /// @dev Frozen amount of tokens per address.
+    /// @dev Confidential frozen amount of tokens per address.
     mapping(address account => euint64 encryptedAmount) private _frozenBalances;
 
+    /// @dev Emitted when a confidential amount of token is frozen for an account
     event Frozen(address indexed account, euint64 encryptedAmount);
 
     error ERC7984UnauthorizedUseOfEncryptedAmount(euint64 encryptedAmount, address user);
 
-    /// @dev Returns the frozen balance of an account.
+    /// @dev Returns the confidential frozen balance of an account.
     function confidentialFrozen(address account) public view virtual returns (euint64) {
         return _frozenBalances[account];
     }
 
-    /// @dev Returns the available (unfrozen) balance of an account. Up to {confidentialBalanceOf}.
+    /// @dev Returns the confidential available (unfrozen) balance of an account. Up to {confidentialBalanceOf}.
     function confidentialAvailable(address account) public virtual returns (euint64) {
         (ebool success, euint64 unfrozen) = FHESafeMath.tryDecrease(
             confidentialBalanceOf(account),
@@ -41,7 +42,7 @@ abstract contract ERC7984Freezable is ConfidentialFungibleToken {
         return unfrozen;
     }
 
-    /// @dev Internal function to set the frozen token amount for an account.
+    /// @dev Freezes a confidential amount of token amount for an account with a proof.
     function setConfidentialFrozen(
         address account,
         externalEuint64 encryptedAmount,
@@ -50,7 +51,7 @@ abstract contract ERC7984Freezable is ConfidentialFungibleToken {
         return setConfidentialFrozen(account, FHE.fromExternal(encryptedAmount, inputProof));
     }
 
-    /// @dev Internal function to set the frozen token amount for an account.
+    /// @dev Freezes a confidential amount of token amount for an account.
     function setConfidentialFrozen(address account, euint64 encryptedAmount) public virtual {
         require(
             FHE.isAllowed(encryptedAmount, msg.sender),
@@ -59,6 +60,7 @@ abstract contract ERC7984Freezable is ConfidentialFungibleToken {
         return _setConfidentialFrozen(account, encryptedAmount);
     }
 
+    /// @dev Internal function to freeze a confidential amount of token amount for an account.
     function _setConfidentialFrozen(address account, euint64 encryptedAmount) internal virtual {
         _checkFreezer();
         FHE.allowThis(encryptedAmount);
@@ -67,14 +69,12 @@ abstract contract ERC7984Freezable is ConfidentialFungibleToken {
         emit Frozen(account, encryptedAmount);
     }
 
+    /// @dev Checks has freezer role.
     function _checkFreezer() internal virtual;
 
     /**
-     * @dev See {ERC7984-_update}.
-     *
-     * Requirements:
-     *
-     * * `from` must have sufficient unfrozen balance.
+     * @dev See {ERC7984-_update}. The `from` account must have sufficient unfrozen balance,
+     * otherwise the update is performed with a zero amount.
      */
     function _update(address from, address to, euint64 encryptedAmount) internal virtual override returns (euint64) {
         if (from != address(0)) {
@@ -83,7 +83,4 @@ abstract contract ERC7984Freezable is ConfidentialFungibleToken {
         }
         return super._update(from, to, encryptedAmount);
     }
-
-    // We don't check frozen balance for approvals since the actual transfer
-    // will be checked in _update. This allows for more flexible approval patterns.
 }
