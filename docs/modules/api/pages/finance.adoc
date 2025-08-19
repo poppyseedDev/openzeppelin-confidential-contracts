@@ -4,7 +4,7 @@
 :VestingWalletConfidential: pass:normal[xref:finance.adoc#VestingWalletConfidential[`VestingWalletConfidential`]]
 :VestingWalletConfidentialFactory: pass:normal[xref:finance.adoc#VestingWalletConfidentialFactory[`VestingWalletConfidentialFactory`]]
 :VestingWalletConfidentialFactory: pass:normal[xref:finance.adoc#VestingWalletConfidentialFactory[`VestingWalletConfidentialFactory`]]
-:IConfidentialFungibleToken: pass:normal[xref:interfaces.adoc#IConfidentialFungibleToken[`IConfidentialFungibleToken`]]
+:IERC7984: pass:normal[xref:interfaces.adoc#IERC7984[`IERC7984`]]
 :VestingWalletConfidential: pass:normal[xref:finance.adoc#VestingWalletConfidential[`VestingWalletConfidential`]]
 :VestingWalletConfidential: pass:normal[xref:finance.adoc#VestingWalletConfidential[`VestingWalletConfidential`]]
 :VestingWalletConfidential-start: pass:normal[xref:finance.adoc#VestingWalletConfidential-start--[`VestingWalletConfidential.start`]]
@@ -57,7 +57,7 @@ For convenience, this directory also includes:
 import "@openzeppelin/confidential-contracts/finance/VestingWalletConfidential.sol";
 ```
 
-A vesting wallet is an ownable contract that can receive ConfidentialFungibleTokens, and release these
+A vesting wallet is an ownable contract that can receive ERC7984 tokens, and release these
 assets to the wallet owner, also referred to as "beneficiary", according to a vesting schedule.
 
 Any assets transferred to this contract will follow the vesting schedule as if they were locked from the beginning.
@@ -193,7 +193,7 @@ Amount of token already released
 ==== `[.contract-item-name]#++releasable++#++(address token) → euint64++` [.item-kind]#public#
 
 Getter for the amount of releasable `token` tokens. `token` should be the address of an
-{IConfidentialFungibleToken} contract.
+{IERC7984} contract.
 
 [.contract-item]
 [[VestingWalletConfidential-release-address-]]
@@ -433,7 +433,7 @@ functions remain unimplemented to allow for custom implementations of the vestin
 .Functions
 --
 * `++constructor()++`
-* `++batchFundVestingWalletConfidential(confidentialFungibleToken, vestingPlans, inputProof)++`
+* `++batchFundVestingWalletConfidential(token, vestingPlans, inputProof)++`
 * `++createVestingWalletConfidential(initArgs)++`
 * `++predictVestingWalletConfidential(initArgs)++`
 * `++_validateVestingWalletInitArgs(initArgs)++`
@@ -446,7 +446,7 @@ functions remain unimplemented to allow for custom implementations of the vestin
 [.contract-index]
 .Events
 --
-* `++VestingWalletConfidentialFunded(vestingWalletConfidential, confidentialFungibleToken, transferredAmount, initArgs)++`
+* `++VestingWalletConfidentialFunded(vestingWalletConfidential, token, transferredAmount, initArgs)++`
 * `++VestingWalletConfidentialCreated(vestingWalletConfidential, initArgs)++`
 
 --
@@ -457,7 +457,7 @@ functions remain unimplemented to allow for custom implementations of the vestin
 
 [.contract-item]
 [[VestingWalletConfidentialFactory-batchFundVestingWalletConfidential-address-struct-VestingWalletConfidentialFactory-VestingPlan---bytes-]]
-==== `[.contract-item-name]#++batchFundVestingWalletConfidential++#++(address confidentialFungibleToken, struct VestingWalletConfidentialFactory.VestingPlan[] vestingPlans, bytes inputProof)++` [.item-kind]#public#
+==== `[.contract-item-name]#++batchFundVestingWalletConfidential++#++(address token, struct VestingWalletConfidentialFactory.VestingPlan[] vestingPlans, bytes inputProof)++` [.item-kind]#public#
 
 Batches the funding of multiple confidential vesting wallets.
 
@@ -508,7 +508,7 @@ Gets create2 salt for a confidential vesting wallet.
 
 [.contract-item]
 [[VestingWalletConfidentialFactory-VestingWalletConfidentialFunded-address-address-euint64-bytes-]]
-==== `[.contract-item-name]#++VestingWalletConfidentialFunded++#++(address indexed vestingWalletConfidential, address indexed confidentialFungibleToken, euint64 transferredAmount, bytes initArgs)++` [.item-kind]#event#
+==== `[.contract-item-name]#++VestingWalletConfidentialFunded++#++(address indexed vestingWalletConfidential, address indexed token, euint64 transferredAmount, bytes initArgs)++` [.item-kind]#event#
 
 Emitted for each vesting wallet funded within a batch.
 
