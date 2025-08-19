@@ -38,8 +38,7 @@ abstract contract ERC7984Freezable is ConfidentialFungibleToken {
             confidentialBalanceOf(account),
             confidentialFrozen(account)
         );
-        unfrozen = FHE.select(success, unfrozen, FHE.asEuint64(0));
-        return unfrozen;
+        return FHE.select(success, unfrozen, FHE.asEuint64(0));
     }
 
     /// @dev Freezes a confidential amount of token amount for an account with a proof.
