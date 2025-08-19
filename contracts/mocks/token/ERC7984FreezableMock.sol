@@ -5,8 +5,8 @@ pragma solidity ^0.8.24;
 import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {FHE, euint64, externalEuint64} from "@fhevm/solidity/lib/FHE.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {ConfidentialFungibleToken} from "../../token/ConfidentialFungibleToken.sol";
-import {ERC7984Freezable} from "../../token/extensions/ERC7984Freezable.sol";
+import {ERC7984} from "../../token/ERC7984/ERC7984.sol";
+import {ERC7984Freezable} from "../../token/ERC7984/extensions/ERC7984Freezable.sol";
 import {HandleAccessManager} from "../../utils/HandleAccessManager.sol";
 
 // solhint-disable func-name-mixedcase
@@ -20,7 +20,7 @@ contract ERC7984FreezableMock is ERC7984Freezable, AccessControl, HandleAccessMa
         string memory symbol,
         string memory tokenUri,
         address freezer
-    ) ConfidentialFungibleToken(name, symbol, tokenUri) {
+    ) ERC7984(name, symbol, tokenUri) {
         _grantRole(FREEZER_ROLE, freezer);
     }
 
