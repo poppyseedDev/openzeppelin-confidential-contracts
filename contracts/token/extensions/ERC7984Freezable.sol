@@ -22,9 +22,9 @@ abstract contract ERC7984Freezable is ConfidentialFungibleToken {
     /// @dev Frozen amount of tokens per address.
     mapping(address account => euint64 encryptedAmount) private _frozenBalances;
 
-    error ERC7984UnauthorizedUseOfEncryptedAmount(euint64 encryptedAmount, address user);
-
     event Frozen(address indexed account, euint64 encryptedAmount);
+
+    error ERC7984UnauthorizedUseOfEncryptedAmount(euint64 encryptedAmount, address user);
 
     /// @dev Returns the frozen balance of an account.
     function confidentialFrozen(address account) public view virtual returns (euint64) {
