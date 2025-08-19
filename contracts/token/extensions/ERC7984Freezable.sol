@@ -38,7 +38,6 @@ abstract contract ERC7984Freezable is ConfidentialFungibleToken {
             confidentialFrozen(account)
         );
         unfrozen = FHE.select(success, unfrozen, FHE.asEuint64(0));
-        FHE.allowThis(unfrozen);
         return unfrozen;
     }
 

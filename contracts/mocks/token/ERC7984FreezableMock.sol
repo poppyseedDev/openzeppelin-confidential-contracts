@@ -4,7 +4,6 @@ pragma solidity ^0.8.24;
 
 import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {FHE, euint64, externalEuint64} from "@fhevm/solidity/lib/FHE.sol";
-import {Impl} from "@fhevm/solidity/lib/Impl.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ConfidentialFungibleToken} from "../../token/ConfidentialFungibleToken.sol";
 import {ERC7984Freezable} from "../../token/extensions/ERC7984Freezable.sol";
@@ -26,7 +25,9 @@ contract ERC7984FreezableMock is ERC7984Freezable, AccessControl, HandleAccessMa
     }
 
     function confidentialAvailableAccess(address account) public {
-        getHandleAllowance(euint64.unwrap(confidentialAvailable(account)), account, true);
+        euint64 available = confidentialAvailable(account);
+        FHE.allowThis(available);
+        getHandleAllowance(euint64.unwrap(available), account, true);
     }
 
     function _validateHandleAllowance(bytes32 handle, address account) internal view override {
