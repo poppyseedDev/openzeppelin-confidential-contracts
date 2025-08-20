@@ -1,23 +1,50 @@
 import { IACL__factory } from '../../../../types';
+import { $ERC7984FreezableMock } from '../../../../types/contracts-exposed/mocks/token/ERC7984FreezableMock.sol/$ERC7984FreezableMock';
+import { $ERC7984Mock } from '../../../../types/contracts-exposed/mocks/token/ERC7984Mock.sol/$ERC7984Mock';
 import { ACL_ADDRESS } from '../../../helpers/accounts';
+import { shouldBehaveLikeERC7984 } from '../ERC7984.behaviour';
 import { FhevmType } from '@fhevm/hardhat-plugin';
 import { expect } from 'chai';
 import { ethers, fhevm } from 'hardhat';
+
+const name = 'ConfidentialFungibleToken';
+const symbol = 'CFT';
+const uri = 'https://example.com/metadata';
 
 /* eslint-disable no-unexpected-multiline */
 describe('ERC7984Freezable', function () {
   async function deployFixture() {
     const [holder, recipient, freezer, operator, anyone] = await ethers.getSigners();
-    const token = await ethers.deployContract('ERC7984FreezableMock', ['name', 'symbol', 'uri', freezer.address]);
+    const token = (await ethers.deployContract('$ERC7984FreezableMock', [
+      name,
+      symbol,
+      uri,
+      freezer.address,
+    ])) as any as $ERC7984FreezableMock;
+    const encryptedInput = await fhevm
+      .createEncryptedInput(await token.getAddress(), holder.address)
+      .add64(1000)
+      .encrypt();
+    await token
+      .connect(holder)
+      ['$_mint(address,bytes32,bytes)'](holder, encryptedInput.handles[0], encryptedInput.inputProof);
     const acl = IACL__factory.connect(ACL_ADDRESS, ethers.provider);
     return { token, acl, holder, recipient, freezer, operator, anyone };
   }
 
   it('should set and get confidential frozen', async function () {
     const { token, acl, holder, recipient, freezer } = await deployFixture();
+    const encryptedRecipientMintInput = await fhevm
+      .createEncryptedInput(await token.getAddress(), holder.address)
+      .add64(1000)
+      .encrypt();
     await token
       .connect(holder)
-      .$_mint(recipient.address, 1000)
+      ['$_mint(address,bytes32,bytes)'](
+        recipient.address,
+        encryptedRecipientMintInput.handles[0],
+        encryptedRecipientMintInput.inputProof,
+      )
       .then(tx => tx.wait());
     const encryptedInput = await fhevm
       .createEncryptedInput(await token.getAddress(), freezer.address)
@@ -57,7 +84,18 @@ describe('ERC7984Freezable', function () {
 
   it('should not set confidential frozen if not called by freezer', async function () {
     const { token, holder, recipient, anyone } = await deployFixture();
-    await token.$_mint(holder.address, 1000).then(tx => tx.wait());
+    const encryptedRecipientMintInput = await fhevm
+      .createEncryptedInput(await token.getAddress(), holder.address)
+      .add64(1000)
+      .encrypt();
+    await token
+      .connect(holder)
+      ['$_mint(address,bytes32,bytes)'](
+        recipient.address,
+        encryptedRecipientMintInput.handles[0],
+        encryptedRecipientMintInput.inputProof,
+      )
+      .then(tx => tx.wait());
     const encryptedInput = await fhevm
       .createEncryptedInput(await token.getAddress(), anyone.address)
       .add64(100)
@@ -78,9 +116,17 @@ describe('ERC7984Freezable', function () {
 
   it('should transfer max available', async function () {
     const { token, holder, recipient, freezer, anyone } = await deployFixture();
+    const encryptedRecipientMintInput = await fhevm
+      .createEncryptedInput(await token.getAddress(), holder.address)
+      .add64(1000)
+      .encrypt();
     await token
       .connect(holder)
-      .$_mint(recipient.address, 1000)
+      ['$_mint(address,bytes32,bytes)'](
+        recipient.address,
+        encryptedRecipientMintInput.handles[0],
+        encryptedRecipientMintInput.inputProof,
+      )
       .then(tx => tx.wait());
     const encryptedInput = await fhevm
       .createEncryptedInput(await token.getAddress(), freezer.address)
@@ -127,9 +173,17 @@ describe('ERC7984Freezable', function () {
 
   it('should transfer zero if transferring more than available', async function () {
     const { token, holder, recipient, freezer, anyone } = await deployFixture();
+    const encryptedRecipientMintInput = await fhevm
+      .createEncryptedInput(await token.getAddress(), holder.address)
+      .add64(1000)
+      .encrypt();
     await token
       .connect(holder)
-      .$_mint(recipient.address, 1000)
+      ['$_mint(address,bytes32,bytes)'](
+        recipient.address,
+        encryptedRecipientMintInput.handles[0],
+        encryptedRecipientMintInput.inputProof,
+      )
       .then(tx => tx.wait());
     const encryptedInput = await fhevm
       .createEncryptedInput(await token.getAddress(), freezer.address)
@@ -163,6 +217,11 @@ describe('ERC7984Freezable', function () {
         recipient,
       ),
     ).to.equal(1000);
+  });
+
+  shouldBehaveLikeERC7984(async () => {
+    const { token, holder, recipient, operator, anyone } = await deployFixture();
+    return { token: token as any as $ERC7984Mock, holder, recipient, operator, anyone };
   });
 });
 /* eslint-disable no-unexpected-multiline */

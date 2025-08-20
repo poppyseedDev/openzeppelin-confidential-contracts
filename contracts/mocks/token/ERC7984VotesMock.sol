@@ -34,7 +34,7 @@ abstract contract ERC7984VotesMock is ERC7984Mock, ERC7984Votes {
         address from,
         address to,
         euint64 amount
-    ) internal virtual override(ERC7984Mock, ERC7984Votes) returns (euint64) {
+    ) internal virtual override(ERC7984, ERC7984Votes) returns (euint64) {
         return super._update(from, to, amount);
     }
 

@@ -8,9 +8,10 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC7984} from "../../token/ERC7984/ERC7984.sol";
 import {ERC7984Freezable} from "../../token/ERC7984/extensions/ERC7984Freezable.sol";
 import {HandleAccessManager} from "../../utils/HandleAccessManager.sol";
+import {ERC7984Mock} from "./ERC7984Mock.sol";
 
 // solhint-disable func-name-mixedcase
-contract ERC7984FreezableMock is ERC7984Freezable, AccessControl, HandleAccessManager, SepoliaConfig {
+contract ERC7984FreezableMock is ERC7984Mock, ERC7984Freezable, AccessControl, HandleAccessManager {
     bytes32 public constant FREEZER_ROLE = keccak256("FREEZER_ROLE");
 
     error UnallowedHandleAccess(bytes32 handle, address account);
@@ -20,7 +21,7 @@ contract ERC7984FreezableMock is ERC7984Freezable, AccessControl, HandleAccessMa
         string memory symbol,
         string memory tokenUri,
         address freezer
-    ) ERC7984(name, symbol, tokenUri) {
+    ) ERC7984Mock(name, symbol, tokenUri) {
         _grantRole(FREEZER_ROLE, freezer);
     }
 
@@ -34,8 +35,12 @@ contract ERC7984FreezableMock is ERC7984Freezable, AccessControl, HandleAccessMa
         require(msg.sender == account, UnallowedHandleAccess(handle, account));
     }
 
-    function $_mint(address to, uint64 amount) public returns (euint64 transferred) {
-        return _mint(to, FHE.asEuint64(amount));
+    function _update(
+        address from,
+        address to,
+        euint64 amount
+    ) internal virtual override(ERC7984, ERC7984Freezable) returns (euint64) {
+        return super._update(from, to, amount);
     }
 
     function _checkFreezer() internal override onlyRole(FREEZER_ROLE) {}
