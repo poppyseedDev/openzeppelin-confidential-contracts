@@ -1,5 +1,5 @@
-import { IACL__factory } from '../../../types';
-import { ACL_ADDRESS } from '../../helpers/accounts';
+import { IACL__factory } from '../../../../types';
+import { ACL_ADDRESS } from '../../../helpers/accounts';
 import { FhevmType } from '@fhevm/hardhat-plugin';
 import { expect } from 'chai';
 import { ethers, fhevm } from 'hardhat';
