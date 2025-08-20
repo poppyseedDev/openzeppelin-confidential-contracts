@@ -32,7 +32,7 @@ describe('ERC7984Freezable', function () {
           encryptedInput.inputProof,
         ),
     )
-      .to.emit(token, 'Frozen')
+      .to.emit(token, 'TokensFrozen')
       .withArgs(recipient.address, encryptedInput.handles[0]);
     const frozenHandle = await token.confidentialFrozen(recipient.address);
     expect(frozenHandle).to.equal(ethers.hexlify(encryptedInput.handles[0]));

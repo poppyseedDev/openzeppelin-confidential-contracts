@@ -23,7 +23,7 @@ abstract contract ERC7984Freezable is ERC7984 {
     mapping(address account => euint64 encryptedAmount) private _frozenBalances;
 
     /// @dev Emitted when a confidential amount of token is frozen for an account
-    event Frozen(address indexed account, euint64 encryptedAmount);
+    event TokensFrozen(address indexed account, euint64 encryptedAmount);
 
     /// @dev Returns the confidential frozen balance of an account.
     function confidentialFrozen(address account) public view virtual returns (euint64) {
@@ -39,39 +39,39 @@ abstract contract ERC7984Freezable is ERC7984 {
         return FHE.select(success, unfrozen, FHE.asEuint64(0));
     }
 
-    /// @dev Freezes a confidential amount of token amount for an account with a proof.
+    /// @dev Freezes a confidential amount of tokens for an account with a proof.
     function setConfidentialFrozen(
         address account,
         externalEuint64 encryptedAmount,
         bytes calldata inputProof
     ) public virtual {
-        return setConfidentialFrozen(account, FHE.fromExternal(encryptedAmount, inputProof));
+        setConfidentialFrozen(account, FHE.fromExternal(encryptedAmount, inputProof));
     }
 
-    /// @dev Freezes a confidential amount of token amount for an account.
+    /// @dev Freezes a confidential amount of tokens for an account.
     function setConfidentialFrozen(address account, euint64 encryptedAmount) public virtual {
         require(
             FHE.isAllowed(encryptedAmount, msg.sender),
             ERC7984UnauthorizedUseOfEncryptedAmount(encryptedAmount, msg.sender)
         );
-        return _setConfidentialFrozen(account, encryptedAmount);
+        _setConfidentialFrozen(account, encryptedAmount);
     }
 
-    /// @dev Internal function to freeze a confidential amount of token amount for an account.
+    /// @dev Internal function to freeze a confidential amount of tokens for an account.
     function _setConfidentialFrozen(address account, euint64 encryptedAmount) internal virtual {
         _checkFreezer();
         FHE.allowThis(encryptedAmount);
         FHE.allow(encryptedAmount, account);
         _frozenBalances[account] = encryptedAmount;
-        emit Frozen(account, encryptedAmount);
+        emit TokensFrozen(account, encryptedAmount);
     }
 
-    /// @dev Checks has freezer role.
+    /// @dev Unimplemented function that must revert if `msg.sender` is not authorized as a freezer.
     function _checkFreezer() internal virtual;
 
     /**
      * @dev See {ERC7984-_update}. The `from` account must have sufficient unfrozen balance,
-     * otherwise the update is performed with a zero amount.
+     * otherwise 0 tokens are transferred.
      */
     function _update(address from, address to, euint64 encryptedAmount) internal virtual override returns (euint64) {
         if (from != address(0)) {
