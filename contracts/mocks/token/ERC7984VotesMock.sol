@@ -30,6 +30,11 @@ abstract contract ERC7984VotesMock is ERC7984Mock, ERC7984Votes {
         return super.confidentialTotalSupply();
     }
 
+    function getPastTotalSupplyAccess(uint256 timepoint) public {
+        require(msg.sender == _OWNER);
+        FHE.allow(getPastTotalSupply(timepoint), msg.sender);
+    }
+
     function _update(
         address from,
         address to,
