@@ -7,7 +7,7 @@ import {FHESafeMath} from "../../../utils/FHESafeMath.sol";
 import {ERC7984} from "../ERC7984.sol";
 
 /**
- * Inspired by https://github.com/OpenZeppelin/openzeppelin-community-contracts/pull/186.
+ * Inspired by https://github.com/OpenZeppelin/openzeppelin-community-contracts/blob/master/contracts/token/ERC20/extensions/ERC20Freezable.sol
  *
  * @dev Extension of {ERC7984} that allows to implement a confidential
  * freezing mechanism that can be managed by an authorized account with
