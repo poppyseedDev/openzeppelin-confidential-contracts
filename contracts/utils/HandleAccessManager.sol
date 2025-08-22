@@ -13,7 +13,7 @@ abstract contract HandleAccessManager {
      * {_validateHandleAllowance} function.
      */
     function getHandleAllowance(bytes32 handle, address account, bool persistent) public virtual {
-        _validateHandleAllowance(handle, account);
+        _validateHandleAllowance(handle);
         if (persistent) {
             Impl.allow(handle, account);
         } else {
@@ -25,5 +25,5 @@ abstract contract HandleAccessManager {
      * @dev Unimplemented function that must revert if the message sender is not allowed to call
      * {getHandleAllowance} for the given handle.
      */
-    function _validateHandleAllowance(bytes32 handle, address account) internal view virtual;
+    function _validateHandleAllowance(bytes32 handle) internal view virtual;
 }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.27;
 
 import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {FHE, euint64, externalEuint64} from "@fhevm/solidity/lib/FHE.sol";
@@ -25,16 +25,6 @@ contract ERC7984FreezableMock is ERC7984Mock, ERC7984Freezable, AccessControl, H
         _grantRole(FREEZER_ROLE, freezer);
     }
 
-    function confidentialAvailableAccess(address account) public {
-        euint64 available = confidentialAvailable(account);
-        FHE.allowThis(available);
-        getHandleAllowance(euint64.unwrap(available), account, true);
-    }
-
-    function _validateHandleAllowance(bytes32 handle, address account) internal view override {
-        require(msg.sender == account, UnallowedHandleAccess(handle, account));
-    }
-
     function _update(
         address from,
         address to,
@@ -42,6 +32,19 @@ contract ERC7984FreezableMock is ERC7984Mock, ERC7984Freezable, AccessControl, H
     ) internal virtual override(ERC7984, ERC7984Freezable) returns (euint64) {
         return super._update(from, to, amount);
     }
+
+    function createEncryptedAmount(uint64 amount) public returns (euint64 encryptedAmount) {
+        FHE.allowThis(encryptedAmount = FHE.asEuint64(amount));
+        FHE.allow(encryptedAmount, msg.sender);
+    }
+
+    function confidentialAvailableAccess(address account) public {
+        euint64 available = confidentialAvailable(account);
+        FHE.allowThis(available);
+        getHandleAllowance(euint64.unwrap(available), account, true);
+    }
+
+    function _validateHandleAllowance(bytes32 handle) internal view override {}
 
     function _checkFreezer() internal override onlyRole(FREEZER_ROLE) {}
 }
