@@ -2,6 +2,7 @@ import { IACL__factory } from '../../../../types';
 import { ACL_ADDRESS } from '../../../helpers/accounts';
 import { FhevmType } from '@fhevm/hardhat-plugin';
 import { expect } from 'chai';
+import { AddressLike, BytesLike } from 'ethers';
 import { ethers, fhevm } from 'hardhat';
 
 describe('ERC7984Freezable', function () {
@@ -11,42 +12,53 @@ describe('ERC7984Freezable', function () {
     const acl = IACL__factory.connect(ACL_ADDRESS, ethers.provider);
     return { token, acl, holder, recipient, freezer, operator, anyone };
   }
-
-  it('should set and get confidential frozen', async function () {
-    const { token, acl, holder, recipient, freezer } = await deployFixture();
-    await token.connect(holder).$_mint(recipient.address, 1000);
-    const encryptedInput = await fhevm
-      .createEncryptedInput(await token.getAddress(), freezer.address)
-      .add64(100)
-      .encrypt();
-    await expect(
-      token
-        .connect(freezer)
-        ['setConfidentialFrozen(address,bytes32,bytes)'](
-          recipient.address,
-          encryptedInput.handles[0],
-          encryptedInput.inputProof,
-        ),
-    )
-      .to.emit(token, 'TokensFrozen')
-      .withArgs(recipient.address, encryptedInput.handles[0]);
-    const frozenHandle = await token.confidentialFrozen(recipient.address);
-    expect(frozenHandle).to.equal(ethers.hexlify(encryptedInput.handles[0]));
-    await expect(acl.isAllowed(frozenHandle, recipient.address)).to.eventually.be.true;
-    await expect(
-      fhevm.userDecryptEuint(FhevmType.euint64, frozenHandle, await token.getAddress(), recipient),
-    ).to.eventually.equal(100);
-    const balanceHandle = await token.confidentialBalanceOf(recipient.address);
-    await expect(
-      fhevm.userDecryptEuint(FhevmType.euint64, balanceHandle, await token.getAddress(), recipient),
-    ).to.eventually.equal(1000);
-    const confidentialAvailableArgs = recipient.address;
-    const availableHandle = await token.confidentialAvailable.staticCall(confidentialAvailableArgs);
-    await (token as any).connect(recipient).confidentialAvailableAccess(confidentialAvailableArgs);
-    await expect(
-      fhevm.userDecryptEuint(FhevmType.euint64, availableHandle, await token.getAddress(), recipient),
-    ).to.eventually.equal(900);
-  });
+  for (const withProof of [true, false]) {
+    it(`should set and get confidential frozen ${withProof ? 'with proof' : ''}`, async function () {
+      const { token, acl, holder, recipient, freezer } = await deployFixture();
+      await token.connect(holder).$_mint(recipient.address, 1000);
+      const amount = 100;
+      let params = [recipient.address] as unknown as [
+        account: AddressLike,
+        encryptedAmount: BytesLike,
+        inputProof: BytesLike,
+      ];
+      if (withProof) {
+        const { handles, inputProof } = await fhevm
+          .createEncryptedInput(await token.getAddress(), freezer.address)
+          .add64(amount)
+          .encrypt();
+        params.push(handles[0], inputProof);
+      } else {
+        await token.connect(freezer).createEncryptedAmount(amount);
+        params.push(await token.connect(freezer).createEncryptedAmount.staticCall(amount));
+      }
+      await expect(
+        token
+          .connect(freezer)
+          [withProof ? 'setConfidentialFrozen(address,bytes32,bytes)' : 'setConfidentialFrozen(address,bytes32)'](
+            ...params,
+          ),
+      )
+        .to.emit(token, 'TokensFrozen')
+        .withArgs(recipient.address, params[1]);
+      const frozenHandle = await token.confidentialFrozen(recipient.address);
+      expect(frozenHandle).to.equal(ethers.hexlify(params[1]));
+      await expect(acl.isAllowed(frozenHandle, recipient.address)).to.eventually.be.true;
+      await expect(
+        fhevm.userDecryptEuint(FhevmType.euint64, frozenHandle, await token.getAddress(), recipient),
+      ).to.eventually.equal(100);
+      const balanceHandle = await token.confidentialBalanceOf(recipient.address);
+      await expect(
+        fhevm.userDecryptEuint(FhevmType.euint64, balanceHandle, await token.getAddress(), recipient),
+      ).to.eventually.equal(1000);
+      const confidentialAvailableArgs = recipient.address;
+      const availableHandle = await token.confidentialAvailable.staticCall(confidentialAvailableArgs);
+      await (token as any).connect(recipient).confidentialAvailableAccess(confidentialAvailableArgs);
+      await expect(
+        fhevm.userDecryptEuint(FhevmType.euint64, availableHandle, await token.getAddress(), recipient),
+      ).to.eventually.equal(900);
+    });
+  }
 
   it('should not set confidential frozen if not called by freezer', async function () {
     const { token, holder, recipient, anyone } = await deployFixture();
@@ -146,5 +158,18 @@ describe('ERC7984Freezable', function () {
         recipient,
       ),
     ).to.eventually.equal(1000);
+  });
+
+  it('should not set confidential frozen if unauthorized', async function () {
+    const { token, recipient, freezer, anyone } = await deployFixture();
+    const encryptedInput = await fhevm
+      .createEncryptedInput(await token.getAddress(), freezer.address)
+      .add64(100)
+      .encrypt();
+    await expect(
+      token.connect(anyone)['setConfidentialFrozen(address,bytes32)'](recipient.address, encryptedInput.handles[0]),
+    )
+      .to.be.revertedWithCustomError(token, 'ERC7984UnauthorizedUseOfEncryptedAmount')
+      .withArgs(encryptedInput.handles[0], anyone);
   });
 });

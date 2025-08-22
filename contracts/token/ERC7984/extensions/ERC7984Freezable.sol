@@ -45,7 +45,7 @@ abstract contract ERC7984Freezable is ERC7984 {
         externalEuint64 encryptedAmount,
         bytes calldata inputProof
     ) public virtual {
-        setConfidentialFrozen(account, FHE.fromExternal(encryptedAmount, inputProof));
+        _setConfidentialFrozen(account, FHE.fromExternal(encryptedAmount, inputProof));
     }
 
     /// @dev Freezes a confidential amount of tokens for an account.
