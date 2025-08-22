@@ -62,7 +62,7 @@ describe('ERC7984Freezable', function () {
 
   it('should not set confidential frozen if not called by freezer', async function () {
     const { token, holder, recipient, anyone } = await deployFixture();
-    await token.$_mint(holder.address, 1000).then(tx => tx.wait());
+    await token.$_mint(holder.address, 1000);
     const encryptedInput = await fhevm
       .createEncryptedInput(await token.getAddress(), anyone.address)
       .add64(100)
@@ -124,10 +124,7 @@ describe('ERC7984Freezable', function () {
 
   it('should transfer zero if transferring more than available', async function () {
     const { token, holder, recipient, freezer, anyone } = await deployFixture();
-    await token
-      .connect(holder)
-      .$_mint(recipient.address, 1000)
-      .then(tx => tx.wait());
+    await token.connect(holder).$_mint(recipient.address, 1000);
     const encryptedInput = await fhevm
       .createEncryptedInput(await token.getAddress(), freezer.address)
       .add64(500)
