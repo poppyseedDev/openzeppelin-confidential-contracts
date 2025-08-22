@@ -83,10 +83,7 @@ function shouldBehaveLikeERC7984(
 
           // Check total supply
           const totalSupplyHandle = await token.confidentialTotalSupply();
-          await token
-            .connect(holder)
-            .confidentialTotalSupplyAccess()
-            .then(tx => tx.wait());
+          await token.connect(holder).confidentialTotalSupplyAccess();
           await expect(
             fhevm.userDecryptEuint(FhevmType.euint64, totalSupplyHandle, await token.getAddress(), holder),
           ).to.eventually.equal(existingUser ? 2000 : 1000);
@@ -132,10 +129,7 @@ function shouldBehaveLikeERC7984(
 
           // Check total supply
           const totalSupplyHandle = await token.confidentialTotalSupply();
-          await token
-            .connect(holder)
-            .confidentialTotalSupplyAccess()
-            .then(tx => tx.wait());
+          await token.connect(holder).confidentialTotalSupplyAccess();
           await expect(
             fhevm.userDecryptEuint(FhevmType.euint64, totalSupplyHandle, await token.getAddress(), holder),
           ).to.eventually.equal(sufficientBalance ? 600 : 1000);
