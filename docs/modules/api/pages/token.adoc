@@ -3,11 +3,14 @@
 :IERC7984: pass:normal[xref:interfaces.adoc#IERC7984[`IERC7984`]]
 :ERC7984ERC20Wrapper: pass:normal[xref:token.adoc#ERC7984ERC20Wrapper[`ERC7984ERC20Wrapper`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
+:ERC7984ObserverAccess: pass:normal[xref:token.adoc#ERC7984ObserverAccess[`ERC7984ObserverAccess`]]
+:ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
 :ERC7984Utils: pass:normal[xref:token.adoc#ERC7984Utils[`ERC7984Utils`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
 :IERC7984: pass:normal[xref:interfaces.adoc#IERC7984[`IERC7984`]]
 :IERC7984Receiver-onConfidentialTransferReceived: pass:normal[xref:interfaces.adoc#IERC7984Receiver-onConfidentialTransferReceived-address-address-euint64-bytes-[`IERC7984Receiver.onConfidentialTransferReceived`]]
 :IERC7984-AmountDisclosed: pass:normal[xref:interfaces.adoc#IERC7984-AmountDisclosed-euint64-uint64-[`IERC7984.AmountDisclosed`]]
+:ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
@@ -21,7 +24,8 @@ This set of interfaces, contracts, and utilities are all related to `ERC7984`, a
 
 - {ERC7984}: Implementation of {IERC7984}.
 - {ERC7984ERC20Wrapper}: Extension of {ERC7984} which wraps an `ERC20` into a confidential token. The wrapper allows for free conversion in both directions at a fixed rate.
-- {ERC7984Utils}: A library that provides the on-transfer callback check used by {ERC7984}. 
+- {ERC7984ObserverAccess}: An extension for {ERC7984}, which allows each account to add an observer who is given access to their transfer and balance amounts.
+- {ERC7984Utils}: A library that provides the on-transfer callback check used by {ERC7984}.
 
 == Core
 :ERC7984InvalidReceiver: pass:normal[xref:#ERC7984-ERC7984InvalidReceiver-address-[`++ERC7984InvalidReceiver++`]]
@@ -581,6 +585,131 @@ ERC-20 token.
 ==== `[.contract-item-name]#++_maxDecimals++#++() → uint8++` [.item-kind]#internal#
 
 Returns the maximum number that will be used for {decimals} by the wrapper.
+
+:ERC7984ObserverAccessObserverSet: pass:normal[xref:#ERC7984ObserverAccess-ERC7984ObserverAccessObserverSet-address-address-address-[`++ERC7984ObserverAccessObserverSet++`]]
+:Unauthorized: pass:normal[xref:#ERC7984ObserverAccess-Unauthorized--[`++Unauthorized++`]]
+:setObserver: pass:normal[xref:#ERC7984ObserverAccess-setObserver-address-address-[`++setObserver++`]]
+:observer: pass:normal[xref:#ERC7984ObserverAccess-observer-address-[`++observer++`]]
+:_update: pass:normal[xref:#ERC7984ObserverAccess-_update-address-address-euint64-[`++_update++`]]
+
+:setObserver-address-address: pass:normal[xref:#ERC7984ObserverAccess-setObserver-address-address-[`++setObserver++`]]
+:observer-address: pass:normal[xref:#ERC7984ObserverAccess-observer-address-[`++observer++`]]
+:_update-address-address-euint64: pass:normal[xref:#ERC7984ObserverAccess-_update-address-address-euint64-[`++_update++`]]
+
+[.contract]
+[[ERC7984ObserverAccess]]
+=== `++ERC7984ObserverAccess++` link:https://github.com/OpenZeppelin/openzeppelin-confidential-contracts/blob/master/contracts/token/ERC7984/extensions/ERC7984ObserverAccess.sol[{github-icon},role=heading-link]
+
+[.hljs-theme-light.nopadding]
+```solidity
+import "@openzeppelin/confidential-contracts/token/ERC7984/extensions/ERC7984ObserverAccess.sol";
+```
+
+Extension of {ERC7984} that allows each account to add a observer who is given
+permanent ACL access to its transfer and balance amounts. A observer can be added or removed at any point in time.
+
+[.contract-index]
+.Functions
+--
+* `++setObserver(account, newObserver)++`
+* `++observer(account)++`
+* `++_update(from, to, amount)++`
+
+[.contract-subindex-inherited]
+.ERC7984
+* `++name()++`
+* `++symbol()++`
+* `++decimals()++`
+* `++tokenURI()++`
+* `++confidentialTotalSupply()++`
+* `++confidentialBalanceOf(account)++`
+* `++isOperator(holder, spender)++`
+* `++setOperator(operator, until)++`
+* `++confidentialTransfer(to, encryptedAmount, inputProof)++`
+* `++confidentialTransfer(to, amount)++`
+* `++confidentialTransferFrom(from, to, encryptedAmount, inputProof)++`
+* `++confidentialTransferFrom(from, to, amount)++`
+* `++confidentialTransferAndCall(to, encryptedAmount, inputProof, data)++`
+* `++confidentialTransferAndCall(to, amount, data)++`
+* `++confidentialTransferFromAndCall(from, to, encryptedAmount, inputProof, data)++`
+* `++confidentialTransferFromAndCall(from, to, amount, data)++`
+* `++discloseEncryptedAmount(encryptedAmount)++`
+* `++finalizeDiscloseEncryptedAmount(requestId, amount, signatures)++`
+* `++_setOperator(holder, operator, until)++`
+* `++_mint(to, amount)++`
+* `++_burn(from, amount)++`
+* `++_transfer(from, to, amount)++`
+* `++_transferAndCall(from, to, amount, data)++`
+
+[.contract-subindex-inherited]
+.IERC7984
+
+--
+
+[.contract-index]
+.Events
+--
+* `++ERC7984ObserverAccessObserverSet(account, oldObserver, newObserver)++`
+
+[.contract-subindex-inherited]
+.ERC7984
+
+[.contract-subindex-inherited]
+.IERC7984
+* `++OperatorSet(holder, operator, until)++`
+* `++ConfidentialTransfer(from, to, amount)++`
+* `++AmountDisclosed(encryptedAmount, amount)++`
+
+--
+
+[.contract-index]
+.Errors
+--
+* `++Unauthorized()++`
+
+[.contract-subindex-inherited]
+.ERC7984
+* `++ERC7984InvalidReceiver(receiver)++`
+* `++ERC7984InvalidSender(sender)++`
+* `++ERC7984UnauthorizedSpender(holder, spender)++`
+* `++ERC7984ZeroBalance(holder)++`
+* `++ERC7984UnauthorizedUseOfEncryptedAmount(amount, user)++`
+* `++ERC7984UnauthorizedCaller(caller)++`
+* `++ERC7984InvalidGatewayRequest(requestId)++`
+
+[.contract-subindex-inherited]
+.IERC7984
+
+--
+
+[.contract-item]
+[[ERC7984ObserverAccess-setObserver-address-address-]]
+==== `[.contract-item-name]#++setObserver++#++(address account, address newObserver)++` [.item-kind]#public#
+
+Sets the observer for the given account `account` to `newObserver`. Can be called by the
+account or the existing observer to abdicate the observer role (may only set to `address(0)`).
+
+[.contract-item]
+[[ERC7984ObserverAccess-observer-address-]]
+==== `[.contract-item-name]#++observer++#++(address account) → address++` [.item-kind]#public#
+
+Returns the observer for the given account `account`.
+
+[.contract-item]
+[[ERC7984ObserverAccess-_update-address-address-euint64-]]
+==== `[.contract-item-name]#++_update++#++(address from, address to, euint64 amount) → euint64 transferred++` [.item-kind]#internal#
+
+[.contract-item]
+[[ERC7984ObserverAccess-ERC7984ObserverAccessObserverSet-address-address-address-]]
+==== `[.contract-item-name]#++ERC7984ObserverAccessObserverSet++#++(address account, address oldObserver, address newObserver)++` [.item-kind]#event#
+
+Emitted when the observer is changed for the given account `account`.
+
+[.contract-item]
+[[ERC7984ObserverAccess-Unauthorized--]]
+==== `[.contract-item-name]#++Unauthorized++#++()++` [.item-kind]#error#
+
+Thrown when an account tries to set a `newObserver` for a given `account` without proper authority.
 
 == Utilities
 :checkOnTransferReceived: pass:normal[xref:#ERC7984Utils-checkOnTransferReceived-address-address-address-euint64-bytes-[`++checkOnTransferReceived++`]]
