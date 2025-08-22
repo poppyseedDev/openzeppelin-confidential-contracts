@@ -7,16 +7,16 @@ import {FHESafeMath} from "../../../utils/FHESafeMath.sol";
 import {ERC7984} from "../ERC7984.sol";
 
 /**
- * Inspired by https://github.com/OpenZeppelin/openzeppelin-community-contracts/blob/master/contracts/token/ERC20/extensions/ERC20Freezable.sol
- *
  * @dev Extension of {ERC7984} that allows to implement a confidential
  * freezing mechanism that can be managed by an authorized account with
- * the {_setConfidentialFrozen} function.
+ * {setConfidentialFrozen} functions.
  *
  * The freezing mechanism provides the guarantee to the contract owner
  * (e.g. a DAO or a well-configured multisig) that a specific confidential
  * amount of tokens held by an account won't be transferable until those
  * tokens are unfrozen.
+ *
+ * Inspired by https://github.com/OpenZeppelin/openzeppelin-community-contracts/blob/master/contracts/token/ERC20/extensions/ERC20Freezable.sol
  */
 abstract contract ERC7984Freezable is ERC7984 {
     /// @dev Confidential frozen amount of tokens per address.
