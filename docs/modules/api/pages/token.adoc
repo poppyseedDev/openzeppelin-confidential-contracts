@@ -3,6 +3,8 @@
 :IERC7984: pass:normal[xref:interfaces.adoc#IERC7984[`IERC7984`]]
 :ERC7984ERC20Wrapper: pass:normal[xref:token.adoc#ERC7984ERC20Wrapper[`ERC7984ERC20Wrapper`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
+:ERC7984Freezable: pass:normal[xref:token.adoc#ERC7984Freezable[`ERC7984Freezable`]]
+:ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
 :ERC7984ObserverAccess: pass:normal[xref:token.adoc#ERC7984ObserverAccess[`ERC7984ObserverAccess`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
 :ERC7984Utils: pass:normal[xref:token.adoc#ERC7984Utils[`ERC7984Utils`]]
@@ -11,6 +13,8 @@
 :IERC7984Receiver-onConfidentialTransferReceived: pass:normal[xref:interfaces.adoc#IERC7984Receiver-onConfidentialTransferReceived-address-address-euint64-bytes-[`IERC7984Receiver.onConfidentialTransferReceived`]]
 :IERC7984-AmountDisclosed: pass:normal[xref:interfaces.adoc#IERC7984-AmountDisclosed-euint64-uint64-[`IERC7984.AmountDisclosed`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
+:ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
+:ERC7984-_update: pass:normal[xref:token.adoc#ERC7984-_update-address-address-euint64-[`ERC7984._update`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
@@ -24,6 +28,7 @@ This set of interfaces, contracts, and utilities are all related to `ERC7984`, a
 
 - {ERC7984}: Implementation of {IERC7984}.
 - {ERC7984ERC20Wrapper}: Extension of {ERC7984} which wraps an `ERC20` into a confidential token. The wrapper allows for free conversion in both directions at a fixed rate.
+- {ERC7984Freezable}: An extension for {ERC7984}, which allows accounts granted the "freezer" role to freeze and unfreeze tokens.
 - {ERC7984ObserverAccess}: An extension for {ERC7984}, which allows each account to add an observer who is given access to their transfer and balance amounts.
 - {ERC7984Utils}: A library that provides the on-transfer callback check used by {ERC7984}.
 
@@ -585,6 +590,169 @@ ERC-20 token.
 ==== `[.contract-item-name]#++_maxDecimals++#++() → uint8++` [.item-kind]#internal#
 
 Returns the maximum number that will be used for {decimals} by the wrapper.
+
+:TokensFrozen: pass:normal[xref:#ERC7984Freezable-TokensFrozen-address-euint64-[`++TokensFrozen++`]]
+:confidentialFrozen: pass:normal[xref:#ERC7984Freezable-confidentialFrozen-address-[`++confidentialFrozen++`]]
+:confidentialAvailable: pass:normal[xref:#ERC7984Freezable-confidentialAvailable-address-[`++confidentialAvailable++`]]
+:setConfidentialFrozen: pass:normal[xref:#ERC7984Freezable-setConfidentialFrozen-address-externalEuint64-bytes-[`++setConfidentialFrozen++`]]
+:setConfidentialFrozen: pass:normal[xref:#ERC7984Freezable-setConfidentialFrozen-address-euint64-[`++setConfidentialFrozen++`]]
+:_setConfidentialFrozen: pass:normal[xref:#ERC7984Freezable-_setConfidentialFrozen-address-euint64-[`++_setConfidentialFrozen++`]]
+:_checkFreezer: pass:normal[xref:#ERC7984Freezable-_checkFreezer--[`++_checkFreezer++`]]
+:_update: pass:normal[xref:#ERC7984Freezable-_update-address-address-euint64-[`++_update++`]]
+
+:confidentialFrozen-address: pass:normal[xref:#ERC7984Freezable-confidentialFrozen-address-[`++confidentialFrozen++`]]
+:confidentialAvailable-address: pass:normal[xref:#ERC7984Freezable-confidentialAvailable-address-[`++confidentialAvailable++`]]
+:setConfidentialFrozen-address-externalEuint64-bytes: pass:normal[xref:#ERC7984Freezable-setConfidentialFrozen-address-externalEuint64-bytes-[`++setConfidentialFrozen++`]]
+:setConfidentialFrozen-address-euint64: pass:normal[xref:#ERC7984Freezable-setConfidentialFrozen-address-euint64-[`++setConfidentialFrozen++`]]
+:_setConfidentialFrozen-address-euint64: pass:normal[xref:#ERC7984Freezable-_setConfidentialFrozen-address-euint64-[`++_setConfidentialFrozen++`]]
+:_checkFreezer-: pass:normal[xref:#ERC7984Freezable-_checkFreezer--[`++_checkFreezer++`]]
+:_update-address-address-euint64: pass:normal[xref:#ERC7984Freezable-_update-address-address-euint64-[`++_update++`]]
+
+[.contract]
+[[ERC7984Freezable]]
+=== `++ERC7984Freezable++` link:https://github.com/OpenZeppelin/openzeppelin-confidential-contracts/blob/master/contracts/token/ERC7984/extensions/ERC7984Freezable.sol[{github-icon},role=heading-link]
+
+[.hljs-theme-light.nopadding]
+```solidity
+import "@openzeppelin/confidential-contracts/token/ERC7984/extensions/ERC7984Freezable.sol";
+```
+
+Extension of {ERC7984} that implements a confidential
+freezing mechanism that can be managed by an authorized account with
+{setConfidentialFrozen} functions.
+
+The freezing mechanism provides the guarantee to the contract owner
+(e.g. a DAO or a well-configured multisig) that a specific confidential
+amount of tokens held by an account won't be transferable until those
+tokens are unfrozen.
+
+Inspired by https://github.com/OpenZeppelin/openzeppelin-community-contracts/blob/master/contracts/token/ERC20/extensions/ERC20Freezable.sol
+
+[.contract-index]
+.Functions
+--
+* `++confidentialFrozen(account)++`
+* `++confidentialAvailable(account)++`
+* `++setConfidentialFrozen(account, encryptedAmount, inputProof)++`
+* `++setConfidentialFrozen(account, encryptedAmount)++`
+* `++_setConfidentialFrozen(account, encryptedAmount)++`
+* `++_checkFreezer()++`
+* `++_update(from, to, encryptedAmount)++`
+
+[.contract-subindex-inherited]
+.ERC7984
+* `++name()++`
+* `++symbol()++`
+* `++decimals()++`
+* `++tokenURI()++`
+* `++confidentialTotalSupply()++`
+* `++confidentialBalanceOf(account)++`
+* `++isOperator(holder, spender)++`
+* `++setOperator(operator, until)++`
+* `++confidentialTransfer(to, encryptedAmount, inputProof)++`
+* `++confidentialTransfer(to, amount)++`
+* `++confidentialTransferFrom(from, to, encryptedAmount, inputProof)++`
+* `++confidentialTransferFrom(from, to, amount)++`
+* `++confidentialTransferAndCall(to, encryptedAmount, inputProof, data)++`
+* `++confidentialTransferAndCall(to, amount, data)++`
+* `++confidentialTransferFromAndCall(from, to, encryptedAmount, inputProof, data)++`
+* `++confidentialTransferFromAndCall(from, to, amount, data)++`
+* `++discloseEncryptedAmount(encryptedAmount)++`
+* `++finalizeDiscloseEncryptedAmount(requestId, amount, signatures)++`
+* `++_setOperator(holder, operator, until)++`
+* `++_mint(to, amount)++`
+* `++_burn(from, amount)++`
+* `++_transfer(from, to, amount)++`
+* `++_transferAndCall(from, to, amount, data)++`
+
+[.contract-subindex-inherited]
+.IERC7984
+
+--
+
+[.contract-index]
+.Events
+--
+* `++TokensFrozen(account, encryptedAmount)++`
+
+[.contract-subindex-inherited]
+.ERC7984
+
+[.contract-subindex-inherited]
+.IERC7984
+* `++OperatorSet(holder, operator, until)++`
+* `++ConfidentialTransfer(from, to, amount)++`
+* `++AmountDisclosed(encryptedAmount, amount)++`
+
+--
+
+[.contract-index]
+.Errors
+--
+
+[.contract-subindex-inherited]
+.ERC7984
+* `++ERC7984InvalidReceiver(receiver)++`
+* `++ERC7984InvalidSender(sender)++`
+* `++ERC7984UnauthorizedSpender(holder, spender)++`
+* `++ERC7984ZeroBalance(holder)++`
+* `++ERC7984UnauthorizedUseOfEncryptedAmount(amount, user)++`
+* `++ERC7984UnauthorizedCaller(caller)++`
+* `++ERC7984InvalidGatewayRequest(requestId)++`
+
+[.contract-subindex-inherited]
+.IERC7984
+
+--
+
+[.contract-item]
+[[ERC7984Freezable-confidentialFrozen-address-]]
+==== `[.contract-item-name]#++confidentialFrozen++#++(address account) → euint64++` [.item-kind]#public#
+
+Returns the confidential frozen balance of an account.
+
+[.contract-item]
+[[ERC7984Freezable-confidentialAvailable-address-]]
+==== `[.contract-item-name]#++confidentialAvailable++#++(address account) → euint64++` [.item-kind]#public#
+
+Returns the confidential available (unfrozen) balance of an account. Up to {confidentialBalanceOf}.
+
+[.contract-item]
+[[ERC7984Freezable-setConfidentialFrozen-address-externalEuint64-bytes-]]
+==== `[.contract-item-name]#++setConfidentialFrozen++#++(address account, externalEuint64 encryptedAmount, bytes inputProof)++` [.item-kind]#public#
+
+Freezes a confidential amount of tokens for an account with a proof.
+
+[.contract-item]
+[[ERC7984Freezable-setConfidentialFrozen-address-euint64-]]
+==== `[.contract-item-name]#++setConfidentialFrozen++#++(address account, euint64 encryptedAmount)++` [.item-kind]#public#
+
+Freezes a confidential amount of tokens for an account.
+
+[.contract-item]
+[[ERC7984Freezable-_setConfidentialFrozen-address-euint64-]]
+==== `[.contract-item-name]#++_setConfidentialFrozen++#++(address account, euint64 encryptedAmount)++` [.item-kind]#internal#
+
+Internal function to freeze a confidential amount of tokens for an account.
+
+[.contract-item]
+[[ERC7984Freezable-_checkFreezer--]]
+==== `[.contract-item-name]#++_checkFreezer++#++()++` [.item-kind]#internal#
+
+Unimplemented function that must revert if `msg.sender` is not authorized as a freezer.
+
+[.contract-item]
+[[ERC7984Freezable-_update-address-address-euint64-]]
+==== `[.contract-item-name]#++_update++#++(address from, address to, euint64 encryptedAmount) → euint64++` [.item-kind]#internal#
+
+See {ERC7984-_update}. The `from` account must have sufficient unfrozen balance,
+otherwise 0 tokens are transferred.
+
+[.contract-item]
+[[ERC7984Freezable-TokensFrozen-address-euint64-]]
+==== `[.contract-item-name]#++TokensFrozen++#++(address indexed account, euint64 encryptedAmount)++` [.item-kind]#event#
+
+Emitted when a confidential amount of token is frozen for an account
 
 :ERC7984ObserverAccessObserverSet: pass:normal[xref:#ERC7984ObserverAccess-ERC7984ObserverAccessObserverSet-address-address-address-[`++ERC7984ObserverAccessObserverSet++`]]
 :Unauthorized: pass:normal[xref:#ERC7984ObserverAccess-Unauthorized--[`++Unauthorized++`]]
