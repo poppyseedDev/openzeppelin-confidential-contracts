@@ -5,7 +5,7 @@ pragma solidity ^0.8.24;
 import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {FHE, euint64, externalEuint64, ebool} from "@fhevm/solidity/lib/FHE.sol";
 import {Impl} from "@fhevm/solidity/lib/Impl.sol";
-import {ERC7984Rwa} from "../../token/extensions/ERC7984Rwa.sol";
+import {ERC7984Rwa} from "../../token/ERC7984/extensions/ERC7984Rwa.sol";
 import {FHESafeMath} from "../../utils/FHESafeMath.sol";
 import {HandleAccessManager} from "../../utils/HandleAccessManager.sol";
 

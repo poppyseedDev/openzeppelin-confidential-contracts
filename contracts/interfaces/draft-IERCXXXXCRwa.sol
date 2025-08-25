@@ -4,10 +4,10 @@ pragma solidity ^0.8.24;
 import {FHE, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {IConfidentialFungibleToken} from "./IConfidentialFungibleToken.sol";
+import {IERC7984} from "./IERC7984.sol";
 
 /// @dev Interface for confidential RWA contracts.
-interface IERCXXXXCRwa is IConfidentialFungibleToken, IERC165, IAccessControl {
+interface IERCXXXXCRwa is IERC7984, IERC165, IAccessControl {
     /// @dev Emitted when the contract is paused.
     event Paused(address account);
     /// @dev Emitted when the contract is unpaused.
