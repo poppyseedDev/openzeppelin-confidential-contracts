@@ -2,4 +2,4 @@
 'openzeppelin-confidential-contracts': minor
 ---
 
-Add `ERC7984Rwa` extension.
+`ERC7984Rwa`: An extension of `ERC7984`, that supports confidential Real World Assets (RWAs).

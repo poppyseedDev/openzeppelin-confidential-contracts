@@ -13,7 +13,8 @@ import {ERC7984} from "./../ERC7984.sol";
 import {ERC7984Freezable} from "./ERC7984Freezable.sol";
 
 /**
- * @dev Extension of {ERC7984} supporting confidential Real World Assets.
+ * @dev Extension of {ERC7984} that supports confidential Real World Assets (RWAs).
+ * This interface provides compliance checks, transfer controls and enforcement actions.
  */
 abstract contract ERC7984Rwa is ERC7984, ERC7984Freezable, Pausable, Multicall, ERC165, AccessControl {
     bytes32 public constant AGENT_ROLE = keccak256("AGENT_ROLE");
