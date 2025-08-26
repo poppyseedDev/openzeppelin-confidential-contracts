@@ -7,14 +7,14 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC165, IERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
-import {IERCXXXXCRwa} from "./../../../interfaces/draft-IERCXXXXCRwa.sol";
+import {IERC7984Rwa} from "./../../../interfaces/IERC7984Rwa.sol";
 import {ERC7984} from "./../ERC7984.sol";
 import {ERC7984Freezable} from "./ERC7984Freezable.sol";
 
 /**
  * @dev Extension of {ERC7984} supporting confidential Real World Assets.
  */
-abstract contract ERC7984Rwa is ERC7984, Pausable, ERC7984Freezable, Multicall, ERC165, AccessControl {
+abstract contract ERC7984Rwa is ERC7984, ERC7984Freezable, Pausable, Multicall, ERC165, AccessControl {
     bytes32 public constant AGENT_ROLE = keccak256("AGENT_ROLE");
 
     /// @dev The caller account is not authorized to perform the operation.
@@ -46,7 +46,7 @@ abstract contract ERC7984Rwa is ERC7984, Pausable, ERC7984Freezable, Multicall, 
 
     /// @inheritdoc ERC165
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, AccessControl) returns (bool) {
-        return interfaceId == type(IERCXXXXCRwa).interfaceId || super.supportsInterface(interfaceId);
+        return interfaceId == type(IERC7984Rwa).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /// @dev Pauses contract.

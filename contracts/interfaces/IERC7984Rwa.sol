@@ -7,7 +7,7 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {IERC7984} from "./IERC7984.sol";
 
 /// @dev Interface for confidential RWA contracts.
-interface IERCXXXXCRwa is IERC7984, IERC165, IAccessControl {
+interface IERC7984Rwa is IERC7984, IERC165, IAccessControl {
     /// @dev Emitted when the contract is paused.
     event Paused(address account);
     /// @dev Emitted when the contract is unpaused.
@@ -66,7 +66,7 @@ interface IERCXXXXCRwa is IERC7984, IERC165, IAccessControl {
 }
 
 /// @dev Interface for confidential RWA compliance.
-interface IERCXXXXCRWACompliance {
+interface IERC7984RwaCompliance {
     /// @dev Checks if a transfer follows token compliance.
     function isCompliantTransfer(address from, address to, euint64 encryptedAmount) external returns (bool);
 }
