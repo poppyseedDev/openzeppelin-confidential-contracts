@@ -4,10 +4,11 @@ pragma solidity ^0.8.27;
 
 import {FHE, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {ERC165, IERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
-import {IERC7984Rwa} from "./../../../interfaces/IERC7984Rwa.sol";
+import {IERC7984} from "./../../../interfaces/IERC7984.sol";
+import {IERC7984RwaBase} from "./../../../interfaces/IERC7984Rwa.sol";
 import {ERC7984} from "./../ERC7984.sol";
 import {ERC7984Freezable} from "./ERC7984Freezable.sol";
 
@@ -46,7 +47,10 @@ abstract contract ERC7984Rwa is ERC7984, ERC7984Freezable, Pausable, Multicall, 
 
     /// @inheritdoc ERC165
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, AccessControl) returns (bool) {
-        return interfaceId == type(IERC7984Rwa).interfaceId || super.supportsInterface(interfaceId);
+        return
+            interfaceId == type(IERC7984RwaBase).interfaceId ||
+            interfaceId == type(IERC7984).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     /// @dev Pauses contract.

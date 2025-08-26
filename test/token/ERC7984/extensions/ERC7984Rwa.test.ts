@@ -1,4 +1,11 @@
+import {
+  IAccessControl__factory,
+  IERC165__factory,
+  IERC7984__factory,
+  IERC7984RwaBase__factory,
+} from '../../../../types';
 import { callAndGetResult } from '../../../helpers/event';
+import { getFunctions, getInterfaceId } from '../../../helpers/interface';
 import { FhevmType } from '@fhevm/hardhat-plugin';
 import { expect } from 'chai';
 import { AddressLike, BytesLike } from 'ethers';
@@ -16,6 +23,22 @@ describe('ERC7984Rwa', function () {
     token.connect(anyone);
     return { token, admin, agent1, agent2, recipient, anyone };
   }
+
+  describe('ERC165', async function () {
+    it('should support interfaces', async function () {
+      const { token } = await deployFixture();
+      const interfaceFactories = [
+        IERC7984RwaBase__factory,
+        IERC7984__factory,
+        IERC165__factory,
+        IAccessControl__factory,
+      ];
+      for (const interfaceFactory of interfaceFactories) {
+        const functions = getFunctions(interfaceFactory);
+        expect(await token.supportsInterface(getInterfaceId(functions))).is.true;
+      }
+    });
+  });
 
   describe('Pausable', async function () {
     it('should pause & unpause', async function () {

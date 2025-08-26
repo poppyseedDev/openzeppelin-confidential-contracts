@@ -6,8 +6,8 @@ import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol"
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {IERC7984} from "./IERC7984.sol";
 
-/// @dev Interface for confidential RWA contracts.
-interface IERC7984Rwa is IERC7984, IERC165, IAccessControl {
+/// @dev Base interface for confidential RWA contracts.
+interface IERC7984RwaBase {
     /// @dev Emitted when the contract is paused.
     event Paused(address account);
     /// @dev Emitted when the contract is unpaused.
@@ -72,6 +72,9 @@ interface IERC7984Rwa is IERC7984, IERC165, IAccessControl {
     /// @dev Receives and executes a batch of function calls on this contract.
     function multicall(bytes[] calldata data) external returns (bytes[] memory results);
 }
+
+/// @dev Full interface for confidential RWA contracts.
+interface IERC7984Rwa is IERC7984, IERC7984RwaBase, IERC165, IAccessControl {}
 
 /// @dev Interface for confidential RWA compliance.
 interface IERC7984RwaCompliance {
