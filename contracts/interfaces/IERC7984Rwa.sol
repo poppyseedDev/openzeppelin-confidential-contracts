@@ -40,29 +40,37 @@ interface IERC7984Rwa is IERC7984, IERC165, IAccessControl {
     ) external;
     /// @dev Sets confidential amount of token for an account as frozen.
     function setConfidentialFrozen(address account, euint64 encryptedAmount) external;
-    /// @dev Receives and executes a batch of function calls on this contract.
-    function multicall(bytes[] calldata data) external returns (bytes[] memory results);
     /// @dev Mints confidential amount of tokens to account with proof.
-    function mint(address to, externalEuint64 encryptedAmount, bytes calldata inputProof) external returns (euint64);
+    function confidentialMint(
+        address to,
+        externalEuint64 encryptedAmount,
+        bytes calldata inputProof
+    ) external returns (euint64);
     /// @dev Mints confidential amount of tokens to account.
-    function mint(address to, euint64 encryptedAmount) external;
+    function confidentialMint(address to, euint64 encryptedAmount) external;
     /// @dev Burns confidential amount of tokens from account with proof.
-    function burn(
+    function confidentialBurn(
         address account,
         externalEuint64 encryptedAmount,
         bytes calldata inputProof
     ) external returns (euint64);
     /// @dev Burns confidential amount of tokens from account.
-    function burn(address account, euint64 encryptedAmount) external returns (euint64);
+    function confidentialBurn(address account, euint64 encryptedAmount) external returns (euint64);
     /// @dev Forces transfer of confidential amount of tokens from account to account with proof by skipping compliance checks.
-    function forceTransfer(
+    function forceConfidentialTransferFrom(
         address from,
         address to,
         externalEuint64 encryptedAmount,
         bytes calldata inputProof
     ) external returns (euint64);
     /// @dev Forces transfer of confidential amount of tokens from account to account by skipping compliance checks.
-    function forceTransfer(address from, address to, euint64 encryptedAmount) external returns (euint64);
+    function forceConfidentialTransferFrom(
+        address from,
+        address to,
+        euint64 encryptedAmount
+    ) external returns (euint64);
+    /// @dev Receives and executes a batch of function calls on this contract.
+    function multicall(bytes[] calldata data) external returns (bytes[] memory results);
 }
 
 /// @dev Interface for confidential RWA compliance.

@@ -80,50 +80,84 @@ abstract contract ERC7984Rwa is ERC7984, ERC7984Freezable, Pausable, Multicall, 
     }
 
     /// @dev Mints confidential amount of tokens to account with proof.
-    function mint(
+    function confidentialMint(
         address to,
         externalEuint64 encryptedAmount,
         bytes calldata inputProof
     ) public virtual returns (euint64) {
-        return mint(to, FHE.fromExternal(encryptedAmount, inputProof));
+        return _confidentialMint(to, FHE.fromExternal(encryptedAmount, inputProof));
     }
 
     /// @dev Mints confidential amount of tokens to account.
-    function mint(address to, euint64 encryptedAmount) public virtual onlyAdminOrAgent returns (euint64) {
-        return _mint(to, encryptedAmount);
+    function confidentialMint(address to, euint64 encryptedAmount) public virtual returns (euint64) {
+        return _confidentialMint(to, encryptedAmount);
     }
 
     /// @dev Burns confidential amount of tokens from account with proof.
-    function burn(
+    function confidentialBurn(
         address account,
         externalEuint64 encryptedAmount,
         bytes calldata inputProof
     ) public virtual returns (euint64) {
-        return burn(account, FHE.fromExternal(encryptedAmount, inputProof));
+        return _confidentialBurn(account, FHE.fromExternal(encryptedAmount, inputProof));
     }
 
     /// @dev Burns confidential amount of tokens from account.
-    function burn(address account, euint64 encryptedAmount) public virtual onlyAdminOrAgent returns (euint64) {
-        return _burn(account, encryptedAmount);
+    function confidentialBurn(address account, euint64 encryptedAmount) public virtual returns (euint64) {
+        return _confidentialBurn(account, encryptedAmount);
     }
 
-    //TODO: Rename all to confidential
     /// @dev Forces transfer of confidential amount of tokens from account to account with proof by skipping compliance checks.
-    function forceTransfer(
+    function forceConfidentialTransferFrom(
         address from,
         address to,
         externalEuint64 encryptedAmount,
         bytes calldata inputProof
     ) public virtual returns (euint64) {
-        return forceTransfer(from, to, FHE.fromExternal(encryptedAmount, inputProof));
+        return _forceConfidentialTransferFrom(from, to, FHE.fromExternal(encryptedAmount, inputProof));
     }
 
     /// @dev Forces transfer of confidential amount of tokens from account to account by skipping compliance checks.
-    function forceTransfer(
+    function forceConfidentialTransferFrom(
         address from,
         address to,
         euint64 encryptedAmount
-    ) public virtual onlyAdminOrAgent returns (euint64 transferred) {
+    ) public virtual returns (euint64 transferred) {
+        return _forceConfidentialTransferFrom(from, to, encryptedAmount);
+    }
+
+    /// @dev Internal function which adds an agent.
+    function _addAgent(address account) internal virtual onlyAdminOrAgent {
+        _grantRole(AGENT_ROLE, account);
+    }
+
+    /// @dev Internal function which removes an agent.
+    function _removeAgent(address account) internal virtual onlyAdminOrAgent {
+        _revokeRole(AGENT_ROLE, account);
+    }
+
+    /// @dev Internal function which mints confidential amount of tokens to account.
+    function _confidentialMint(
+        address to,
+        euint64 encryptedAmount
+    ) internal virtual onlyAdminOrAgent returns (euint64) {
+        return _mint(to, encryptedAmount);
+    }
+
+    /// @dev Internal function which burns confidential amount of tokens from account.
+    function _confidentialBurn(
+        address account,
+        euint64 encryptedAmount
+    ) internal virtual onlyAdminOrAgent returns (euint64) {
+        return _burn(account, encryptedAmount);
+    }
+
+    /// @dev Internal function which forces transfer of confidential amount of tokens from account to account by skipping compliance checks.
+    function _forceConfidentialTransferFrom(
+        address from,
+        address to,
+        euint64 encryptedAmount
+    ) internal virtual onlyAdminOrAgent returns (euint64 transferred) {
         euint64 available = confidentialAvailable(from);
         transferred = ERC7984._update(from, to, encryptedAmount); // bypass frozen & compliance checks
         setConfidentialFrozen(
@@ -132,16 +166,7 @@ abstract contract ERC7984Rwa is ERC7984, ERC7984Freezable, Pausable, Multicall, 
         );
     }
 
-    /// @dev Adds an agent.
-    function _addAgent(address account) internal virtual onlyAdminOrAgent {
-        _grantRole(AGENT_ROLE, account);
-    }
-
-    /// @dev Removes an agent.
-    function _removeAgent(address account) internal virtual onlyAdminOrAgent {
-        _revokeRole(AGENT_ROLE, account);
-    }
-
+    /// @dev Internal function which updates confidential balances while performing frozen and compliance checks.
     function _update(
         address from,
         address to,
@@ -152,6 +177,10 @@ abstract contract ERC7984Rwa is ERC7984, ERC7984Freezable, Pausable, Multicall, 
         return super._update(from, to, encryptedAmount);
     }
 
+    /**
+     * @dev Internal function which reverts if `msg.sender` is not authorized as a freezer.
+     * This freezer role is only granted to admin or agent.
+     */
     function _checkFreezer() internal override onlyAdminOrAgent {}
 
     /// @dev Checks if a transfer follows token compliance.

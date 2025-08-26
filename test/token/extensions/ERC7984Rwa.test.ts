@@ -7,10 +7,7 @@ describe('ERC7984Rwa', function () {
   async function deployFixture() {
     const [admin, agent1, agent2, recipient, anyone] = await ethers.getSigners();
     const token = await ethers.deployContract('ERC7984RwaMock', ['name', 'symbol', 'uri']);
-    await token
-      .connect(admin)
-      .addAgent(agent1)
-      .then(tx => tx.wait());
+    await token.connect(admin).addAgent(agent1);
     token.connect(anyone);
     return { token, admin, agent1, agent2, recipient, anyone };
   }
@@ -20,15 +17,9 @@ describe('ERC7984Rwa', function () {
       const { token, admin, agent1 } = await deployFixture();
       for (const manager of [admin, agent1]) {
         expect(await token.paused()).is.false;
-        await token
-          .connect(manager)
-          .pause()
-          .then(tx => tx.wait());
+        await token.connect(manager).pause();
         expect(await token.paused()).is.true;
-        await token
-          .connect(manager)
-          .unpause()
-          .then(tx => tx.wait());
+        await token.connect(manager).unpause();
         expect(await token.paused()).is.false;
       }
     });
@@ -59,15 +50,9 @@ describe('ERC7984Rwa', function () {
       const { token, admin, agent1, agent2 } = await deployFixture();
       for (const manager of [admin, agent1]) {
         expect(await token.isAgent(agent2)).is.false;
-        await token
-          .connect(manager)
-          .addAgent(agent2)
-          .then(tx => tx.wait());
+        await token.connect(manager).addAgent(agent2);
         expect(await token.isAgent(agent2)).is.true;
-        await token
-          .connect(manager)
-          .removeAgent(agent2)
-          .then(tx => tx.wait());
+        await token.connect(manager).removeAgent(agent2);
         expect(await token.isAgent(agent2)).is.false;
       }
     });
@@ -96,16 +81,12 @@ describe('ERC7984Rwa', function () {
           .createEncryptedInput(await token.getAddress(), manager.address)
           .add64(100)
           .encrypt();
-        await token.$_setCompliantTransfer().then(tx => tx.wait());
+        await token.$_setCompliantTransfer();
         await token
           .connect(manager)
-          ['mint(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof)
-          .then(tx => tx.wait());
+          ['confidentialMint(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof);
         const balanceHandle = await token.confidentialBalanceOf(recipient);
-        await token
-          .connect(manager)
-          .getHandleAllowance(balanceHandle, manager, true)
-          .then(tx => tx.wait());
+        await token.connect(manager).getHandleAllowance(balanceHandle, manager, true);
         await expect(
           fhevm.userDecryptEuint(FhevmType.euint64, balanceHandle, await token.getAddress(), manager),
         ).to.eventually.equal(100);
@@ -118,10 +99,11 @@ describe('ERC7984Rwa', function () {
         .createEncryptedInput(await token.getAddress(), anyone.address)
         .add64(100)
         .encrypt();
+      await token.$_setCompliantTransfer();
       await expect(
         token
           .connect(anyone)
-          ['mint(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
+          ['confidentialMint(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
       )
         .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
         .withArgs(anyone);
@@ -136,7 +118,7 @@ describe('ERC7984Rwa', function () {
       await expect(
         token
           .connect(admin)
-          ['mint(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
+          ['confidentialMint(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
       )
         .to.be.revertedWithCustomError(token, 'UncompliantTransfer')
         .withArgs(ethers.ZeroAddress, recipient, encryptedInput.handles[0]);
@@ -144,10 +126,7 @@ describe('ERC7984Rwa', function () {
 
     it('should not mint if paused', async function () {
       const { token, admin, recipient } = await deployFixture();
-      await token
-        .connect(admin)
-        .pause()
-        .then(tx => tx.wait());
+      await token.connect(admin).pause();
       const encryptedInput = await fhevm
         .createEncryptedInput(await token.getAddress(), admin.address)
         .add64(100)
@@ -155,7 +134,7 @@ describe('ERC7984Rwa', function () {
       await expect(
         token
           .connect(admin)
-          ['mint(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
+          ['confidentialMint(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
       ).to.be.revertedWithCustomError(token, 'EnforcedPause');
     });
   });
@@ -169,28 +148,20 @@ describe('ERC7984Rwa', function () {
           .createEncryptedInput(await token.getAddress(), manager.address)
           .add64(100)
           .encrypt();
-        await token.$_setCompliantTransfer().then(tx => tx.wait());
+        await token.$_setCompliantTransfer();
         await token
           .connect(manager)
-          ['mint(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof)
-          .then(tx => tx.wait());
+          ['confidentialMint(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof);
         const balanceBeforeHandle = await token.confidentialBalanceOf(recipient);
-        await token
-          .connect(manager)
-          .getHandleAllowance(balanceBeforeHandle, manager, true)
-          .then(tx => tx.wait());
+        await token.connect(manager).getHandleAllowance(balanceBeforeHandle, manager, true);
         await expect(
           fhevm.userDecryptEuint(FhevmType.euint64, balanceBeforeHandle, await token.getAddress(), manager),
         ).to.eventually.greaterThan(0);
         await token
           .connect(manager)
-          ['burn(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof)
-          .then(tx => tx.wait());
+          ['confidentialBurn(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof);
         const balanceHandle = await token.confidentialBalanceOf(recipient);
-        await token
-          .connect(manager)
-          .getHandleAllowance(balanceHandle, manager, true)
-          .then(tx => tx.wait());
+        await token.connect(manager).getHandleAllowance(balanceHandle, manager, true);
         await expect(
           fhevm.userDecryptEuint(FhevmType.euint64, balanceHandle, await token.getAddress(), manager),
         ).to.eventually.equal(0);
@@ -203,10 +174,11 @@ describe('ERC7984Rwa', function () {
         .createEncryptedInput(await token.getAddress(), anyone.address)
         .add64(100)
         .encrypt();
+      await token.$_setCompliantTransfer();
       await expect(
         token
           .connect(anyone)
-          ['burn(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
+          ['confidentialBurn(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
       )
         .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
         .withArgs(anyone);
@@ -221,7 +193,7 @@ describe('ERC7984Rwa', function () {
       await expect(
         token
           .connect(admin)
-          ['burn(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
+          ['confidentialBurn(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
       )
         .to.be.revertedWithCustomError(token, 'UncompliantTransfer')
         .withArgs(recipient, ethers.ZeroAddress, encryptedInput.handles[0]);
@@ -229,10 +201,7 @@ describe('ERC7984Rwa', function () {
 
     it('should not burn if paused', async function () {
       const { token, admin, recipient } = await deployFixture();
-      await token
-        .connect(admin)
-        .pause()
-        .then(tx => tx.wait());
+      await token.connect(admin).pause();
       const encryptedInput = await fhevm
         .createEncryptedInput(await token.getAddress(), admin.address)
         .add64(100)
@@ -240,7 +209,7 @@ describe('ERC7984Rwa', function () {
       await expect(
         token
           .connect(admin)
-          ['burn(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
+          ['confidentialBurn(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
       ).to.be.revertedWithCustomError(token, 'EnforcedPause');
     });
   });
@@ -254,15 +223,14 @@ describe('ERC7984Rwa', function () {
           .createEncryptedInput(await token.getAddress(), manager.address)
           .add64(100)
           .encrypt();
-        await token.$_setCompliantTransfer().then(tx => tx.wait());
+        await token.$_setCompliantTransfer();
         await token
           .connect(manager)
-          ['mint(address,bytes32,bytes)'](
+          ['confidentialMint(address,bytes32,bytes)'](
             recipient,
             encryptedMintValueInput.handles[0],
             encryptedMintValueInput.inputProof,
-          )
-          .then(tx => tx.wait());
+          );
         // set frozen (50 available and about to force transfer 25)
         const encryptedFrozenValueInput = await fhevm
           .createEncryptedInput(await token.getAddress(), manager.address)
@@ -274,36 +242,28 @@ describe('ERC7984Rwa', function () {
             recipient,
             encryptedFrozenValueInput.handles[0],
             encryptedFrozenValueInput.inputProof,
-          )
-          .then(tx => tx.wait());
+          );
         const encryptedTransferValueInput = await fhevm
           .createEncryptedInput(await token.getAddress(), manager.address)
           .add64(25)
           .encrypt();
-        await token.$_unsetCompliantTransfer().then(tx => tx.wait());
+        await token.$_unsetCompliantTransfer();
         expect(await token.compliantTransfer()).to.be.false;
         await token
           .connect(manager)
-          ['forceTransfer(address,address,bytes32,bytes)'](
+          ['forceConfidentialTransferFrom(address,address,bytes32,bytes)'](
             recipient,
             anyone,
             encryptedTransferValueInput.handles[0],
             encryptedTransferValueInput.inputProof,
-          )
-          .then(tx => tx.wait());
+          );
         const balanceHandle = await token.confidentialBalanceOf(recipient);
-        await token
-          .connect(manager)
-          .getHandleAllowance(balanceHandle, manager, true)
-          .then(tx => tx.wait());
+        await token.connect(manager).getHandleAllowance(balanceHandle, manager, true);
         await expect(
           fhevm.userDecryptEuint(FhevmType.euint64, balanceHandle, await token.getAddress(), manager),
         ).to.eventually.equal(75);
         const frozenHandle = await token.confidentialFrozen(recipient);
-        await token
-          .connect(manager)
-          .getHandleAllowance(frozenHandle, manager, true)
-          .then(tx => tx.wait());
+        await token.connect(manager).getHandleAllowance(frozenHandle, manager, true);
         await expect(
           fhevm.userDecryptEuint(FhevmType.euint64, frozenHandle, await token.getAddress(), manager),
         ).to.eventually.equal(50); // frozen is left unchanged
@@ -318,15 +278,14 @@ describe('ERC7984Rwa', function () {
           .createEncryptedInput(await token.getAddress(), manager.address)
           .add64(100)
           .encrypt();
-        await token.$_setCompliantTransfer().then(tx => tx.wait());
+        await token.$_setCompliantTransfer();
         await token
           .connect(manager)
-          ['mint(address,bytes32,bytes)'](
+          ['confidentialMint(address,bytes32,bytes)'](
             recipient,
             encryptedMintValueInput.handles[0],
             encryptedMintValueInput.inputProof,
-          )
-          .then(tx => tx.wait());
+          );
         // set frozen (only 20 available but about to force transfer 25)
         const encryptedFrozenValueInput = await fhevm
           .createEncryptedInput(await token.getAddress(), manager.address)
@@ -338,42 +297,31 @@ describe('ERC7984Rwa', function () {
             recipient,
             encryptedFrozenValueInput.handles[0],
             encryptedFrozenValueInput.inputProof,
-          )
-          .then(tx => tx.wait());
+          );
         const encryptedTransferValueInput = await fhevm
           .createEncryptedInput(await token.getAddress(), manager.address)
           .add64(25)
           .encrypt();
-        await token.$_unsetCompliantTransfer().then(tx => tx.wait());
+        await token.$_unsetCompliantTransfer();
         expect(await token.compliantTransfer()).to.be.false;
         // should force transfer even if paused
-        await token
-          .connect(manager)
-          .pause()
-          .then(tx => tx.wait());
+        await token.connect(manager).pause();
         expect(await token.paused()).to.be.true;
         await token
           .connect(manager)
-          ['forceTransfer(address,address,bytes32,bytes)'](
+          ['forceConfidentialTransferFrom(address,address,bytes32,bytes)'](
             recipient,
             anyone,
             encryptedTransferValueInput.handles[0],
             encryptedTransferValueInput.inputProof,
-          )
-          .then(tx => tx.wait());
+          );
         const balanceHandle = await token.confidentialBalanceOf(recipient);
-        await token
-          .connect(manager)
-          .getHandleAllowance(balanceHandle, manager, true)
-          .then(tx => tx.wait());
+        await token.connect(manager).getHandleAllowance(balanceHandle, manager, true);
         await expect(
           fhevm.userDecryptEuint(FhevmType.euint64, balanceHandle, await token.getAddress(), manager),
         ).to.eventually.equal(75);
         const frozenHandle = await token.confidentialFrozen(recipient);
-        await token
-          .connect(manager)
-          .getHandleAllowance(frozenHandle, manager, true)
-          .then(tx => tx.wait());
+        await token.connect(manager).getHandleAllowance(frozenHandle, manager, true);
         await expect(
           fhevm.userDecryptEuint(FhevmType.euint64, frozenHandle, await token.getAddress(), manager),
         ).to.eventually.equal(75); // frozen got reset to available balance
@@ -388,15 +336,14 @@ describe('ERC7984Rwa', function () {
         .createEncryptedInput(await token.getAddress(), manager.address)
         .add64(100)
         .encrypt();
-      await token.$_setCompliantTransfer().then(tx => tx.wait());
+      await token.$_setCompliantTransfer();
       await token
         .connect(manager)
-        ['mint(address,bytes32,bytes)'](
+        ['confidentialMint(address,bytes32,bytes)'](
           recipient,
           encryptedMintValueInput.handles[0],
           encryptedMintValueInput.inputProof,
-        )
-        .then(tx => tx.wait());
+        );
       // set frozen (50 available and about to transfer 25)
       const encryptedFrozenValueInput = await fhevm
         .createEncryptedInput(await token.getAddress(), manager.address)
@@ -408,13 +355,12 @@ describe('ERC7984Rwa', function () {
           recipient,
           encryptedFrozenValueInput.handles[0],
           encryptedFrozenValueInput.inputProof,
-        )
-        .then(tx => tx.wait());
+        );
       const encryptedTransferValueInput = await fhevm
         .createEncryptedInput(await token.getAddress(), recipient.address)
         .add64(25)
         .encrypt();
-      await token.$_setCompliantTransfer().then(tx => tx.wait());
+      await token.$_setCompliantTransfer();
       expect(await token.compliantTransfer()).to.be.true;
       await expect(
         token
@@ -441,10 +387,7 @@ describe('ERC7984Rwa', function () {
         .createEncryptedInput(await token.getAddress(), recipient.address)
         .add64(25)
         .encrypt();
-      await token
-        .connect(manager)
-        .pause()
-        .then(tx => tx.wait());
+      await token.connect(manager).pause();
       await expect(
         token
           .connect(recipient)
@@ -482,15 +425,14 @@ describe('ERC7984Rwa', function () {
         .createEncryptedInput(await token.getAddress(), manager.address)
         .add64(100)
         .encrypt();
-      await token.$_setCompliantTransfer().then(tx => tx.wait());
+      await token.$_setCompliantTransfer();
       await token
         .connect(manager)
-        ['mint(address,bytes32,bytes)'](
+        ['confidentialMint(address,bytes32,bytes)'](
           recipient,
           encryptedMintValueInput.handles[0],
           encryptedMintValueInput.inputProof,
-        )
-        .then(tx => tx.wait());
+        );
       // set frozen (20 available but about to transfer 25)
       const encryptedFrozenValueInput = await fhevm
         .createEncryptedInput(await token.getAddress(), manager.address)
@@ -502,13 +444,12 @@ describe('ERC7984Rwa', function () {
           recipient,
           encryptedFrozenValueInput.handles[0],
           encryptedFrozenValueInput.inputProof,
-        )
-        .then(tx => tx.wait());
+        );
       const encryptedTransferValueInput = await fhevm
         .createEncryptedInput(await token.getAddress(), recipient.address)
         .add64(25)
         .encrypt();
-      await token.$_setCompliantTransfer().then(tx => tx.wait());
+      await token.$_setCompliantTransfer();
       expect(await token.compliantTransfer()).to.be.true;
       await expect(
         token
