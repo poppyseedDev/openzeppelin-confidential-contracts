@@ -1,7 +1,11 @@
+import { callAndGetResult } from '../../../helpers/event';
 import { FhevmType } from '@fhevm/hardhat-plugin';
 import { expect } from 'chai';
 import { AddressLike, BytesLike } from 'ethers';
 import { ethers, fhevm } from 'hardhat';
+
+const transferEventSignature = 'ConfidentialTransfer(address,address,bytes32)';
+const frozenEventSignature = 'TokensFrozen(address,bytes32)';
 
 /* eslint-disable no-unexpected-multiline */
 describe('ERC7984Rwa', function () {
@@ -96,14 +100,20 @@ describe('ERC7984Rwa', function () {
             await token.connect(manager).createEncryptedAmount(amount);
             params.push(await token.connect(manager).createEncryptedAmount.staticCall(amount));
           }
-          await token
-            .connect(manager)
-            [withProof ? 'confidentialMint(address,bytes32,bytes)' : 'confidentialMint(address,bytes32)'](...params);
+          const [, , transferredHandle] = await callAndGetResult(
+            token
+              .connect(manager)
+              [withProof ? 'confidentialMint(address,bytes32,bytes)' : 'confidentialMint(address,bytes32)'](...params),
+            transferEventSignature,
+          );
+          await expect(
+            fhevm.userDecryptEuint(FhevmType.euint64, transferredHandle, await token.getAddress(), recipient),
+          ).to.eventually.equal(amount);
           const balanceHandle = await token.confidentialBalanceOf(recipient);
           await token.connect(manager).getHandleAllowance(balanceHandle, manager, true);
           await expect(
             fhevm.userDecryptEuint(FhevmType.euint64, balanceHandle, await token.getAddress(), manager),
-          ).to.eventually.equal(100);
+          ).to.eventually.equal(amount);
         }
       });
     }
@@ -193,9 +203,15 @@ describe('ERC7984Rwa', function () {
             await token.connect(manager).createEncryptedAmount(amount);
             params.push(await token.connect(manager).createEncryptedAmount.staticCall(amount));
           }
-          await token
-            .connect(manager)
-            [withProof ? 'confidentialBurn(address,bytes32,bytes)' : 'confidentialBurn(address,bytes32)'](...params);
+          const [, , transferredHandle] = await callAndGetResult(
+            token
+              .connect(manager)
+              [withProof ? 'confidentialBurn(address,bytes32,bytes)' : 'confidentialBurn(address,bytes32)'](...params),
+            transferEventSignature,
+          );
+          await expect(
+            fhevm.userDecryptEuint(FhevmType.euint64, transferredHandle, await token.getAddress(), recipient),
+          ).to.eventually.equal(amount);
           const balanceHandle = await token.confidentialBalanceOf(recipient);
           await token.connect(manager).getHandleAllowance(balanceHandle, manager, true);
           await expect(
@@ -300,13 +316,21 @@ describe('ERC7984Rwa', function () {
             await token.connect(manager).createEncryptedAmount(amount);
             params.push(await token.connect(manager).createEncryptedAmount.staticCall(amount));
           }
-          await token
-            .connect(manager)
-            [
-              withProof
-                ? 'forceConfidentialTransferFrom(address,address,bytes32,bytes)'
-                : 'forceConfidentialTransferFrom(address,address,bytes32)'
-            ](...params);
+          const [from, to, transferredHandle] = await callAndGetResult(
+            token
+              .connect(manager)
+              [
+                withProof
+                  ? 'forceConfidentialTransferFrom(address,address,bytes32,bytes)'
+                  : 'forceConfidentialTransferFrom(address,address,bytes32)'
+              ](...params),
+            transferEventSignature,
+          );
+          expect(from).equal(recipient.address);
+          expect(to).equal(anyone.address);
+          await expect(
+            fhevm.userDecryptEuint(FhevmType.euint64, transferredHandle, await token.getAddress(), anyone),
+          ).to.eventually.equal(amount);
           const balanceHandle = await token.confidentialBalanceOf(recipient);
           await token.connect(manager).getHandleAllowance(balanceHandle, manager, true);
           await expect(
@@ -372,13 +396,20 @@ describe('ERC7984Rwa', function () {
             await token.connect(manager).createEncryptedAmount(amount);
             params.push(await token.connect(manager).createEncryptedAmount.staticCall(amount));
           }
-          await token
-            .connect(manager)
-            [
-              withProof
-                ? 'forceConfidentialTransferFrom(address,address,bytes32,bytes)'
-                : 'forceConfidentialTransferFrom(address,address,bytes32)'
-            ](...params);
+          const [account, frozenAmountHandle] = await callAndGetResult(
+            token
+              .connect(manager)
+              [
+                withProof
+                  ? 'forceConfidentialTransferFrom(address,address,bytes32,bytes)'
+                  : 'forceConfidentialTransferFrom(address,address,bytes32)'
+              ](...params),
+            frozenEventSignature,
+          );
+          expect(account).equal(recipient.address);
+          await expect(
+            fhevm.userDecryptEuint(FhevmType.euint64, frozenAmountHandle, await token.getAddress(), recipient),
+          ).to.eventually.equal(75);
           const balanceHandle = await token.confidentialBalanceOf(recipient);
           await token.connect(manager).getHandleAllowance(balanceHandle, manager, true);
           await expect(
@@ -421,13 +452,14 @@ describe('ERC7984Rwa', function () {
           encryptedFrozenValueInput.handles[0],
           encryptedFrozenValueInput.inputProof,
         );
+      const amount = 25;
       const encryptedTransferValueInput = await fhevm
         .createEncryptedInput(await token.getAddress(), recipient.address)
-        .add64(25)
+        .add64(amount)
         .encrypt();
       await token.$_setCompliantTransfer();
       expect(await token.compliantTransfer()).to.be.true;
-      await expect(
+      const [from, to, transferredHandle] = await callAndGetResult(
         token
           .connect(recipient)
           ['confidentialTransfer(address,bytes32,bytes)'](
@@ -435,7 +467,21 @@ describe('ERC7984Rwa', function () {
             encryptedTransferValueInput.handles[0],
             encryptedTransferValueInput.inputProof,
           ),
-      ).to.emit(token, 'ConfidentialTransfer');
+        transferEventSignature,
+      );
+      expect(from).equal(recipient.address);
+      expect(to).equal(anyone.address);
+      await expect(
+        fhevm.userDecryptEuint(FhevmType.euint64, transferredHandle, await token.getAddress(), anyone),
+      ).to.eventually.equal(amount);
+      await expect(
+        fhevm.userDecryptEuint(
+          FhevmType.euint64,
+          await token.confidentialBalanceOf(anyone),
+          await token.getAddress(),
+          anyone,
+        ),
+      ).to.eventually.equal(amount);
       await expect(
         fhevm.userDecryptEuint(
           FhevmType.euint64,
@@ -516,7 +562,7 @@ describe('ERC7984Rwa', function () {
         .encrypt();
       await token.$_setCompliantTransfer();
       expect(await token.compliantTransfer()).to.be.true;
-      await expect(
+      const [, , transferredHandle] = await callAndGetResult(
         token
           .connect(recipient)
           ['confidentialTransfer(address,bytes32,bytes)'](
@@ -524,8 +570,11 @@ describe('ERC7984Rwa', function () {
             encryptedTransferValueInput.handles[0],
             encryptedTransferValueInput.inputProof,
           ),
-      ).to.emit(token, 'ConfidentialTransfer');
-      /* TODO: Enable when freezable ready
+        transferEventSignature,
+      );
+      await expect(
+        fhevm.userDecryptEuint(FhevmType.euint64, transferredHandle, await token.getAddress(), anyone),
+      ).to.eventually.equal(0);
       // Balance is unchanged
       await expect(
         fhevm.userDecryptEuint(
@@ -535,7 +584,6 @@ describe('ERC7984Rwa', function () {
           recipient,
         ),
       ).to.eventually.equal(100);
-      */
     });
   });
 });
