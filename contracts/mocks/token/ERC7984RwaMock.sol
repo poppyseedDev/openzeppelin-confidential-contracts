@@ -16,6 +16,11 @@ contract ERC7984RwaMock is ERC7984Rwa, HandleAccessManager, SepoliaConfig {
 
     constructor(string memory name, string memory symbol, string memory tokenUri) ERC7984Rwa(name, symbol, tokenUri) {}
 
+    function createEncryptedAmount(uint64 amount) public returns (euint64 encryptedAmount) {
+        FHE.allowThis(encryptedAmount = FHE.asEuint64(amount));
+        FHE.allow(encryptedAmount, msg.sender);
+    }
+
     function $_setCompliantTransfer() public {
         compliantTransfer = true;
     }

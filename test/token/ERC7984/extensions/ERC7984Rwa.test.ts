@@ -1,5 +1,6 @@
 import { FhevmType } from '@fhevm/hardhat-plugin';
 import { expect } from 'chai';
+import { AddressLike, BytesLike } from 'ethers';
 import { ethers, fhevm } from 'hardhat';
 
 /* eslint-disable no-unexpected-multiline */
@@ -73,25 +74,39 @@ describe('ERC7984Rwa', function () {
   });
 
   describe('Mintable', async function () {
-    it('should mint by admin or agent', async function () {
-      const { admin, agent1, recipient } = await deployFixture();
-      for (const manager of [admin, agent1]) {
-        const { token } = await deployFixture();
-        const encryptedInput = await fhevm
-          .createEncryptedInput(await token.getAddress(), manager.address)
-          .add64(100)
-          .encrypt();
-        await token.$_setCompliantTransfer();
-        await token
-          .connect(manager)
-          ['confidentialMint(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof);
-        const balanceHandle = await token.confidentialBalanceOf(recipient);
-        await token.connect(manager).getHandleAllowance(balanceHandle, manager, true);
-        await expect(
-          fhevm.userDecryptEuint(FhevmType.euint64, balanceHandle, await token.getAddress(), manager),
-        ).to.eventually.equal(100);
-      }
-    });
+    for (const withProof of [true, false]) {
+      it(`should mint by admin or agent ${withProof ? 'with proof' : ''}`, async function () {
+        const { admin, agent1, recipient } = await deployFixture();
+        for (const manager of [admin, agent1]) {
+          const { token } = await deployFixture();
+          await token.$_setCompliantTransfer();
+          const amount = 100;
+          let params = [recipient.address] as unknown as [
+            account: AddressLike,
+            encryptedAmount: BytesLike,
+            inputProof: BytesLike,
+          ];
+          if (withProof) {
+            const { handles, inputProof } = await fhevm
+              .createEncryptedInput(await token.getAddress(), manager.address)
+              .add64(amount)
+              .encrypt();
+            params.push(handles[0], inputProof);
+          } else {
+            await token.connect(manager).createEncryptedAmount(amount);
+            params.push(await token.connect(manager).createEncryptedAmount.staticCall(amount));
+          }
+          await token
+            .connect(manager)
+            [withProof ? 'confidentialMint(address,bytes32,bytes)' : 'confidentialMint(address,bytes32)'](...params);
+          const balanceHandle = await token.confidentialBalanceOf(recipient);
+          await token.connect(manager).getHandleAllowance(balanceHandle, manager, true);
+          await expect(
+            fhevm.userDecryptEuint(FhevmType.euint64, balanceHandle, await token.getAddress(), manager),
+          ).to.eventually.equal(100);
+        }
+      });
+    }
 
     it('should not mint if neither admin nor agent', async function () {
       const { token, recipient, anyone } = await deployFixture();
@@ -140,33 +155,55 @@ describe('ERC7984Rwa', function () {
   });
 
   describe('Burnable', async function () {
-    it('should burn by admin or agent', async function () {
-      const { admin, agent1, recipient } = await deployFixture();
-      for (const manager of [admin, agent1]) {
-        const { token } = await deployFixture();
-        const encryptedInput = await fhevm
-          .createEncryptedInput(await token.getAddress(), manager.address)
-          .add64(100)
-          .encrypt();
-        await token.$_setCompliantTransfer();
-        await token
-          .connect(manager)
-          ['confidentialMint(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof);
-        const balanceBeforeHandle = await token.confidentialBalanceOf(recipient);
-        await token.connect(manager).getHandleAllowance(balanceBeforeHandle, manager, true);
-        await expect(
-          fhevm.userDecryptEuint(FhevmType.euint64, balanceBeforeHandle, await token.getAddress(), manager),
-        ).to.eventually.greaterThan(0);
-        await token
-          .connect(manager)
-          ['confidentialBurn(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof);
-        const balanceHandle = await token.confidentialBalanceOf(recipient);
-        await token.connect(manager).getHandleAllowance(balanceHandle, manager, true);
-        await expect(
-          fhevm.userDecryptEuint(FhevmType.euint64, balanceHandle, await token.getAddress(), manager),
-        ).to.eventually.equal(0);
-      }
-    });
+    for (const withProof of [true, false]) {
+      it(`should burn by admin or agent ${withProof ? 'with proof' : ''}`, async function () {
+        const { admin, agent1, recipient } = await deployFixture();
+        for (const manager of [admin, agent1]) {
+          const { token } = await deployFixture();
+          const encryptedInput = await fhevm
+            .createEncryptedInput(await token.getAddress(), manager.address)
+            .add64(100)
+            .encrypt();
+          await token.$_setCompliantTransfer();
+          await token
+            .connect(manager)
+            ['confidentialMint(address,bytes32,bytes)'](
+              recipient,
+              encryptedInput.handles[0],
+              encryptedInput.inputProof,
+            );
+          const balanceBeforeHandle = await token.confidentialBalanceOf(recipient);
+          await token.connect(manager).getHandleAllowance(balanceBeforeHandle, manager, true);
+          await expect(
+            fhevm.userDecryptEuint(FhevmType.euint64, balanceBeforeHandle, await token.getAddress(), manager),
+          ).to.eventually.greaterThan(0);
+          const amount = 100;
+          let params = [recipient.address] as unknown as [
+            account: AddressLike,
+            encryptedAmount: BytesLike,
+            inputProof: BytesLike,
+          ];
+          if (withProof) {
+            const { handles, inputProof } = await fhevm
+              .createEncryptedInput(await token.getAddress(), manager.address)
+              .add64(amount)
+              .encrypt();
+            params.push(handles[0], inputProof);
+          } else {
+            await token.connect(manager).createEncryptedAmount(amount);
+            params.push(await token.connect(manager).createEncryptedAmount.staticCall(amount));
+          }
+          await token
+            .connect(manager)
+            [withProof ? 'confidentialBurn(address,bytes32,bytes)' : 'confidentialBurn(address,bytes32)'](...params);
+          const balanceHandle = await token.confidentialBalanceOf(recipient);
+          await token.connect(manager).getHandleAllowance(balanceHandle, manager, true);
+          await expect(
+            fhevm.userDecryptEuint(FhevmType.euint64, balanceHandle, await token.getAddress(), manager),
+          ).to.eventually.equal(0);
+        }
+      });
+    }
 
     it('should not burn if neither admin nor agent', async function () {
       const { token, recipient, anyone } = await deployFixture();
@@ -215,60 +252,75 @@ describe('ERC7984Rwa', function () {
   });
 
   describe('Force transfer', async function () {
-    it('should force transfer by admin or agent', async function () {
-      const { admin, agent1, recipient, anyone } = await deployFixture();
-      for (const manager of [admin, agent1]) {
-        const { token } = await deployFixture();
-        const encryptedMintValueInput = await fhevm
-          .createEncryptedInput(await token.getAddress(), manager.address)
-          .add64(100)
-          .encrypt();
-        await token.$_setCompliantTransfer();
-        await token
-          .connect(manager)
-          ['confidentialMint(address,bytes32,bytes)'](
-            recipient,
-            encryptedMintValueInput.handles[0],
-            encryptedMintValueInput.inputProof,
-          );
-        // set frozen (50 available and about to force transfer 25)
-        const encryptedFrozenValueInput = await fhevm
-          .createEncryptedInput(await token.getAddress(), manager.address)
-          .add64(50)
-          .encrypt();
-        await token
-          .connect(manager)
-          ['setConfidentialFrozen(address,bytes32,bytes)'](
-            recipient,
-            encryptedFrozenValueInput.handles[0],
-            encryptedFrozenValueInput.inputProof,
-          );
-        const encryptedTransferValueInput = await fhevm
-          .createEncryptedInput(await token.getAddress(), manager.address)
-          .add64(25)
-          .encrypt();
-        await token.$_unsetCompliantTransfer();
-        expect(await token.compliantTransfer()).to.be.false;
-        await token
-          .connect(manager)
-          ['forceConfidentialTransferFrom(address,address,bytes32,bytes)'](
-            recipient,
-            anyone,
-            encryptedTransferValueInput.handles[0],
-            encryptedTransferValueInput.inputProof,
-          );
-        const balanceHandle = await token.confidentialBalanceOf(recipient);
-        await token.connect(manager).getHandleAllowance(balanceHandle, manager, true);
-        await expect(
-          fhevm.userDecryptEuint(FhevmType.euint64, balanceHandle, await token.getAddress(), manager),
-        ).to.eventually.equal(75);
-        const frozenHandle = await token.confidentialFrozen(recipient);
-        await token.connect(manager).getHandleAllowance(frozenHandle, manager, true);
-        await expect(
-          fhevm.userDecryptEuint(FhevmType.euint64, frozenHandle, await token.getAddress(), manager),
-        ).to.eventually.equal(50); // frozen is left unchanged
-      }
-    });
+    for (const withProof of [true, false]) {
+      it(`should force transfer by admin or agent
+         ${withProof ? 'with proof' : ''}`, async function () {
+        const { admin, agent1, recipient, anyone } = await deployFixture();
+        for (const manager of [admin, agent1]) {
+          const { token } = await deployFixture();
+          const encryptedMintValueInput = await fhevm
+            .createEncryptedInput(await token.getAddress(), manager.address)
+            .add64(100)
+            .encrypt();
+          await token.$_setCompliantTransfer();
+          await token
+            .connect(manager)
+            ['confidentialMint(address,bytes32,bytes)'](
+              recipient,
+              encryptedMintValueInput.handles[0],
+              encryptedMintValueInput.inputProof,
+            );
+          // set frozen (50 available and about to force transfer 25)
+          const encryptedFrozenValueInput = await fhevm
+            .createEncryptedInput(await token.getAddress(), manager.address)
+            .add64(50)
+            .encrypt();
+          await token
+            .connect(manager)
+            ['setConfidentialFrozen(address,bytes32,bytes)'](
+              recipient,
+              encryptedFrozenValueInput.handles[0],
+              encryptedFrozenValueInput.inputProof,
+            );
+          await token.$_unsetCompliantTransfer();
+          expect(await token.compliantTransfer()).to.be.false;
+          const amount = 25;
+          let params = [recipient.address, anyone.address] as unknown as [
+            from: AddressLike,
+            to: AddressLike,
+            encryptedAmount: BytesLike,
+            inputProof: BytesLike,
+          ];
+          if (withProof) {
+            const { handles, inputProof } = await fhevm
+              .createEncryptedInput(await token.getAddress(), manager.address)
+              .add64(amount)
+              .encrypt();
+            params.push(handles[0], inputProof);
+          } else {
+            await token.connect(manager).createEncryptedAmount(amount);
+            params.push(await token.connect(manager).createEncryptedAmount.staticCall(amount));
+          }
+          await token
+            .connect(manager)
+            [
+              withProof
+                ? 'forceConfidentialTransferFrom(address,address,bytes32,bytes)'
+                : 'forceConfidentialTransferFrom(address,address,bytes32)'
+            ](...params);
+          const balanceHandle = await token.confidentialBalanceOf(recipient);
+          await token.connect(manager).getHandleAllowance(balanceHandle, manager, true);
+          await expect(
+            fhevm.userDecryptEuint(FhevmType.euint64, balanceHandle, await token.getAddress(), manager),
+          ).to.eventually.equal(75);
+          const frozenHandle = await token.confidentialFrozen(recipient);
+          await token.connect(manager).getHandleAllowance(frozenHandle, manager, true);
+          await expect(
+            fhevm.userDecryptEuint(FhevmType.euint64, frozenHandle, await token.getAddress(), manager),
+          ).to.eventually.equal(50); // frozen is left unchanged
+        }
+      });
+    }
 
     it('should force transfer even if frozen', async function () {
       const { admin, agent1, recipient, anyone } = await deployFixture();
