@@ -367,6 +367,7 @@ describe('ERC7984Rwa', function () {
         }
       });
     }
+
     for (const withProof of [true, false]) {
       it(`should force transfer even if frozen ${withProof ? 'with proof' : ''}`, async function () {
         const { admin, agent1, recipient, anyone } = await deployFixture();
@@ -444,6 +445,40 @@ describe('ERC7984Rwa', function () {
             fhevm.userDecryptEuint(FhevmType.euint64, frozenHandle, await token.getAddress(), manager),
           ).to.eventually.equal(75); // frozen got reset to available balance
         }
+      });
+    }
+
+    for (const withProof of [true, false]) {
+      it(`should not force transfer if neither admin nor agent ${withProof ? 'with proof' : ''}`, async function () {
+        const { token, recipient, anyone } = await deployFixture();
+        let params = [recipient.address, anyone.address] as unknown as [
+          from: AddressLike,
+          to: AddressLike,
+          encryptedAmount: BytesLike,
+          inputProof: BytesLike,
+        ];
+        const amount = 100;
+        if (withProof) {
+          const { handles, inputProof } = await fhevm
+            .createEncryptedInput(await token.getAddress(), anyone.address)
+            .add64(amount)
+            .encrypt();
+          params.push(handles[0], inputProof);
+        } else {
+          await token.connect(anyone).createEncryptedAmount(amount);
+          params.push(await token.connect(anyone).createEncryptedAmount.staticCall(amount));
+        }
+        await expect(
+          token
+            .connect(anyone)
+            [
+              withProof
+                ? 'forceConfidentialTransferFrom(address,address,bytes32,bytes)'
+                : 'forceConfidentialTransferFrom(address,address,bytes32)'
+            ](...params),
+        )
+          .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
+          .withArgs(anyone.address);
       });
     }
   });
