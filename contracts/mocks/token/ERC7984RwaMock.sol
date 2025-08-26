@@ -41,29 +41,5 @@ contract ERC7984RwaMock is ERC7984Rwa, HandleAccessManager, SepoliaConfig {
         return compliantTransfer;
     }
 
-    // TODO: Remove all below
-    function confidentialAvailable(address account) public override returns (euint64) {
-        (ebool success, euint64 unfrozen) = FHESafeMath.tryDecrease(
-            confidentialBalanceOf(account),
-            confidentialFrozen(account)
-        );
-        unfrozen = FHE.select(success, unfrozen, FHE.asEuint64(0));
-        FHE.allowThis(unfrozen);
-        return unfrozen;
-    }
-    function confidentialFrozen(address account) public view override returns (euint64) {
-        return _frozenBalances[account];
-    }
-    function setConfidentialFrozen(
-        address account,
-        externalEuint64 encryptedAmount,
-        bytes calldata inputProof
-    ) public override {
-        return setConfidentialFrozen(account, FHE.fromExternal(encryptedAmount, inputProof));
-    }
-    function setConfidentialFrozen(address account, euint64 encryptedAmount) public override {
-        FHE.allowThis(_frozenBalances[account] = encryptedAmount);
-    }
-
     function _validateHandleAllowance(bytes32 handle) internal view override onlyAdminOrAgent {}
 }

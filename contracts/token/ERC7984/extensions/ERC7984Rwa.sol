@@ -160,7 +160,7 @@ abstract contract ERC7984Rwa is ERC7984, ERC7984Freezable, Pausable, Multicall, 
     ) internal virtual onlyAdminOrAgent returns (euint64 transferred) {
         euint64 available = confidentialAvailable(from);
         transferred = ERC7984._update(from, to, encryptedAmount); // bypass frozen & compliance checks
-        setConfidentialFrozen(
+        _setConfidentialFrozen(
             from,
             FHE.select(FHE.gt(transferred, available), confidentialBalanceOf(from), confidentialFrozen(from))
         );
