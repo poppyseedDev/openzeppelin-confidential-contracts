@@ -23,26 +23,14 @@ abstract contract ERC7984Rwa is ERC7984, ERC7984Freezable, Pausable, Multicall, 
     /// @dev The transfer does not follow token compliance.
     error UncompliantTransfer(address from, address to, euint64 encryptedAmount);
 
-    constructor(string memory name, string memory symbol, string memory tokenUri) ERC7984(name, symbol, tokenUri) {
-        _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
-    /// @dev Checks if the sender is an admin.
-    modifier onlyAdmin() {
-        require(isAdmin(_msgSender()), UnauthorizedSender(_msgSender()));
-        _;
-    }
-
-    /// @dev Checks if the sender is an agent.
-    modifier onlyAgent() {
-        require(isAgent(_msgSender()), UnauthorizedSender(_msgSender()));
-        _;
-    }
-
     /// @dev Checks if the sender is an admin or an agent.
     modifier onlyAdminOrAgent() {
         require(isAdmin(_msgSender()) || isAgent(_msgSender()), UnauthorizedSender(_msgSender()));
         _;
+    }
+
+    constructor(string memory name, string memory symbol, string memory tokenUri) ERC7984(name, symbol, tokenUri) {
+        _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @inheritdoc ERC165
