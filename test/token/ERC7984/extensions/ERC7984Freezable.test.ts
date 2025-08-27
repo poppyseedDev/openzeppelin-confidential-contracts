@@ -1,6 +1,5 @@
 import { IACL__factory } from '../../../../types';
 import { $ERC7984FreezableMock } from '../../../../types/contracts-exposed/mocks/token/ERC7984FreezableMock.sol/$ERC7984FreezableMock';
-import { $ERC7984Mock } from '../../../../types/contracts-exposed/mocks/token/ERC7984Mock.sol/$ERC7984Mock';
 import { ACL_ADDRESS } from '../../../helpers/accounts';
 import { shouldBehaveLikeERC7984 } from '../ERC7984.behaviour';
 import { FhevmType } from '@fhevm/hardhat-plugin';
@@ -8,6 +7,7 @@ import { expect } from 'chai';
 import { AddressLike, BytesLike, EventLog } from 'ethers';
 import { ethers, fhevm } from 'hardhat';
 
+const contract = '$ERC7984FreezableMock';
 const name = 'ConfidentialFungibleToken';
 const symbol = 'CFT';
 const uri = 'https://example.com/metadata';
@@ -15,7 +15,7 @@ const uri = 'https://example.com/metadata';
 describe('ERC7984Freezable', function () {
   async function deployFixture() {
     const [holder, recipient, freezer, operator, anyone] = await ethers.getSigners();
-    const token = (await ethers.deployContract('$ERC7984FreezableMock', [
+    const token = (await ethers.deployContract(contract, [
       name,
       symbol,
       uri,
@@ -239,8 +239,8 @@ describe('ERC7984Freezable', function () {
       .withArgs(encryptedInput.handles[0], anyone);
   });
 
-  shouldBehaveLikeERC7984(async () => {
-    const { token, holder, recipient, operator, anyone } = await deployFixture();
-    return { token: token as any as $ERC7984Mock, holder, recipient, operator, anyone };
-  });
+  shouldBehaveLikeERC7984(
+    contract,
+    '0x0000000000000000000000000000000000000001', // freezer
+  );
 });
