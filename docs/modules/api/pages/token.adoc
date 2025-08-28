@@ -7,6 +7,8 @@
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
 :ERC7984ObserverAccess: pass:normal[xref:token.adoc#ERC7984ObserverAccess[`ERC7984ObserverAccess`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
+:ERC7984Restricted: pass:normal[xref:token.adoc#ERC7984Restricted[`ERC7984Restricted`]]
+:ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
 :ERC7984Utils: pass:normal[xref:token.adoc#ERC7984Utils[`ERC7984Utils`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
 :IERC7984: pass:normal[xref:interfaces.adoc#IERC7984[`IERC7984`]]
@@ -16,6 +18,8 @@
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
 :ERC7984-_update: pass:normal[xref:token.adoc#ERC7984-_update-address-address-euint64-[`ERC7984._update`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
+:ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
+:ERC7984-_update: pass:normal[xref:token.adoc#ERC7984-_update-address-address-euint64-[`ERC7984._update`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
 :ERC7984: pass:normal[xref:token.adoc#ERC7984[`ERC7984`]]
 :IERC7984Receiver-onConfidentialTransferReceived: pass:normal[xref:interfaces.adoc#IERC7984Receiver-onConfidentialTransferReceived-address-address-euint64-bytes-[`IERC7984Receiver.onConfidentialTransferReceived`]]
@@ -28,8 +32,9 @@ This set of interfaces, contracts, and utilities are all related to `ERC7984`, a
 
 - {ERC7984}: Implementation of {IERC7984}.
 - {ERC7984ERC20Wrapper}: Extension of {ERC7984} which wraps an `ERC20` into a confidential token. The wrapper allows for free conversion in both directions at a fixed rate.
-- {ERC7984Freezable}: An extension for {ERC7984}, which allows accounts granted the "freezer" role to freeze and unfreeze tokens.
-- {ERC7984ObserverAccess}: An extension for {ERC7984}, which allows each account to add an observer who is given access to their transfer and balance amounts.
+- {ERC7984Freezable}: An extension of {ERC7984}, which allows accounts granted the "freezer" role to freeze and unfreeze tokens.
+- {ERC7984ObserverAccess}: An extension of {ERC7984}, which allows each account to add an observer who is given access to their transfer and balance amounts.
+- {ERC7984Restricted}: An extension of {ERC7984} that implements user account transfer restrictions.
 - {ERC7984Utils}: A library that provides the on-transfer callback check used by {ERC7984}.
 
 == Core
@@ -878,6 +883,198 @@ Emitted when the observer is changed for the given account `account`.
 ==== `[.contract-item-name]#++Unauthorized++#++()++` [.item-kind]#error#
 
 Thrown when an account tries to set a `newObserver` for a given `account` without proper authority.
+
+:Restriction: pass:normal[xref:#ERC7984Restricted-Restriction[`++Restriction++`]]
+:UserRestrictionUpdated: pass:normal[xref:#ERC7984Restricted-UserRestrictionUpdated-address-enum-ERC7984Restricted-Restriction-[`++UserRestrictionUpdated++`]]
+:UserRestricted: pass:normal[xref:#ERC7984Restricted-UserRestricted-address-[`++UserRestricted++`]]
+:getRestriction: pass:normal[xref:#ERC7984Restricted-getRestriction-address-[`++getRestriction++`]]
+:isUserAllowed: pass:normal[xref:#ERC7984Restricted-isUserAllowed-address-[`++isUserAllowed++`]]
+:_update: pass:normal[xref:#ERC7984Restricted-_update-address-address-euint64-[`++_update++`]]
+:_setRestriction: pass:normal[xref:#ERC7984Restricted-_setRestriction-address-enum-ERC7984Restricted-Restriction-[`++_setRestriction++`]]
+:_blockUser: pass:normal[xref:#ERC7984Restricted-_blockUser-address-[`++_blockUser++`]]
+:_allowUser: pass:normal[xref:#ERC7984Restricted-_allowUser-address-[`++_allowUser++`]]
+:_resetUser: pass:normal[xref:#ERC7984Restricted-_resetUser-address-[`++_resetUser++`]]
+:_checkRestriction: pass:normal[xref:#ERC7984Restricted-_checkRestriction-address-[`++_checkRestriction++`]]
+
+:getRestriction-address: pass:normal[xref:#ERC7984Restricted-getRestriction-address-[`++getRestriction++`]]
+:isUserAllowed-address: pass:normal[xref:#ERC7984Restricted-isUserAllowed-address-[`++isUserAllowed++`]]
+:_update-address-address-euint64: pass:normal[xref:#ERC7984Restricted-_update-address-address-euint64-[`++_update++`]]
+:_setRestriction-address-enum-ERC7984Restricted-Restriction: pass:normal[xref:#ERC7984Restricted-_setRestriction-address-enum-ERC7984Restricted-Restriction-[`++_setRestriction++`]]
+:_blockUser-address: pass:normal[xref:#ERC7984Restricted-_blockUser-address-[`++_blockUser++`]]
+:_allowUser-address: pass:normal[xref:#ERC7984Restricted-_allowUser-address-[`++_allowUser++`]]
+:_resetUser-address: pass:normal[xref:#ERC7984Restricted-_resetUser-address-[`++_resetUser++`]]
+:_checkRestriction-address: pass:normal[xref:#ERC7984Restricted-_checkRestriction-address-[`++_checkRestriction++`]]
+
+[.contract]
+[[ERC7984Restricted]]
+=== `++ERC7984Restricted++` link:https://github.com/OpenZeppelin/openzeppelin-confidential-contracts/blob/master/contracts/token/ERC7984/extensions/ERC7984Restricted.sol[{github-icon},role=heading-link]
+
+[.hljs-theme-light.nopadding]
+```solidity
+import "@openzeppelin/confidential-contracts/token/ERC7984/extensions/ERC7984Restricted.sol";
+```
+
+Extension of {ERC7984} that implements user account transfer restrictions through the
+{isUserAllowed} function. Inspired by
+https://github.com/OpenZeppelin/openzeppelin-community-contracts/blob/master/contracts/token/ERC20/extensions/ERC20Restricted.sol.
+
+By default, each account has no explicit restriction. The {isUserAllowed} function acts as
+a blocklist. Developers can override {isUserAllowed} to check that `restriction == ALLOWED`
+to implement an allowlist.
+
+[.contract-index]
+.Functions
+--
+* `++getRestriction(account)++`
+* `++isUserAllowed(account)++`
+* `++_update(from, to, value)++`
+* `++_setRestriction(account, restriction)++`
+* `++_blockUser(account)++`
+* `++_allowUser(account)++`
+* `++_resetUser(account)++`
+* `++_checkRestriction(account)++`
+
+[.contract-subindex-inherited]
+.ERC7984
+* `++name()++`
+* `++symbol()++`
+* `++decimals()++`
+* `++tokenURI()++`
+* `++confidentialTotalSupply()++`
+* `++confidentialBalanceOf(account)++`
+* `++isOperator(holder, spender)++`
+* `++setOperator(operator, until)++`
+* `++confidentialTransfer(to, encryptedAmount, inputProof)++`
+* `++confidentialTransfer(to, amount)++`
+* `++confidentialTransferFrom(from, to, encryptedAmount, inputProof)++`
+* `++confidentialTransferFrom(from, to, amount)++`
+* `++confidentialTransferAndCall(to, encryptedAmount, inputProof, data)++`
+* `++confidentialTransferAndCall(to, amount, data)++`
+* `++confidentialTransferFromAndCall(from, to, encryptedAmount, inputProof, data)++`
+* `++confidentialTransferFromAndCall(from, to, amount, data)++`
+* `++discloseEncryptedAmount(encryptedAmount)++`
+* `++finalizeDiscloseEncryptedAmount(requestId, amount, signatures)++`
+* `++_setOperator(holder, operator, until)++`
+* `++_mint(to, amount)++`
+* `++_burn(from, amount)++`
+* `++_transfer(from, to, amount)++`
+* `++_transferAndCall(from, to, amount, data)++`
+
+[.contract-subindex-inherited]
+.IERC7984
+
+--
+
+[.contract-index]
+.Events
+--
+* `++UserRestrictionUpdated(account, restriction)++`
+
+[.contract-subindex-inherited]
+.ERC7984
+
+[.contract-subindex-inherited]
+.IERC7984
+* `++OperatorSet(holder, operator, until)++`
+* `++ConfidentialTransfer(from, to, amount)++`
+* `++AmountDisclosed(encryptedAmount, amount)++`
+
+--
+
+[.contract-index]
+.Errors
+--
+* `++UserRestricted(account)++`
+
+[.contract-subindex-inherited]
+.ERC7984
+* `++ERC7984InvalidReceiver(receiver)++`
+* `++ERC7984InvalidSender(sender)++`
+* `++ERC7984UnauthorizedSpender(holder, spender)++`
+* `++ERC7984ZeroBalance(holder)++`
+* `++ERC7984UnauthorizedUseOfEncryptedAmount(amount, user)++`
+* `++ERC7984UnauthorizedCaller(caller)++`
+* `++ERC7984InvalidGatewayRequest(requestId)++`
+
+[.contract-subindex-inherited]
+.IERC7984
+
+--
+
+[.contract-item]
+[[ERC7984Restricted-getRestriction-address-]]
+==== `[.contract-item-name]#++getRestriction++#++(address account) → enum ERC7984Restricted.Restriction++` [.item-kind]#public#
+
+Returns the restriction of a user account.
+
+[.contract-item]
+[[ERC7984Restricted-isUserAllowed-address-]]
+==== `[.contract-item-name]#++isUserAllowed++#++(address account) → bool++` [.item-kind]#public#
+
+Returns whether a user account is allowed to interact with the token.
+
+Default implementation only disallows explicitly BLOCKED accounts (i.e. a blocklist).
+
+To convert into an allowlist, override as:
+
+```solidity
+function isUserAllowed(address account) public view virtual override returns (bool) {
+    return getRestriction(account) == Restriction.ALLOWED;
+}
+```
+
+[.contract-item]
+[[ERC7984Restricted-_update-address-address-euint64-]]
+==== `[.contract-item-name]#++_update++#++(address from, address to, euint64 value) → euint64++` [.item-kind]#internal#
+
+See {ERC7984-_update}. Enforces transfer restrictions (excluding minting and burning).
+
+Requirements:
+
+* `from` must be allowed to transfer tokens (see {isUserAllowed}).
+* `to` must be allowed to receive tokens (see {isUserAllowed}).
+
+[.contract-item]
+[[ERC7984Restricted-_setRestriction-address-enum-ERC7984Restricted-Restriction-]]
+==== `[.contract-item-name]#++_setRestriction++#++(address account, enum ERC7984Restricted.Restriction restriction)++` [.item-kind]#internal#
+
+Updates the restriction of a user account.
+
+[.contract-item]
+[[ERC7984Restricted-_blockUser-address-]]
+==== `[.contract-item-name]#++_blockUser++#++(address account)++` [.item-kind]#internal#
+
+Convenience function to block a user account (set to BLOCKED).
+
+[.contract-item]
+[[ERC7984Restricted-_allowUser-address-]]
+==== `[.contract-item-name]#++_allowUser++#++(address account)++` [.item-kind]#internal#
+
+Convenience function to allow a user account (set to ALLOWED).
+
+[.contract-item]
+[[ERC7984Restricted-_resetUser-address-]]
+==== `[.contract-item-name]#++_resetUser++#++(address account)++` [.item-kind]#internal#
+
+Convenience function to reset a user account to default restriction.
+
+[.contract-item]
+[[ERC7984Restricted-_checkRestriction-address-]]
+==== `[.contract-item-name]#++_checkRestriction++#++(address account)++` [.item-kind]#internal#
+
+Checks if a user account is restricted. Reverts with {ERC20Restricted} if so.
+
+[.contract-item]
+[[ERC7984Restricted-UserRestrictionUpdated-address-enum-ERC7984Restricted-Restriction-]]
+==== `[.contract-item-name]#++UserRestrictionUpdated++#++(address indexed account, enum ERC7984Restricted.Restriction restriction)++` [.item-kind]#event#
+
+Emitted when a user account's restriction is updated.
+
+[.contract-item]
+[[ERC7984Restricted-UserRestricted-address-]]
+==== `[.contract-item-name]#++UserRestricted++#++(address account)++` [.item-kind]#error#
+
+The operation failed because the user account is restricted.
 
 == Utilities
 :checkOnTransferReceived: pass:normal[xref:#ERC7984Utils-checkOnTransferReceived-address-address-address-euint64-bytes-[`++checkOnTransferReceived++`]]
