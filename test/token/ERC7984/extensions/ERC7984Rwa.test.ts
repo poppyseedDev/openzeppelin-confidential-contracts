@@ -14,7 +14,6 @@ import { ethers, fhevm } from 'hardhat';
 const transferEventSignature = 'ConfidentialTransfer(address,address,bytes32)';
 const frozenEventSignature = 'TokensFrozen(address,bytes32)';
 
-/* eslint-disable no-unexpected-multiline */
 describe('ERC7984Rwa', function () {
   const deployFixture = async () => {
     const [admin, agent1, agent2, recipient, anyone] = await ethers.getSigners();
@@ -649,4 +648,3 @@ describe('ERC7984Rwa', function () {
     });
   });
 });
-/* eslint-disable no-unexpected-multiline */
