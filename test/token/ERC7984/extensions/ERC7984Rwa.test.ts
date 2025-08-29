@@ -263,7 +263,7 @@ describe('ERC7984Rwa', function () {
         .withArgs(anyone.address);
     });
 
-    it('should not mint if transfer not compliant', async function () {
+    it('should not burn if transfer not compliant', async function () {
       const { token, admin, recipient } = await deployFixture();
       const encryptedInput = await fhevm
         .createEncryptedInput(await token.getAddress(), admin.address)
