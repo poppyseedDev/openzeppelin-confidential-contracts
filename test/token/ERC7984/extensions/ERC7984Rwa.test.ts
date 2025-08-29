@@ -16,16 +16,16 @@ const frozenEventSignature = 'TokensFrozen(address,bytes32)';
 
 /* eslint-disable no-unexpected-multiline */
 describe('ERC7984Rwa', function () {
-  async function deployFixture() {
+  const deployFixture = async () => {
     const [admin, agent1, agent2, recipient, anyone] = await ethers.getSigners();
     const token = await ethers.deployContract('ERC7984RwaMock', ['name', 'symbol', 'uri']);
     await token.connect(admin).addAgent(agent1);
     token.connect(anyone);
     return { token, admin, agent1, agent2, recipient, anyone };
-  }
+  };
 
   describe('ERC165', async function () {
-    it('should support interfaces', async function () {
+    it('should support interface', async function () {
       const { token } = await deployFixture();
       const interfaceFactories = [
         IERC7984RwaBase__factory,
@@ -37,6 +37,10 @@ describe('ERC7984Rwa', function () {
         const functions = getFunctions(interfaceFactory);
         expect(await token.supportsInterface(getInterfaceId(functions))).is.true;
       }
+    });
+    it('should not support interface', async function () {
+      const { token } = await deployFixture();
+      expect(await token.supportsInterface('0xbadbadba')).is.false;
     });
   });
 
@@ -56,14 +60,14 @@ describe('ERC7984Rwa', function () {
       const { token, anyone } = await deployFixture();
       await expect(token.connect(anyone).pause())
         .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
-        .withArgs(anyone);
+        .withArgs(anyone.address);
     });
 
     it('should not unpause if neither admin nor agent', async function () {
       const { token, anyone } = await deployFixture();
       await expect(token.connect(anyone).unpause())
         .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
-        .withArgs(anyone);
+        .withArgs(anyone.address);
     });
   });
 
@@ -89,14 +93,14 @@ describe('ERC7984Rwa', function () {
       const { token, agent1, anyone } = await deployFixture();
       await expect(token.connect(anyone).addAgent(agent1))
         .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
-        .withArgs(anyone);
+        .withArgs(anyone.address);
     });
 
     it('should not remove agent if neither admin nor agent', async function () {
       const { token, agent1, anyone } = await deployFixture();
       await expect(token.connect(anyone).removeAgent(agent1))
         .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
-        .withArgs(anyone);
+        .withArgs(anyone.address);
     });
   });
 
@@ -154,7 +158,7 @@ describe('ERC7984Rwa', function () {
           ['confidentialMint(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
       )
         .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
-        .withArgs(anyone);
+        .withArgs(anyone.address);
     });
 
     it('should not mint if transfer not compliant', async function () {
@@ -169,7 +173,7 @@ describe('ERC7984Rwa', function () {
           ['confidentialMint(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
       )
         .to.be.revertedWithCustomError(token, 'UncompliantTransfer')
-        .withArgs(ethers.ZeroAddress, recipient, encryptedInput.handles[0]);
+        .withArgs(ethers.ZeroAddress, recipient.address, encryptedInput.handles[0]);
     });
 
     it('should not mint if paused', async function () {
@@ -257,7 +261,7 @@ describe('ERC7984Rwa', function () {
           ['confidentialBurn(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
       )
         .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
-        .withArgs(anyone);
+        .withArgs(anyone.address);
     });
 
     it('should not mint if transfer not compliant', async function () {
@@ -272,7 +276,7 @@ describe('ERC7984Rwa', function () {
           ['confidentialBurn(address,bytes32,bytes)'](recipient, encryptedInput.handles[0], encryptedInput.inputProof),
       )
         .to.be.revertedWithCustomError(token, 'UncompliantTransfer')
-        .withArgs(recipient, ethers.ZeroAddress, encryptedInput.handles[0]);
+        .withArgs(recipient.address, ethers.ZeroAddress, encryptedInput.handles[0]);
     });
 
     it('should not burn if paused', async function () {
@@ -585,7 +589,7 @@ describe('ERC7984Rwa', function () {
           ),
       )
         .to.be.revertedWithCustomError(token, 'UncompliantTransfer')
-        .withArgs(recipient, anyone, encryptedTransferValueInput.handles[0]);
+        .withArgs(recipient.address, anyone.address, encryptedTransferValueInput.handles[0]);
     });
 
     it('should not transfer if frozen', async function () {

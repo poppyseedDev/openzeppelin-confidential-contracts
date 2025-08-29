@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import {FHE, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC7984} from "./IERC7984.sol";
 
 /// @dev Base interface for confidential RWA contracts.
@@ -47,7 +47,7 @@ interface IERC7984RwaBase {
         bytes calldata inputProof
     ) external returns (euint64);
     /// @dev Mints confidential amount of tokens to account.
-    function confidentialMint(address to, euint64 encryptedAmount) external;
+    function confidentialMint(address to, euint64 encryptedAmount) external returns (euint64);
     /// @dev Burns confidential amount of tokens from account with proof.
     function confidentialBurn(
         address account,
