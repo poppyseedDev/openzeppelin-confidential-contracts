@@ -11,12 +11,21 @@ import {IERC7984} from "./../../../interfaces/IERC7984.sol";
 import {IERC7984RwaBase} from "./../../../interfaces/IERC7984Rwa.sol";
 import {ERC7984} from "./../ERC7984.sol";
 import {ERC7984Freezable} from "./ERC7984Freezable.sol";
+import {ERC7984Restricted} from "./ERC7984Restricted.sol";
 
 /**
  * @dev Extension of {ERC7984} that supports confidential Real World Assets (RWAs).
  * This interface provides compliance checks, transfer controls and enforcement actions.
  */
-abstract contract ERC7984Rwa is ERC7984, ERC7984Freezable, Pausable, Multicall, ERC165, AccessControl {
+abstract contract ERC7984Rwa is
+    ERC7984,
+    ERC7984Freezable,
+    ERC7984Restricted,
+    Pausable,
+    Multicall,
+    ERC165,
+    AccessControl
+{
     bytes32 public constant AGENT_ROLE = keccak256("AGENT_ROLE");
 
     /// @dev The caller account is not authorized to perform the operation.
@@ -70,6 +79,16 @@ abstract contract ERC7984Rwa is ERC7984, ERC7984Freezable, Pausable, Multicall, 
     /// @dev Removes agent.
     function removeAgent(address account) public virtual {
         _removeAgent(account);
+    }
+
+    /// @dev Blocks an account.
+    function block(address account) public virtual onlyAdminOrAgent {
+        _blockUser(account);
+    }
+
+    /// @dev Unblocks an account.
+    function unblock(address account) public virtual onlyAdminOrAgent {
+        _allowUser(account);
     }
 
     /// @dev Mints confidential amount of tokens to account with proof.
@@ -152,21 +171,21 @@ abstract contract ERC7984Rwa is ERC7984, ERC7984Freezable, Pausable, Multicall, 
         euint64 encryptedAmount
     ) internal virtual onlyAdminOrAgent returns (euint64 transferred) {
         euint64 available = confidentialAvailable(from);
-        transferred = ERC7984._update(from, to, encryptedAmount); // bypass frozen & compliance checks
+        transferred = ERC7984._update(from, to, encryptedAmount); // bypass frozen, restrictions & compliance checks
         _setConfidentialFrozen(
             from,
             FHE.select(FHE.gt(transferred, available), confidentialBalanceOf(from), confidentialFrozen(from))
         );
     }
 
-    /// @dev Internal function which updates confidential balances while performing frozen and compliance checks.
+    /// @dev Internal function which updates confidential balances while performing frozen, restrictions and compliance checks.
     function _update(
         address from,
         address to,
         euint64 encryptedAmount
-    ) internal override(ERC7984, ERC7984Freezable) whenNotPaused returns (euint64) {
+    ) internal override(ERC7984, ERC7984Freezable, ERC7984Restricted) whenNotPaused returns (euint64) {
         require(_isCompliantTransfer(from, to, encryptedAmount), UncompliantTransfer(from, to, encryptedAmount));
-        // frozen check performed through inheritance
+        // frozen and restrictions checks performed through inheritance
         return super._update(from, to, encryptedAmount);
     }
 

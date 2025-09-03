@@ -103,6 +103,28 @@ describe('ERC7984Rwa', function () {
     });
   });
 
+  describe('ERC7984Restricted', async function () {
+    it('should block & unblock', async function () {
+      const { token, admin, agent1, recipient } = await deployFixture();
+      for (const manager of [admin, agent1]) {
+        await expect(token.isUserAllowed(recipient)).to.eventually.be.true;
+        await token.connect(manager).block(recipient);
+        await expect(token.isUserAllowed(recipient)).to.eventually.be.false;
+        await token.connect(manager).unblock(recipient);
+        await expect(token.isUserAllowed(recipient)).to.eventually.be.true;
+      }
+    });
+
+    for (const arg of [true, false]) {
+      it(`should not ${arg ? 'block' : 'unblock'} if neither admin nor agent`, async function () {
+        const { token, anyone } = await deployFixture();
+        await expect(token.connect(anyone)[arg ? 'block' : 'unblock'](anyone))
+          .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
+          .withArgs(anyone.address);
+      });
+    }
+  });
+
   describe('Mintable', async function () {
     for (const withProof of [true, false]) {
       it(`should mint by admin or agent ${withProof ? 'with proof' : ''}`, async function () {
@@ -646,5 +668,30 @@ describe('ERC7984Rwa', function () {
         ),
       ).to.eventually.equal(100);
     });
+
+    for (const arg of [true, false]) {
+      it(`should not transfer if ${arg ? 'sender' : 'receiver'} blocked `, async function () {
+        const { token, admin: manager, recipient, anyone } = await deployFixture();
+        const account = arg ? recipient : anyone;
+        await token.$_setCompliantTransfer();
+        const encryptedInput = await fhevm
+          .createEncryptedInput(await token.getAddress(), recipient.address)
+          .add64(25)
+          .encrypt();
+        await token.connect(manager).block(account);
+
+        await expect(
+          token
+            .connect(recipient)
+            ['confidentialTransfer(address,bytes32,bytes)'](
+              anyone,
+              encryptedInput.handles[0],
+              encryptedInput.inputProof,
+            ),
+        )
+          .to.be.revertedWithCustomError(token, 'UserRestricted')
+          .withArgs(account);
+      });
+    }
   });
 });

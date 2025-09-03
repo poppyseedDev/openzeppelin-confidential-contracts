@@ -5,6 +5,7 @@ import {FHE, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC7984} from "./IERC7984.sol";
+import {IERC7984Restricted} from "./IERC7984Restricted.sol";
 
 /// @dev Base interface for confidential RWA contracts.
 interface IERC7984RwaBase {
@@ -28,6 +29,14 @@ interface IERC7984RwaBase {
     function pause() external;
     /// @dev Unpauses contract.
     function unpause() external;
+    /// @dev Returns the restriction of a user account.
+    function getRestriction(address account) external view returns (IERC7984Restricted.Restriction);
+    /// @dev Blocks an account.
+    function block(address account) external;
+    /// @dev Unblocks an account.
+    function unblock(address account) external;
+    /// @dev Returns whether an account is allowed to interact with the token.
+    function isUserAllowed(address account) external view returns (bool);
     /// @dev Returns the confidential frozen balance of an account.
     function confidentialFrozen(address account) external view returns (euint64);
     /// @dev Returns the available (unfrozen) balance of an account. Up to {confidentialBalanceOf}.

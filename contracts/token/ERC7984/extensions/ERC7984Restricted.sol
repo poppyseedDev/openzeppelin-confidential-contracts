@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.27;
 
+import {IERC7984Restricted} from "../../../interfaces/IERC7984Restricted.sol";
 import {ERC7984, euint64} from "../ERC7984.sol";
 
 /**
@@ -13,20 +14,8 @@ import {ERC7984, euint64} from "../ERC7984.sol";
  * a blocklist. Developers can override {isUserAllowed} to check that `restriction == ALLOWED`
  * to implement an allowlist.
  */
-abstract contract ERC7984Restricted is ERC7984 {
-    enum Restriction {
-        DEFAULT, // User has no explicit restriction
-        BLOCKED, // User is explicitly blocked
-        ALLOWED // User is explicitly allowed
-    }
-
+abstract contract ERC7984Restricted is ERC7984, IERC7984Restricted {
     mapping(address account => Restriction) private _restrictions;
-
-    /// @dev Emitted when a user account's restriction is updated.
-    event UserRestrictionUpdated(address indexed account, Restriction restriction);
-
-    /// @dev The operation failed because the user account is restricted.
-    error UserRestricted(address account);
 
     /// @dev Returns the restriction of a user account.
     function getRestriction(address account) public view virtual returns (Restriction) {
