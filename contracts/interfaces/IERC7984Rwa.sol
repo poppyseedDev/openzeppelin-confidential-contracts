@@ -20,8 +20,6 @@ interface IERC7984RwaBase {
     error OwnableInvalidOwner(address owner);
     /// @dev The operation failed because the contract is paused.
     error EnforcedPause();
-    /// @dev The operation failed because the contract is not paused.
-    error ExpectedPause();
 
     /// @dev Returns true if the contract is paused, and false otherwise.
     function paused() external view returns (bool);
