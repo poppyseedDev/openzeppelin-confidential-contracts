@@ -81,13 +81,13 @@ abstract contract ERC7984Rwa is
         _removeAgent(account);
     }
 
-    /// @dev Blocks an account.
-    function block(address account) public virtual onlyAdminOrAgent {
+    /// @dev Blocks a user account.
+    function blockUser(address account) public virtual onlyAdminOrAgent {
         _blockUser(account);
     }
 
-    /// @dev Unblocks an account.
-    function unblock(address account) public virtual onlyAdminOrAgent {
+    /// @dev Unblocks a user account.
+    function unblockUser(address account) public virtual onlyAdminOrAgent {
         _allowUser(account);
     }
 

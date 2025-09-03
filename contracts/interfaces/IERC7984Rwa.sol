@@ -29,10 +29,10 @@ interface IERC7984RwaBase {
     function unpause() external;
     /// @dev Returns the restriction of a user account.
     function getRestriction(address account) external view returns (IERC7984Restricted.Restriction);
-    /// @dev Blocks an account.
-    function block(address account) external;
-    /// @dev Unblocks an account.
-    function unblock(address account) external;
+    /// @dev Blocks a user account.
+    function blockUser(address account) external;
+    /// @dev Unblocks a user account.
+    function unblockUser(address account) external;
     /// @dev Returns whether an account is allowed to interact with the token.
     function isUserAllowed(address account) external view returns (bool);
     /// @dev Returns the confidential frozen balance of an account.

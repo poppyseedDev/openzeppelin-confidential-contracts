@@ -108,9 +108,9 @@ describe('ERC7984Rwa', function () {
       const { token, admin, agent1, recipient } = await deployFixture();
       for (const manager of [admin, agent1]) {
         await expect(token.isUserAllowed(recipient)).to.eventually.be.true;
-        await token.connect(manager).block(recipient);
+        await token.connect(manager).blockUser(recipient);
         await expect(token.isUserAllowed(recipient)).to.eventually.be.false;
-        await token.connect(manager).unblock(recipient);
+        await token.connect(manager).unblockUser(recipient);
         await expect(token.isUserAllowed(recipient)).to.eventually.be.true;
       }
     });
@@ -118,7 +118,7 @@ describe('ERC7984Rwa', function () {
     for (const arg of [true, false]) {
       it(`should not ${arg ? 'block' : 'unblock'} if neither admin nor agent`, async function () {
         const { token, anyone } = await deployFixture();
-        await expect(token.connect(anyone)[arg ? 'block' : 'unblock'](anyone))
+        await expect(token.connect(anyone)[arg ? 'blockUser' : 'unblockUser'](anyone))
           .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
           .withArgs(anyone.address);
       });
@@ -678,7 +678,7 @@ describe('ERC7984Rwa', function () {
           .createEncryptedInput(await token.getAddress(), recipient.address)
           .add64(25)
           .encrypt();
-        await token.connect(manager).block(account);
+        await token.connect(manager).blockUser(account);
 
         await expect(
           token
