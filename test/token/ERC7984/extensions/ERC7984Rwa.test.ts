@@ -14,18 +14,18 @@ import { ethers, fhevm } from 'hardhat';
 const transferEventSignature = 'ConfidentialTransfer(address,address,bytes32)';
 const frozenEventSignature = 'TokensFrozen(address,bytes32)';
 
-describe('ERC7984Rwa', function () {
-  const deployFixture = async () => {
-    const [admin, agent1, agent2, recipient, anyone] = await ethers.getSigners();
-    const token = await ethers.deployContract('ERC7984RwaMock', ['name', 'symbol', 'uri']);
-    await token.connect(admin).addAgent(agent1);
-    token.connect(anyone);
-    return { token, admin, agent1, agent2, recipient, anyone };
-  };
+const fixture = async () => {
+  const [admin, agent1, agent2, recipient, anyone] = await ethers.getSigners();
+  const token = await ethers.deployContract('ERC7984RwaMock', ['name', 'symbol', 'uri']);
+  await token.connect(admin).addAgent(agent1);
+  token.connect(anyone);
+  return { token, admin, agent1, agent2, recipient, anyone };
+};
 
+describe('ERC7984Rwa', function () {
   describe('ERC165', async function () {
     it('should support interface', async function () {
-      const { token } = await deployFixture();
+      const { token } = await fixture();
       const interfaceFactories = [
         IERC7984RwaBase__factory,
         IERC7984__factory,
@@ -38,14 +38,14 @@ describe('ERC7984Rwa', function () {
       }
     });
     it('should not support interface', async function () {
-      const { token } = await deployFixture();
+      const { token } = await fixture();
       expect(await token.supportsInterface('0xbadbadba')).is.false;
     });
   });
 
   describe('Pausable', async function () {
     it('should pause & unpause', async function () {
-      const { token, admin, agent1 } = await deployFixture();
+      const { token, admin, agent1 } = await fixture();
       for (const manager of [admin, agent1]) {
         expect(await token.paused()).is.false;
         await token.connect(manager).pause();
@@ -56,14 +56,14 @@ describe('ERC7984Rwa', function () {
     });
 
     it('should not pause if neither admin nor agent', async function () {
-      const { token, anyone } = await deployFixture();
+      const { token, anyone } = await fixture();
       await expect(token.connect(anyone).pause())
         .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
         .withArgs(anyone.address);
     });
 
     it('should not unpause if neither admin nor agent', async function () {
-      const { token, anyone } = await deployFixture();
+      const { token, anyone } = await fixture();
       await expect(token.connect(anyone).unpause())
         .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
         .withArgs(anyone.address);
@@ -72,13 +72,13 @@ describe('ERC7984Rwa', function () {
 
   describe('Roles', async function () {
     it('should check admin', async function () {
-      const { token, admin, anyone } = await deployFixture();
+      const { token, admin, anyone } = await fixture();
       expect(await token.isAdmin(admin)).is.true;
       expect(await token.isAdmin(anyone)).is.false;
     });
 
     it('should check/add/remove agent', async function () {
-      const { token, admin, agent1, agent2 } = await deployFixture();
+      const { token, admin, agent1, agent2 } = await fixture();
       for (const manager of [admin, agent1]) {
         expect(await token.isAgent(agent2)).is.false;
         await token.connect(manager).addAgent(agent2);
@@ -89,14 +89,14 @@ describe('ERC7984Rwa', function () {
     });
 
     it('should not add agent if neither admin nor agent', async function () {
-      const { token, agent1, anyone } = await deployFixture();
+      const { token, agent1, anyone } = await fixture();
       await expect(token.connect(anyone).addAgent(agent1))
         .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
         .withArgs(anyone.address);
     });
 
     it('should not remove agent if neither admin nor agent', async function () {
-      const { token, agent1, anyone } = await deployFixture();
+      const { token, agent1, anyone } = await fixture();
       await expect(token.connect(anyone).removeAgent(agent1))
         .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
         .withArgs(anyone.address);
@@ -105,7 +105,7 @@ describe('ERC7984Rwa', function () {
 
   describe('ERC7984Restricted', async function () {
     it('should block & unblock', async function () {
-      const { token, admin, agent1, recipient } = await deployFixture();
+      const { token, admin, agent1, recipient } = await fixture();
       for (const manager of [admin, agent1]) {
         await expect(token.isUserAllowed(recipient)).to.eventually.be.true;
         await token.connect(manager).blockUser(recipient);
@@ -117,7 +117,7 @@ describe('ERC7984Rwa', function () {
 
     for (const arg of [true, false]) {
       it(`should not ${arg ? 'block' : 'unblock'} if neither admin nor agent`, async function () {
-        const { token, anyone } = await deployFixture();
+        const { token, anyone } = await fixture();
         await expect(token.connect(anyone)[arg ? 'blockUser' : 'unblockUser'](anyone))
           .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
           .withArgs(anyone.address);
@@ -128,9 +128,9 @@ describe('ERC7984Rwa', function () {
   describe('Mintable', async function () {
     for (const withProof of [true, false]) {
       it(`should mint by admin or agent ${withProof ? 'with proof' : ''}`, async function () {
-        const { admin, agent1, recipient } = await deployFixture();
+        const { admin, agent1, recipient } = await fixture();
         for (const manager of [admin, agent1]) {
-          const { token } = await deployFixture();
+          const { token } = await fixture();
           await token.$_setCompliantTransfer();
           const amount = 100;
           let params = [recipient.address] as unknown as [
@@ -167,7 +167,7 @@ describe('ERC7984Rwa', function () {
     }
 
     it('should not mint if neither admin nor agent', async function () {
-      const { token, recipient, anyone } = await deployFixture();
+      const { token, recipient, anyone } = await fixture();
       const encryptedInput = await fhevm
         .createEncryptedInput(await token.getAddress(), anyone.address)
         .add64(100)
@@ -183,7 +183,7 @@ describe('ERC7984Rwa', function () {
     });
 
     it('should not mint if transfer not compliant', async function () {
-      const { token, admin, recipient } = await deployFixture();
+      const { token, admin, recipient } = await fixture();
       const encryptedInput = await fhevm
         .createEncryptedInput(await token.getAddress(), admin.address)
         .add64(100)
@@ -198,7 +198,7 @@ describe('ERC7984Rwa', function () {
     });
 
     it('should not mint if paused', async function () {
-      const { token, admin, recipient } = await deployFixture();
+      const { token, admin, recipient } = await fixture();
       await token.connect(admin).pause();
       const encryptedInput = await fhevm
         .createEncryptedInput(await token.getAddress(), admin.address)
@@ -215,9 +215,9 @@ describe('ERC7984Rwa', function () {
   describe('Burnable', async function () {
     for (const withProof of [true, false]) {
       it(`should burn by admin or agent ${withProof ? 'with proof' : ''}`, async function () {
-        const { admin, agent1, recipient } = await deployFixture();
+        const { admin, agent1, recipient } = await fixture();
         for (const manager of [admin, agent1]) {
-          const { token } = await deployFixture();
+          const { token } = await fixture();
           const encryptedInput = await fhevm
             .createEncryptedInput(await token.getAddress(), manager.address)
             .add64(100)
@@ -270,7 +270,7 @@ describe('ERC7984Rwa', function () {
     }
 
     it('should not burn if neither admin nor agent', async function () {
-      const { token, recipient, anyone } = await deployFixture();
+      const { token, recipient, anyone } = await fixture();
       const encryptedInput = await fhevm
         .createEncryptedInput(await token.getAddress(), anyone.address)
         .add64(100)
@@ -286,7 +286,7 @@ describe('ERC7984Rwa', function () {
     });
 
     it('should not burn if transfer not compliant', async function () {
-      const { token, admin, recipient } = await deployFixture();
+      const { token, admin, recipient } = await fixture();
       const encryptedInput = await fhevm
         .createEncryptedInput(await token.getAddress(), admin.address)
         .add64(100)
@@ -301,7 +301,7 @@ describe('ERC7984Rwa', function () {
     });
 
     it('should not burn if paused', async function () {
-      const { token, admin, recipient } = await deployFixture();
+      const { token, admin, recipient } = await fixture();
       await token.connect(admin).pause();
       const encryptedInput = await fhevm
         .createEncryptedInput(await token.getAddress(), admin.address)
@@ -318,9 +318,9 @@ describe('ERC7984Rwa', function () {
   describe('Force transfer', async function () {
     for (const withProof of [true, false]) {
       it(`should force transfer by admin or agent ${withProof ? 'with proof' : ''}`, async function () {
-        const { admin, agent1, recipient, anyone } = await deployFixture();
+        const { admin, agent1, recipient, anyone } = await fixture();
         for (const manager of [admin, agent1]) {
-          const { token } = await deployFixture();
+          const { token } = await fixture();
           const encryptedMintValueInput = await fhevm
             .createEncryptedInput(await token.getAddress(), manager.address)
             .add64(100)
@@ -395,9 +395,9 @@ describe('ERC7984Rwa', function () {
 
     for (const withProof of [true, false]) {
       it(`should force transfer even if frozen ${withProof ? 'with proof' : ''}`, async function () {
-        const { admin, agent1, recipient, anyone } = await deployFixture();
+        const { admin, agent1, recipient, anyone } = await fixture();
         for (const manager of [admin, agent1]) {
-          const { token } = await deployFixture();
+          const { token } = await fixture();
           const encryptedMintValueInput = await fhevm
             .createEncryptedInput(await token.getAddress(), manager.address)
             .add64(100)
@@ -475,7 +475,7 @@ describe('ERC7984Rwa', function () {
 
     for (const withProof of [true, false]) {
       it(`should not force transfer if neither admin nor agent ${withProof ? 'with proof' : ''}`, async function () {
-        const { token, recipient, anyone } = await deployFixture();
+        const { token, recipient, anyone } = await fixture();
         let params = [recipient.address, anyone.address] as unknown as [
           from: AddressLike,
           to: AddressLike,
@@ -510,7 +510,7 @@ describe('ERC7984Rwa', function () {
 
   describe('Transfer', async function () {
     it('should transfer', async function () {
-      const { token, admin: manager, recipient, anyone } = await deployFixture();
+      const { token, admin: manager, recipient, anyone } = await fixture();
       const encryptedMintValueInput = await fhevm
         .createEncryptedInput(await token.getAddress(), manager.address)
         .add64(100)
@@ -576,7 +576,7 @@ describe('ERC7984Rwa', function () {
     });
 
     it('should not transfer if paused', async function () {
-      const { token, admin: manager, recipient, anyone } = await deployFixture();
+      const { token, admin: manager, recipient, anyone } = await fixture();
       const encryptedTransferValueInput = await fhevm
         .createEncryptedInput(await token.getAddress(), recipient.address)
         .add64(25)
@@ -594,7 +594,7 @@ describe('ERC7984Rwa', function () {
     });
 
     it('should not transfer if transfer not compliant', async function () {
-      const { token, recipient, anyone } = await deployFixture();
+      const { token, recipient, anyone } = await fixture();
       const encryptedTransferValueInput = await fhevm
         .createEncryptedInput(await token.getAddress(), recipient.address)
         .add64(25)
@@ -614,7 +614,7 @@ describe('ERC7984Rwa', function () {
     });
 
     it('should not transfer if frozen', async function () {
-      const { token, admin: manager, recipient, anyone } = await deployFixture();
+      const { token, admin: manager, recipient, anyone } = await fixture();
       const encryptedMintValueInput = await fhevm
         .createEncryptedInput(await token.getAddress(), manager.address)
         .add64(100)
@@ -671,7 +671,7 @@ describe('ERC7984Rwa', function () {
 
     for (const arg of [true, false]) {
       it(`should not transfer if ${arg ? 'sender' : 'receiver'} blocked `, async function () {
-        const { token, admin: manager, recipient, anyone } = await deployFixture();
+        const { token, admin: manager, recipient, anyone } = await fixture();
         const account = arg ? recipient : anyone;
         await token.$_setCompliantTransfer();
         const encryptedInput = await fhevm
