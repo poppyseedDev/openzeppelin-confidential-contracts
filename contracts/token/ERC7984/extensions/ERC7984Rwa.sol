@@ -72,12 +72,12 @@ abstract contract ERC7984Rwa is
     }
 
     /// @dev Adds agent.
-    function addAgent(address account) public virtual {
+    function addAgent(address account) public virtual onlyAdminOrAgent {
         _addAgent(account);
     }
 
     /// @dev Removes agent.
-    function removeAgent(address account) public virtual {
+    function removeAgent(address account) public virtual onlyAdminOrAgent {
         _removeAgent(account);
     }
 
@@ -96,12 +96,12 @@ abstract contract ERC7984Rwa is
         address to,
         externalEuint64 encryptedAmount,
         bytes calldata inputProof
-    ) public virtual returns (euint64) {
+    ) public virtual onlyAdminOrAgent returns (euint64) {
         return _confidentialMint(to, FHE.fromExternal(encryptedAmount, inputProof));
     }
 
     /// @dev Mints confidential amount of tokens to account.
-    function confidentialMint(address to, euint64 encryptedAmount) public virtual returns (euint64) {
+    function confidentialMint(address to, euint64 encryptedAmount) public virtual onlyAdminOrAgent returns (euint64) {
         return _confidentialMint(to, encryptedAmount);
     }
 
@@ -110,12 +110,15 @@ abstract contract ERC7984Rwa is
         address account,
         externalEuint64 encryptedAmount,
         bytes calldata inputProof
-    ) public virtual returns (euint64) {
+    ) public virtual onlyAdminOrAgent returns (euint64) {
         return _confidentialBurn(account, FHE.fromExternal(encryptedAmount, inputProof));
     }
 
     /// @dev Burns confidential amount of tokens from account.
-    function confidentialBurn(address account, euint64 encryptedAmount) public virtual returns (euint64) {
+    function confidentialBurn(
+        address account,
+        euint64 encryptedAmount
+    ) public virtual onlyAdminOrAgent returns (euint64) {
         return _confidentialBurn(account, encryptedAmount);
     }
 
@@ -125,7 +128,7 @@ abstract contract ERC7984Rwa is
         address to,
         externalEuint64 encryptedAmount,
         bytes calldata inputProof
-    ) public virtual returns (euint64) {
+    ) public virtual onlyAdminOrAgent returns (euint64) {
         return _forceConfidentialTransferFrom(from, to, FHE.fromExternal(encryptedAmount, inputProof));
     }
 
@@ -134,33 +137,27 @@ abstract contract ERC7984Rwa is
         address from,
         address to,
         euint64 encryptedAmount
-    ) public virtual returns (euint64 transferred) {
+    ) public virtual onlyAdminOrAgent returns (euint64 transferred) {
         return _forceConfidentialTransferFrom(from, to, encryptedAmount);
     }
 
     /// @dev Internal function which adds an agent.
-    function _addAgent(address account) internal virtual onlyAdminOrAgent {
+    function _addAgent(address account) internal virtual {
         _grantRole(AGENT_ROLE, account);
     }
 
     /// @dev Internal function which removes an agent.
-    function _removeAgent(address account) internal virtual onlyAdminOrAgent {
+    function _removeAgent(address account) internal virtual {
         _revokeRole(AGENT_ROLE, account);
     }
 
     /// @dev Internal function which mints confidential amount of tokens to account.
-    function _confidentialMint(
-        address to,
-        euint64 encryptedAmount
-    ) internal virtual onlyAdminOrAgent returns (euint64) {
+    function _confidentialMint(address to, euint64 encryptedAmount) internal virtual returns (euint64) {
         return _mint(to, encryptedAmount);
     }
 
     /// @dev Internal function which burns confidential amount of tokens from account.
-    function _confidentialBurn(
-        address account,
-        euint64 encryptedAmount
-    ) internal virtual onlyAdminOrAgent returns (euint64) {
+    function _confidentialBurn(address account, euint64 encryptedAmount) internal virtual returns (euint64) {
         return _burn(account, encryptedAmount);
     }
 
@@ -169,7 +166,7 @@ abstract contract ERC7984Rwa is
         address from,
         address to,
         euint64 encryptedAmount
-    ) internal virtual onlyAdminOrAgent returns (euint64 transferred) {
+    ) internal virtual returns (euint64 transferred) {
         euint64 available = confidentialAvailable(from);
         transferred = ERC7984._update(from, to, encryptedAmount); // bypass frozen, restrictions & compliance checks
         _setConfidentialFrozen(
