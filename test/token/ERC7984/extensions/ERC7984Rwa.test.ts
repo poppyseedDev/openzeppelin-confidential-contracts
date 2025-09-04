@@ -468,7 +468,7 @@ describe('ERC7984Rwa', function () {
           await token.connect(manager).getHandleAllowance(frozenHandle, manager, true);
           await expect(
             fhevm.userDecryptEuint(FhevmType.euint64, frozenHandle, await token.getAddress(), manager),
-          ).to.eventually.equal(75); // frozen got reset to available balance
+          ).to.eventually.equal(75); // frozen got reset to balance
         }
       });
     }
@@ -493,6 +493,41 @@ describe('ERC7984Rwa', function () {
           await token.connect(anyone).createEncryptedAmount(amount);
           params.push(await token.connect(anyone).createEncryptedAmount.staticCall(amount));
         }
+        await expect(
+          token
+            .connect(anyone)
+            [
+              withProof
+                ? 'forceConfidentialTransferFrom(address,address,bytes32,bytes)'
+                : 'forceConfidentialTransferFrom(address,address,bytes32)'
+            ](...params),
+        )
+          .to.be.revertedWithCustomError(token, 'UnauthorizedSender')
+          .withArgs(anyone.address);
+      });
+    }
+
+    for (const withProof of [true, false]) {
+      it(`should not force transfer if receiver blocked ${withProof ? 'with proof' : ''}`, async function () {
+        const { token, recipient, anyone } = await fixture();
+        let params = [recipient.address, anyone.address] as unknown as [
+          from: AddressLike,
+          to: AddressLike,
+          encryptedAmount: BytesLike,
+          inputProof: BytesLike,
+        ];
+        const amount = 100;
+        if (withProof) {
+          const { handles, inputProof } = await fhevm
+            .createEncryptedInput(await token.getAddress(), anyone.address)
+            .add64(amount)
+            .encrypt();
+          params.push(handles[0], inputProof);
+        } else {
+          await token.connect(anyone).createEncryptedAmount(amount);
+          params.push(await token.connect(anyone).createEncryptedAmount.staticCall(amount));
+        }
+        await token.blockUser(anyone);
         await expect(
           token
             .connect(anyone)

@@ -167,22 +167,22 @@ abstract contract ERC7984Rwa is
         address to,
         euint64 encryptedAmount
     ) internal virtual returns (euint64 transferred) {
-        euint64 available = confidentialAvailable(from);
-        transferred = ERC7984._update(from, to, encryptedAmount); // bypass frozen, restrictions & compliance checks
-        _setConfidentialFrozen(
-            from,
-            FHE.select(FHE.gt(transferred, available), confidentialBalanceOf(from), confidentialFrozen(from))
-        );
+        _disableERC7984FreezableUpdateCheck(); // bypass frozen check
+        _disableERC7984RestrictedUpdateCheck(); // bypass default restriction check
+        if (to != address(0)) _checkRestriction(to); // only perform restriction check on `to`
+        transferred = super._update(from, to, encryptedAmount); // bypass compliance check
+        _restoreERC7984FreezableUpdateCheck();
+        _restoreERC7984RestrictedUpdateCheck();
     }
 
-    /// @dev Internal function which updates confidential balances while performing frozen, restrictions and compliance checks.
+    /// @dev Internal function which updates confidential balances while performing frozen, restriction and compliance checks.
     function _update(
         address from,
         address to,
         euint64 encryptedAmount
-    ) internal override(ERC7984, ERC7984Freezable, ERC7984Restricted) whenNotPaused returns (euint64) {
+    ) internal override(ERC7984Freezable, ERC7984Restricted, ERC7984) whenNotPaused returns (euint64) {
         require(_isCompliantTransfer(from, to, encryptedAmount), UncompliantTransfer(from, to, encryptedAmount));
-        // frozen and restrictions checks performed through inheritance
+        // frozen and restriction checks performed through inheritance
         return super._update(from, to, encryptedAmount);
     }
 
