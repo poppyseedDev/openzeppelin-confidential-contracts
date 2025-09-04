@@ -313,6 +313,14 @@ NOTE: This is an asynchronous operation where the actual decryption happens off-
 ==== `[.contract-item-name]#++finalizeDiscloseEncryptedAmount++#++(uint256 requestId, uint64 amount, bytes[] signatures)++` [.item-kind]#public#
 
 Finalizes a disclose encrypted amount request.
+For gas saving purposes, the `requestId` might not be related to a
+{discloseEncryptedAmount} request. As a result, the current {finalizeDiscloseEncryptedAmount}
+function might emit a disclosed amount related to another decryption request context.
+In this case it would only display public information
+since the handle would have already been allowed for public decryption through a previous
+`FHE.requestDecryption` call.
+The downside of this behavior is that a {finalizeDiscloseEncryptedAmount} watcher might observe
+unexpected `AmountDisclosed` events.
 
 [.contract-item]
 [[ERC7984-_setOperator-address-address-uint48-]]
