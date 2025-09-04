@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.27;
 
+import {TransientSlot} from "@openzeppelin/contracts/utils/TransientSlot.sol";
 import {FHE, ebool, euint64, externalEuint64} from "@fhevm/solidity/lib/FHE.sol";
 import {FHESafeMath} from "../../../utils/FHESafeMath.sol";
 import {ERC7984} from "../ERC7984.sol";
@@ -21,6 +22,9 @@ import {ERC7984} from "../ERC7984.sol";
 abstract contract ERC7984Freezable is ERC7984 {
     /// @dev Confidential frozen amount of tokens per address.
     mapping(address account => euint64 encryptedAmount) private _frozenBalances;
+
+    TransientSlot.BooleanSlot private _skipRwaRestrictionsFlag =
+        TransientSlot.asBoolean(keccak256(abi.encode("skipRwaRestrictions")));
 
     /// @dev Emitted when a confidential amount of token is frozen for an account
     event TokensFrozen(address indexed account, euint64 encryptedAmount);
@@ -74,9 +78,11 @@ abstract contract ERC7984Freezable is ERC7984 {
      * otherwise 0 tokens are transferred.
      */
     function _update(address from, address to, euint64 encryptedAmount) internal virtual override returns (euint64) {
-        if (from != address(0)) {
-            euint64 unfrozen = confidentialAvailable(from);
-            encryptedAmount = FHE.select(FHE.le(encryptedAmount, unfrozen), encryptedAmount, FHE.asEuint64(0));
+        if (!TransientSlot.tload(_skipRwaRestrictionsFlag)) {
+            if (from != address(0)) {
+                euint64 unfrozen = confidentialAvailable(from);
+                encryptedAmount = FHE.select(FHE.le(encryptedAmount, unfrozen), encryptedAmount, FHE.asEuint64(0));
+            }
         }
         return super._update(from, to, encryptedAmount);
     }

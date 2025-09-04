@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.27;
 
+import {TransientSlot} from "@openzeppelin/contracts/utils/TransientSlot.sol";
 import {ERC7984, euint64} from "../ERC7984.sol";
 
 /**
@@ -20,6 +21,8 @@ abstract contract ERC7984Restricted is ERC7984 {
         ALLOWED // User is explicitly allowed
     }
 
+    TransientSlot.BooleanSlot private _skipRwaRestrictionsFlag =
+        TransientSlot.asBoolean(keccak256(abi.encode("skipRwaRestrictions")));
     mapping(address account => Restriction) private _restrictions;
 
     /// @dev Emitted when a user account's restriction is updated.
@@ -59,8 +62,11 @@ abstract contract ERC7984Restricted is ERC7984 {
      * * `to` must be allowed to receive tokens (see {isUserAllowed}).
      */
     function _update(address from, address to, euint64 value) internal virtual override returns (euint64) {
-        if (from != address(0)) _checkRestriction(from); // Not minting
-        if (to != address(0)) _checkRestriction(to); // Not burning
+        if (!TransientSlot.tload(_skipRwaRestrictionsFlag)) {
+            if (from != address(0)) _checkRestriction(from); // Not minting
+            if (to != address(0)) _checkRestriction(to); // Not burning
+        }
+
         return super._update(from, to, value);
     }
 

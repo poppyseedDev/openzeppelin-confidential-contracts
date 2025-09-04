@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Confidential Contracts (last updated v0.2.0) (token/extensions/ConfidentialFungibleTokenVotes.sol)
+
 pragma solidity ^0.8.27;
 
 import {FHE, euint64, ebool, externalEuint64} from "@fhevm/solidity/lib/FHE.sol";
@@ -18,7 +18,8 @@ abstract contract ERC7984Rwa is ERC7984, ERC7984Restricted, ERC7984Freezable, Pa
     EnumerableSet.AddressSet private _complianceModules_;
     EnumerableSet.AddressSet private _forceTransferComplianceModules_;
 
-    bytes32 private _skipRwaRestrictionsFlag = keccak256(abi.encode("skipRwaRestrictions"));
+    TransientSlot.BooleanSlot private _skipRwaRestrictionsFlag =
+        TransientSlot.asBoolean(keccak256(abi.encode("skipRwaRestrictions")));
 
     function confidentialBurn(address from, euint64 amount) public virtual returns (euint64) {
         return _burn(from, amount);
@@ -29,12 +30,11 @@ abstract contract ERC7984Rwa is ERC7984, ERC7984Restricted, ERC7984Freezable, Pa
     }
 
     function confidentialForceTransfer(address from, address to, euint64 value) public virtual returns (euint64) {
-        TransientSlot.BooleanSlot slot = TransientSlot.asBoolean(_skipRwaRestrictionsFlag);
-        slot.tstore(true);
+        _skipRwaRestrictionsFlag.tstore(true);
 
         euint64 transferred = _update(from, to, value);
 
-        slot.tstore(false);
+        _skipRwaRestrictionsFlag.tstore(false);
 
         return transferred;
     }
@@ -44,11 +44,21 @@ abstract contract ERC7984Rwa is ERC7984, ERC7984Restricted, ERC7984Freezable, Pa
         address to,
         euint64 value
     ) internal virtual override(ERC7984, ERC7984Restricted, ERC7984Freezable) returns (euint64) {
-        uint256 complianceModulesCount = _complianceModules().length();
-
         ebool compliancePassed = FHE.asEbool(true);
-        for (uint256 i = 0; i < complianceModulesCount; i++) {
-            address complianceModule = _complianceModules().at(i);
+
+        uint256 complianceModulesCount = _complianceModules().length();
+        if (!_skipRwaRestrictionsFlag.tload()) {
+            for (uint256 i = 0; i < complianceModulesCount; i++) {
+                address complianceModule = _complianceModules().at(i);
+                // Call the compliance module
+                ebool res = FHE.asEbool(true);
+                compliancePassed = FHE.and(compliancePassed, res);
+            }
+        }
+
+        uint256 forceTransferComplianceModulesCount = _forceTransferComplianceModules().length();
+        for (uint256 i = 0; i < forceTransferComplianceModulesCount; i++) {
+            address complianceModule = _forceTransferComplianceModules().at(i);
             // Call the compliance module
             ebool res = FHE.asEbool(true);
             compliancePassed = FHE.and(compliancePassed, res);
@@ -61,6 +71,11 @@ abstract contract ERC7984Rwa is ERC7984, ERC7984Restricted, ERC7984Freezable, Pa
         // Iterate again to allow for post-transfer side effects
         for (uint256 i = 0; i < complianceModulesCount; i++) {
             address complianceModule = _complianceModules().at(i);
+            // Call the compliance module
+        }
+
+        for (uint256 i = 0; i < forceTransferComplianceModulesCount; i++) {
+            address complianceModule = _forceTransferComplianceModules().at(i);
             // Call the compliance module
         }
 
