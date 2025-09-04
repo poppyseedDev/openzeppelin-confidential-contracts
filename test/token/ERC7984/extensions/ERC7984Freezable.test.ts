@@ -10,6 +10,7 @@ import { ethers, fhevm } from 'hardhat';
 const name = 'ConfidentialFungibleToken';
 const symbol = 'CFT';
 const uri = 'https://example.com/metadata';
+const confidentialTransferEventSignature = 'ConfidentialTransfer(address,address,bytes32)';
 
 describe('ERC7984Freezable', function () {
   async function deployFixture() {
@@ -247,7 +248,7 @@ describe('ERC7984Freezable', function () {
       .createEncryptedInput(await token.getAddress(), recipient.address)
       .add64(501)
       .encrypt();
-    const tx = await token
+    const tx = token
       .connect(recipient)
       ['confidentialTransfer(address,bytes32,bytes)'](
         anyone.address,
@@ -255,13 +256,11 @@ describe('ERC7984Freezable', function () {
         encryptedInput1.inputProof,
       );
     await expect(tx).to.emit(token, 'ConfidentialTransfer');
-    const transferEvent = (await tx
-      .wait()
-      .then(receipt => receipt!.logs.filter((log: any) => log.address === token.target)[0])) as EventLog;
-    expect(transferEvent.args[0]).to.equal(recipient.address);
-    expect(transferEvent.args[1]).to.equal(anyone.address);
+    const [from, to, transferred1] = await callAndGetResult(tx, confidentialTransferEventSignature);
+    expect(from).to.equal(recipient.address);
+    expect(to).to.equal(anyone.address);
     await expect(
-      fhevm.userDecryptEuint(FhevmType.euint64, transferEvent.args[2], await token.getAddress(), recipient),
+      fhevm.userDecryptEuint(FhevmType.euint64, transferred1, await token.getAddress(), recipient),
     ).to.eventually.equal(501);
     await expect(
       fhevm.userDecryptEuint(
@@ -274,7 +273,7 @@ describe('ERC7984Freezable', function () {
     await expect(
       fhevm.userDecryptEuint(
         FhevmType.euint64,
-        await token.confidentialFrozen(recipient),
+        await token.confidentialFrozen(recipient.address),
         await token.getAddress(),
         recipient,
       ),
@@ -286,7 +285,7 @@ describe('ERC7984Freezable', function () {
       .createEncryptedInput(await token.getAddress(), recipient.address)
       .add64(499)
       .encrypt();
-    const [, , transferred] = await callAndGetResult(
+    const [, , transferred2] = await callAndGetResult(
       token
         .connect(recipient)
         ['confidentialTransfer(address,bytes32,bytes)'](
@@ -294,10 +293,10 @@ describe('ERC7984Freezable', function () {
           encryptedInput2.handles[0],
           encryptedInput2.inputProof,
         ),
-      'ConfidentialTransfer(address,address,bytes32)',
+      confidentialTransferEventSignature,
     );
     await expect(
-      fhevm.userDecryptEuint(FhevmType.euint64, transferred, await token.getAddress(), recipient),
+      fhevm.userDecryptEuint(FhevmType.euint64, transferred2, await token.getAddress(), recipient),
     ).to.eventually.equal(0);
   });
 
