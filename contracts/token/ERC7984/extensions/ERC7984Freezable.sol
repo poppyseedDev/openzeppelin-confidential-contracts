@@ -64,7 +64,7 @@ abstract contract ERC7984Freezable is ERC7984 {
         _setConfidentialFrozen(account, encryptedAmount, true);
     }
 
-    /// @dev Private function to freeze a confidential amount of tokens for an account
+    /// @dev Private function to freeze a confidential amount of tokens for an account with optional freezer check.
     function _setConfidentialFrozen(address account, euint64 encryptedAmount, bool checkFreezer) internal virtual {
         if (checkFreezer) {
             _checkFreezer();
