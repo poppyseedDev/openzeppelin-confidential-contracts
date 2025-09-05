@@ -13,6 +13,7 @@ import {HandleAccessManager} from "../../utils/HandleAccessManager.sol";
 contract ERC7984RwaMock is ERC7984Rwa, HandleAccessManager, SepoliaConfig {
     mapping(address account => euint64 encryptedAmount) private _frozenBalances;
     bool public compliantTransfer;
+    bool public compliantForceTransfer;
 
     // TODO: Move modifiers to `ERC7984Rwa` or remove from mock if useless
     /// @dev Checks if the sender is an admin.
@@ -33,12 +34,20 @@ contract ERC7984RwaMock is ERC7984Rwa, HandleAccessManager, SepoliaConfig {
         FHE.allow(encryptedAmount, msg.sender);
     }
 
-    function $_setCompliantTransfer() public {
+    function $_setCompliant() public {
         compliantTransfer = true;
     }
 
-    function $_unsetCompliantTransfer() public {
+    function $_unsetCompliant() public {
         compliantTransfer = false;
+    }
+
+    function $_setForceCompliant() public {
+        compliantForceTransfer = true;
+    }
+
+    function $_unsetForceCompliant() public {
+        compliantForceTransfer = false;
     }
 
     function $_mint(address to, uint64 amount) public returns (euint64 transferred) {
@@ -51,6 +60,14 @@ contract ERC7984RwaMock is ERC7984Rwa, HandleAccessManager, SepoliaConfig {
         euint64 /*encryptedAmount*/
     ) internal override returns (bool) {
         return compliantTransfer;
+    }
+
+    function _isForceCompliant(
+        address /*from*/,
+        address /*to*/,
+        euint64 /*encryptedAmount*/
+    ) internal override returns (bool) {
+        return compliantForceTransfer;
     }
 
     function _validateHandleAllowance(bytes32 handle) internal view override onlyAdminOrAgent {}

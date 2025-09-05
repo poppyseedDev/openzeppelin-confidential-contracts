@@ -7,6 +7,9 @@ import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC7984} from "./IERC7984.sol";
 import {IERC7984Restricted} from "./IERC7984Restricted.sol";
 
+uint256 constant IDENTITY_COMPLIANCE_MODULE_TYPE = 1;
+uint256 constant TRANSFER_COMPLIANCE_MODULE_TYPE = 2;
+
 /// @dev Base interface for confidential RWA contracts.
 interface IERC7984RwaBase {
     /// @dev Emitted when the contract is paused.
@@ -85,8 +88,10 @@ interface IERC7984Rwa is IERC7984, IERC7984RwaBase, IERC165, IAccessControl {}
 
 /// @dev Interface for confidential RWA compliance.
 interface IERC7984RwaCompliance {
-    /// @dev Checks if a transfer follows token compliance.
+    /// @dev Checks if a transfer follows compliance.
     function isCompliant(address from, address to, euint64 encryptedAmount) external returns (bool);
+    /// @dev Checks if a force transfer follows compliance.
+    function isForceCompliantForce(address from, address to, euint64 encryptedAmount) external returns (bool);
 }
 
 /// @dev Interface for confidential RWA compliance module.
@@ -97,12 +102,12 @@ interface IERC7984RwaComplianceModule {
 
 /// @dev Interface for confidential RWA identity compliance module.
 interface IERC7984RwaIdentityComplianceModule is IERC7984RwaComplianceModule {
-    /// @dev Checks if an identity is authorized.
-    function isAuthorizedIdentity(address identity) external returns (bool);
+    /// @dev Checks if an identity is compliant.
+    function isCompliantIdentity(address identity) external returns (bool);
 }
 
 /// @dev Interface for confidential RWA transfer compliance module.
 interface IERC7984RwaTransferComplianceModule is IERC7984RwaComplianceModule {
-    /// @dev Checks if an identity is authorized.
-    function isAuthorizedTransfer(address from, address to, euint64 encryptedAmount) external returns (bool);
+    /// @dev Checks if an transfer is compliant.
+    function isCompliantTransfer(address from, address to, euint64 encryptedAmount) external returns (bool);
 }
