@@ -4,14 +4,14 @@ pragma solidity ^0.8.27;
 
 import {FHE, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IERC7984RwaComplianceModule, IERC7984RwaIdentityComplianceModule, IERC7984RwaTransferComplianceModule, IDENTITY_COMPLIANCE_MODULE_TYPE, TRANSFER_COMPLIANCE_MODULE_TYPE} from "./../../../interfaces/IERC7984Rwa.sol";
+import {IERC7984RwaCompliance, IERC7984RwaComplianceModule, IERC7984RwaIdentityComplianceModule, IERC7984RwaTransferComplianceModule, IDENTITY_COMPLIANCE_MODULE_TYPE, TRANSFER_COMPLIANCE_MODULE_TYPE} from "./../../../interfaces/IERC7984Rwa.sol";
 import {ERC7984Rwa} from "./ERC7984Rwa.sol";
 
 /**
  * @dev Extension of {ERC7984Rwa} that supports compliance modules for confidential Real World Assets (RWAs).
  * Inspired by ERC-7579 modules.
  */
-abstract contract ERC7984RwaCompliance is ERC7984Rwa {
+abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
     using EnumerableSet for *;
 
     EnumerableSet.AddressSet private _identityComplianceModules;

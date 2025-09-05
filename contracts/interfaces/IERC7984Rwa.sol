@@ -91,7 +91,7 @@ interface IERC7984RwaCompliance {
     /// @dev Checks if a transfer follows compliance.
     function isCompliant(address from, address to, euint64 encryptedAmount) external returns (bool);
     /// @dev Checks if a force transfer follows compliance.
-    function isForceCompliantForce(address from, address to, euint64 encryptedAmount) external returns (bool);
+    function isForceCompliant(address from, address to, euint64 encryptedAmount) external returns (bool);
 }
 
 /// @dev Interface for confidential RWA compliance module.
