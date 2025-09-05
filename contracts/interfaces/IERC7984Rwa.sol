@@ -86,5 +86,23 @@ interface IERC7984Rwa is IERC7984, IERC7984RwaBase, IERC165, IAccessControl {}
 /// @dev Interface for confidential RWA compliance.
 interface IERC7984RwaCompliance {
     /// @dev Checks if a transfer follows token compliance.
-    function isCompliantTransfer(address from, address to, euint64 encryptedAmount) external returns (bool);
+    function isCompliant(address from, address to, euint64 encryptedAmount) external returns (bool);
+}
+
+/// @dev Interface for confidential RWA compliance module.
+interface IERC7984RwaComplianceModule {
+    /// @dev Returns true if module is a certain type, false otherwise.
+    function isModuleType(uint256 moduleTypeId) external returns (bool);
+}
+
+/// @dev Interface for confidential RWA identity compliance module.
+interface IERC7984RwaIdentityComplianceModule is IERC7984RwaComplianceModule {
+    /// @dev Checks if an identity is authorized.
+    function isAuthorizedIdentity(address identity) external returns (bool);
+}
+
+/// @dev Interface for confidential RWA transfer compliance module.
+interface IERC7984RwaTransferComplianceModule is IERC7984RwaComplianceModule {
+    /// @dev Checks if an identity is authorized.
+    function isAuthorizedTransfer(address from, address to, euint64 encryptedAmount) external returns (bool);
 }
