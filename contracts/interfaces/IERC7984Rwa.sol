@@ -7,8 +7,8 @@ import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC7984} from "./IERC7984.sol";
 import {IERC7984Restricted} from "./IERC7984Restricted.sol";
 
-uint256 constant IDENTITY_COMPLIANCE_MODULE_TYPE = 1;
-uint256 constant TRANSFER_COMPLIANCE_MODULE_TYPE = 2;
+uint256 constant TRANSFER_COMPLIANCE_MODULE_TYPE = 1;
+uint256 constant FORCE_TRANSFER_COMPLIANCE_MODULE_TYPE = 2;
 
 /// @dev Base interface for confidential RWA contracts.
 interface IERC7984RwaBase {
@@ -88,26 +88,18 @@ interface IERC7984Rwa is IERC7984, IERC7984RwaBase, IERC165, IAccessControl {}
 
 /// @dev Interface for confidential RWA compliance.
 interface IERC7984RwaCompliance {
-    /// @dev Checks if a transfer follows compliance.
-    function isCompliant(address from, address to, euint64 encryptedAmount) external returns (bool);
-    /// @dev Checks if a force transfer follows compliance.
-    function isForceCompliant(address from, address to, euint64 encryptedAmount) external returns (bool);
-}
-
-/// @dev Interface for confidential RWA compliance module.
-interface IERC7984RwaComplianceModule {
-    /// @dev Returns true if module is a certain type, false otherwise.
-    function isModuleType(uint256 moduleTypeId) external returns (bool);
-}
-
-/// @dev Interface for confidential RWA identity compliance module.
-interface IERC7984RwaIdentityComplianceModule is IERC7984RwaComplianceModule {
-    /// @dev Checks if an identity is compliant.
-    function isCompliantIdentity(address identity) external returns (bool);
+    /// @dev Installs a transfer compliance module.
+    function installModule(uint256 moduleTypeId, address module) external;
+    /// @dev Uninstalls a transfer compliance module.
+    function uninstallModule(uint256 moduleTypeId, address module) external;
 }
 
 /// @dev Interface for confidential RWA transfer compliance module.
-interface IERC7984RwaTransferComplianceModule is IERC7984RwaComplianceModule {
-    /// @dev Checks if an transfer is compliant.
+interface IERC7984RwaTransferComplianceModule {
+    /// @dev Returns magic number if it is a module.
+    function isModule() external returns (bytes4);
+    /// @dev Checks if a transfer is compliant. Should be non-mutating.
     function isCompliantTransfer(address from, address to, euint64 encryptedAmount) external returns (bool);
+    /// @dev Peforms operation after transfer.
+    function postTransferHook(address from, address to, euint64 encryptedAmount) external;
 }

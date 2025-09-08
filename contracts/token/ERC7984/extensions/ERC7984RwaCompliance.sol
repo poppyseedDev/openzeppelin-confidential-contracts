@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 
 import {FHE, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IERC7984RwaCompliance, IERC7984RwaComplianceModule, IERC7984RwaIdentityComplianceModule, IERC7984RwaTransferComplianceModule, IDENTITY_COMPLIANCE_MODULE_TYPE, TRANSFER_COMPLIANCE_MODULE_TYPE} from "./../../../interfaces/IERC7984Rwa.sol";
+import {IERC7984RwaCompliance, IERC7984RwaTransferComplianceModule, FORCE_TRANSFER_COMPLIANCE_MODULE_TYPE, TRANSFER_COMPLIANCE_MODULE_TYPE} from "./../../../interfaces/IERC7984Rwa.sol";
 import {ERC7984Rwa} from "./ERC7984Rwa.sol";
 
 /**
@@ -14,8 +14,8 @@ import {ERC7984Rwa} from "./ERC7984Rwa.sol";
 abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
     using EnumerableSet for *;
 
-    EnumerableSet.AddressSet private _identityComplianceModules;
     EnumerableSet.AddressSet private _transferComplianceModules;
+    EnumerableSet.AddressSet private _forceTransferComplianceModules;
 
     /// @dev Emitted when a module is installed.
     event ModuleInstalled(uint256 moduleTypeId, address module);
@@ -24,80 +24,123 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
 
     /// @dev The module type is not supported.
     error ERC7984RwaUnsupportedModuleType(uint256 moduleTypeId);
-    /// @dev The provided module doesn't match the provided module type.
-    error ERC7984RwaMismatchedModuleTypeId(uint256 moduleTypeId, address module);
+    /// @dev The address is not a transfer compliance module.
+    error ERC7984RwaNotTransferComplianceModule(address module);
     /// @dev The module is already installed.
     error ERC7984RwaAlreadyInstalledModule(uint256 moduleTypeId, address module);
+    /// @dev The module is already uninstalled.
+    error ERC7984RwaAlreadyUninstalledModule(uint256 moduleTypeId, address module);
 
     /**
      * @dev Check if a certain module typeId is supported.
      *
      * Supported module types:
      *
-     * * Identity compliance module
      * * Transfer compliance module
+     * * Force transfer compliance module
      */
     function supportsModule(uint256 moduleTypeId) public view virtual returns (bool) {
-        return moduleTypeId == IDENTITY_COMPLIANCE_MODULE_TYPE || moduleTypeId == TRANSFER_COMPLIANCE_MODULE_TYPE;
+        return moduleTypeId == TRANSFER_COMPLIANCE_MODULE_TYPE || moduleTypeId == FORCE_TRANSFER_COMPLIANCE_MODULE_TYPE;
     }
 
+    /**
+     * @inheritdoc IERC7984RwaCompliance
+     * @dev Consider gas footprint of the module before adding it since all modules will perform
+     * all steps (pre-check, compliance check, post-hook) in a single transaction.
+     */
     function installModule(uint256 moduleTypeId, address module) public virtual onlyAdminOrAgent {
         _installModule(moduleTypeId, module);
     }
 
+    /// @inheritdoc IERC7984RwaCompliance
+    function uninstallModule(uint256 moduleTypeId, address module) public virtual onlyAdminOrAgent {
+        _uninstallModule(moduleTypeId, module);
+    }
+
+    /// @dev Internal function which installs a transfer compliance module.
     function _installModule(uint256 moduleTypeId, address module) internal virtual {
         require(supportsModule(moduleTypeId), ERC7984RwaUnsupportedModuleType(moduleTypeId));
         require(
-            IERC7984RwaComplianceModule(module).isModuleType(moduleTypeId),
-            ERC7984RwaMismatchedModuleTypeId(moduleTypeId, module)
+            IERC7984RwaTransferComplianceModule(module).isModule() ==
+                IERC7984RwaTransferComplianceModule.isModule.selector,
+            ERC7984RwaNotTransferComplianceModule(module)
         );
 
-        if (moduleTypeId == IDENTITY_COMPLIANCE_MODULE_TYPE) {
-            require(_identityComplianceModules.add(module), ERC7984RwaAlreadyInstalledModule(moduleTypeId, module));
-        } else if (moduleTypeId == TRANSFER_COMPLIANCE_MODULE_TYPE) {
+        if (moduleTypeId == TRANSFER_COMPLIANCE_MODULE_TYPE) {
             require(_transferComplianceModules.add(module), ERC7984RwaAlreadyInstalledModule(moduleTypeId, module));
+        } else if (moduleTypeId == FORCE_TRANSFER_COMPLIANCE_MODULE_TYPE) {
+            require(
+                _forceTransferComplianceModules.add(module),
+                ERC7984RwaAlreadyInstalledModule(moduleTypeId, module)
+            );
         }
         emit ModuleInstalled(moduleTypeId, module);
     }
 
-    /// @dev Checks if an identity is compliant.
-    function _isCompliantIdentity(address identity) internal virtual returns (bool) {
-        address[] memory modules = _identityComplianceModules.values();
-        uint256 modulesLength = modules.length;
-        for (uint256 index = 0; index < modulesLength; index++) {
-            address module = modules[index];
-            if (!IERC7984RwaIdentityComplianceModule(module).isCompliantIdentity(identity)) {
-                return false;
-            }
+    /// @dev Internal function which uninstalls a transfer compliance module.
+    function _uninstallModule(uint256 moduleTypeId, address module) internal virtual {
+        require(supportsModule(moduleTypeId), ERC7984RwaUnsupportedModuleType(moduleTypeId));
+        if (moduleTypeId == TRANSFER_COMPLIANCE_MODULE_TYPE) {
+            require(
+                _transferComplianceModules.remove(module),
+                ERC7984RwaAlreadyUninstalledModule(moduleTypeId, module)
+            );
+        } else if (moduleTypeId == FORCE_TRANSFER_COMPLIANCE_MODULE_TYPE) {
+            require(
+                _forceTransferComplianceModules.remove(module),
+                ERC7984RwaAlreadyUninstalledModule(moduleTypeId, module)
+            );
         }
-        return true;
+        emit ModuleUninstalled(moduleTypeId, module);
     }
 
     /// @dev Checks if a transfer is compliant.
-    function _isCompliantTransfer(address from, address to, euint64 encryptedAmount) internal virtual returns (bool) {
+    function _isTransferCompliantTransfer(
+        address from,
+        address to,
+        euint64 encryptedAmount
+    ) internal virtual returns (bool) {
         address[] memory modules = _transferComplianceModules.values();
         uint256 modulesLength = modules.length;
-        for (uint256 index = 0; index < modulesLength; index++) {
-            address module = modules[index];
-            if (!IERC7984RwaTransferComplianceModule(module).isCompliantTransfer(from, to, encryptedAmount)) {
+        for (uint256 i = 0; i < modulesLength; i++) {
+            if (!IERC7984RwaTransferComplianceModule(modules[i]).isCompliantTransfer(from, to, encryptedAmount)) {
                 return false;
             }
         }
         return true;
     }
 
-    /// @dev Checks if a transfer follows compliance.
-    function _isCompliant(address from, address to, euint64 encryptedAmount) internal override returns (bool) {
-        return
-            _isCompliantIdentity(from) && _isCompliantIdentity(to) && _isCompliantTransfer(from, to, encryptedAmount);
+    /// @dev Checks if a force transfer is compliant.
+    function _isTransferCompliantForceTransfer(
+        address from,
+        address to,
+        euint64 encryptedAmount
+    ) internal virtual returns (bool) {
+        address[] memory modules = _forceTransferComplianceModules.values();
+        uint256 modulesLength = modules.length;
+        for (uint256 i = 0; i < modulesLength; i++) {
+            if (!IERC7984RwaTransferComplianceModule(modules[i]).isCompliantTransfer(from, to, encryptedAmount)) {
+                return false;
+            }
+        }
+        return true;
     }
 
-    /// @dev Checks if a force transfer follows compliance.
-    function _isForceCompliant(
-        address /*from*/,
-        address to,
-        euint64 /*encryptedAmount*/
-    ) internal override returns (bool) {
-        return _isCompliantIdentity(to);
+    /// @dev Peforms operation after transfer.
+    function _postTransferHook(address from, address to, euint64 encryptedAmount) internal override {
+        address[] memory modules = _transferComplianceModules.values();
+        uint256 modulesLength = modules.length;
+        for (uint256 i = 0; i < modulesLength; i++) {
+            IERC7984RwaTransferComplianceModule(modules[i]).postTransferHook(from, to, encryptedAmount);
+        }
+    }
+
+    /// @dev Peforms operation after force transfer.
+    function _postForceTransferHook(address from, address to, euint64 encryptedAmount) internal override {
+        address[] memory modules = _forceTransferComplianceModules.values();
+        uint256 modulesLength = modules.length;
+        for (uint256 i = 0; i < modulesLength; i++) {
+            IERC7984RwaTransferComplianceModule(modules[i]).postTransferHook(from, to, encryptedAmount);
+        }
     }
 }
