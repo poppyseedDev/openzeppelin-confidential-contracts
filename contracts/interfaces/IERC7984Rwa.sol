@@ -100,6 +100,6 @@ interface IERC7984RwaTransferComplianceModule {
     function isModule() external returns (bytes4);
     /// @dev Checks if a transfer is compliant. Should be non-mutating.
     function isCompliantTransfer(address from, address to, euint64 encryptedAmount) external returns (bool);
-    /// @dev Peforms operation after transfer.
+    /// @dev Performs operation after transfer.
     function postTransferHook(address from, address to, euint64 encryptedAmount) external;
 }

@@ -205,9 +205,9 @@ abstract contract ERC7984Rwa is
         euint64 encryptedAmount
     ) internal virtual returns (bool);
 
-    /// @dev Peforms operation after transfer.
+    /// @dev Performs operation after transfer.
     function _postTransferHook(address from, address to, euint64 encryptedAmount) internal virtual {}
 
-    /// @dev Peforms operation after force transfer.
+    /// @dev Performs operation after force transfer.
     function _postForceTransferHook(address from, address to, euint64 encryptedAmount) internal virtual {}
 }

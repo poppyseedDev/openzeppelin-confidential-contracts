@@ -126,7 +126,7 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
         return true;
     }
 
-    /// @dev Peforms operation after transfer.
+    /// @dev Performs operation after transfer.
     function _postTransferHook(address from, address to, euint64 encryptedAmount) internal override {
         address[] memory modules = _transferComplianceModules.values();
         uint256 modulesLength = modules.length;
@@ -135,7 +135,7 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
         }
     }
 
-    /// @dev Peforms operation after force transfer.
+    /// @dev Performs operation after force transfer.
     function _postForceTransferHook(address from, address to, euint64 encryptedAmount) internal override {
         address[] memory modules = _forceTransferComplianceModules.values();
         uint256 modulesLength = modules.length;

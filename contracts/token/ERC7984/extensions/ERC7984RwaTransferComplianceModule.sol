@@ -34,7 +34,7 @@ abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferCompl
         return false;
     }
 
-    /// @dev Internal function which peforms operation after transfer.
+    /// @dev Internal function which Performs operation after transfer.
     function _postTransferHook(address /*from*/, address /*to*/, euint64 /*encryptedAmount*/) internal virtual {
         // default to no-op
     }
