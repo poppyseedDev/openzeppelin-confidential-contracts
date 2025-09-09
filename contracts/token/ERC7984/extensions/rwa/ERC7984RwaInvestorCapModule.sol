@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 
 import {euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {ERC7984RwaTransferComplianceModule} from "../ERC7984RwaTransferComplianceModule.sol";
+import {ERC7984RwaTransferComplianceModule} from "./ERC7984RwaTransferComplianceModule.sol";
 
 /**
  * @dev A transfer compliance module for confidential Real World Assets (RWAs) which limits the number of investors.

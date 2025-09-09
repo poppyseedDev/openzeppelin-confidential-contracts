@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 
 import {euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IERC7984RwaTransferComplianceModule, TRANSFER_COMPLIANCE_MODULE_TYPE} from "./../../../interfaces/IERC7984Rwa.sol";
+import {IERC7984RwaTransferComplianceModule, TRANSFER_COMPLIANCE_MODULE_TYPE} from "./../../../../interfaces/IERC7984Rwa.sol";
 
 /**
  * @dev A contract which allows to build a transfer compliance module for confidential Real World Assets (RWAs).
