@@ -3,12 +3,21 @@
 pragma solidity ^0.8.27;
 
 import {euint64} from "@fhevm/solidity/lib/FHE.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC7984RwaTransferComplianceModule, TRANSFER_COMPLIANCE_MODULE_TYPE} from "./../../../interfaces/IERC7984Rwa.sol";
 
 /**
  * @dev A contract which allows to build a transfer compliance module for confidential Real World Assets (RWAs).
  */
-abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferComplianceModule {
+abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferComplianceModule, Ownable {
+    /// @dev Throws if called by any account other than the compliance.
+    modifier onlyCompliance() {
+        _checkOwner();
+        _;
+    }
+
+    constructor(address compliance) Ownable(compliance) {}
+
     /// @inheritdoc IERC7984RwaTransferComplianceModule
     function isModule() public pure override returns (bytes4) {
         return this.isModule.selector;
