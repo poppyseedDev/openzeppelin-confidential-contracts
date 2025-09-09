@@ -17,6 +17,7 @@ abstract contract ERC7984Rwa is ERC7984, ERC7984Restricted, ERC7984Freezable, Pa
     using TransientSlot for TransientSlot.BooleanSlot;
     EnumerableSet.AddressSet private _complianceModules_;
     EnumerableSet.AddressSet private _forceTransferComplianceModules_;
+    address private _onchainID;
 
     TransientSlot.BooleanSlot private _skipRwaRestrictionsFlag =
         TransientSlot.asBoolean(keccak256(abi.encode("skipRwaRestrictions")));
@@ -37,6 +38,43 @@ abstract contract ERC7984Rwa is ERC7984, ERC7984Restricted, ERC7984Freezable, Pa
         _skipRwaRestrictionsFlag.tstore(false);
 
         return transferred;
+    }
+
+    function onchainID() public view virtual returns (address) {
+        return _onchainID;
+    }
+
+    function recoveryAddress(
+        address _lostWallet,
+        address _newWallet,
+        address _investorOnchainID
+    ) external override returns (bool) {
+        IIdentity _onchainID = IIdentity(_investorOnchainID);
+        bytes32 _key = keccak256(abi.encode(_newWallet));
+        if (_onchainID.keyHasPurpose(_key, 1)) {
+            uint256 investorTokens = balanceOf(_lostWallet);
+            uint256 frozenTokens = _frozenTokens[_lostWallet];
+            _tokenIdentityRegistry.registerIdentity(
+                _newWallet,
+                _onchainID,
+                _tokenIdentityRegistry.investorCountry(_lostWallet)
+            );
+            forcedTransfer(_lostWallet, _newWallet, investorTokens);
+            if (frozenTokens > 0) {
+                freezePartialTokens(_newWallet, frozenTokens);
+            }
+            if (_frozen[_lostWallet] == true) {
+                setAddressFrozen(_newWallet, true);
+            }
+            _tokenIdentityRegistry.deleteIdentity(_lostWallet);
+            emit RecoverySuccess(_lostWallet, _newWallet, _investorOnchainID);
+            return true;
+        }
+        revert("Recovery not possible");
+    }
+
+    function _setOnchainID(address onchainID_) internal virtual {
+        _onchainID = onchainID_;
     }
 
     function _update(
