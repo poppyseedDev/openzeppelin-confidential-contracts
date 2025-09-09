@@ -607,16 +607,12 @@ Returns the maximum number that will be used for {decimals} by the wrapper.
 :TokensFrozen: pass:normal[xref:#ERC7984Freezable-TokensFrozen-address-euint64-[`++TokensFrozen++`]]
 :confidentialFrozen: pass:normal[xref:#ERC7984Freezable-confidentialFrozen-address-[`++confidentialFrozen++`]]
 :confidentialAvailable: pass:normal[xref:#ERC7984Freezable-confidentialAvailable-address-[`++confidentialAvailable++`]]
-:setConfidentialFrozen: pass:normal[xref:#ERC7984Freezable-setConfidentialFrozen-address-externalEuint64-bytes-[`++setConfidentialFrozen++`]]
-:setConfidentialFrozen: pass:normal[xref:#ERC7984Freezable-setConfidentialFrozen-address-euint64-[`++setConfidentialFrozen++`]]
 :_setConfidentialFrozen: pass:normal[xref:#ERC7984Freezable-_setConfidentialFrozen-address-euint64-[`++_setConfidentialFrozen++`]]
 :_checkFreezer: pass:normal[xref:#ERC7984Freezable-_checkFreezer--[`++_checkFreezer++`]]
 :_update: pass:normal[xref:#ERC7984Freezable-_update-address-address-euint64-[`++_update++`]]
 
 :confidentialFrozen-address: pass:normal[xref:#ERC7984Freezable-confidentialFrozen-address-[`++confidentialFrozen++`]]
 :confidentialAvailable-address: pass:normal[xref:#ERC7984Freezable-confidentialAvailable-address-[`++confidentialAvailable++`]]
-:setConfidentialFrozen-address-externalEuint64-bytes: pass:normal[xref:#ERC7984Freezable-setConfidentialFrozen-address-externalEuint64-bytes-[`++setConfidentialFrozen++`]]
-:setConfidentialFrozen-address-euint64: pass:normal[xref:#ERC7984Freezable-setConfidentialFrozen-address-euint64-[`++setConfidentialFrozen++`]]
 :_setConfidentialFrozen-address-euint64: pass:normal[xref:#ERC7984Freezable-_setConfidentialFrozen-address-euint64-[`++_setConfidentialFrozen++`]]
 :_checkFreezer-: pass:normal[xref:#ERC7984Freezable-_checkFreezer--[`++_checkFreezer++`]]
 :_update-address-address-euint64: pass:normal[xref:#ERC7984Freezable-_update-address-address-euint64-[`++_update++`]]
@@ -646,8 +642,6 @@ Inspired by https://github.com/OpenZeppelin/openzeppelin-community-contracts/blo
 --
 * `++confidentialFrozen(account)++`
 * `++confidentialAvailable(account)++`
-* `++setConfidentialFrozen(account, encryptedAmount, inputProof)++`
-* `++setConfidentialFrozen(account, encryptedAmount)++`
 * `++_setConfidentialFrozen(account, encryptedAmount)++`
 * `++_checkFreezer()++`
 * `++_update(from, to, encryptedAmount)++`
@@ -729,18 +723,6 @@ Returns the confidential frozen balance of an account.
 ==== `[.contract-item-name]#++confidentialAvailable++#++(address account) → euint64++` [.item-kind]#public#
 
 Returns the confidential available (unfrozen) balance of an account. Up to {confidentialBalanceOf}.
-
-[.contract-item]
-[[ERC7984Freezable-setConfidentialFrozen-address-externalEuint64-bytes-]]
-==== `[.contract-item-name]#++setConfidentialFrozen++#++(address account, externalEuint64 encryptedAmount, bytes inputProof)++` [.item-kind]#public#
-
-Freezes a confidential amount of tokens for an account with a proof.
-
-[.contract-item]
-[[ERC7984Freezable-setConfidentialFrozen-address-euint64-]]
-==== `[.contract-item-name]#++setConfidentialFrozen++#++(address account, euint64 encryptedAmount)++` [.item-kind]#public#
-
-Freezes a confidential amount of tokens for an account.
 
 [.contract-item]
 [[ERC7984Freezable-_setConfidentialFrozen-address-euint64-]]
