@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
+import {ebool, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC7984} from "./IERC7984.sol";
@@ -99,7 +99,7 @@ interface IERC7984RwaTransferComplianceModule {
     /// @dev Returns magic number if it is a module.
     function isModule() external returns (bytes4);
     /// @dev Checks if a transfer is compliant. Should be non-mutating.
-    function isCompliantTransfer(address from, address to, euint64 encryptedAmount) external returns (bool);
+    function isCompliantTransfer(address from, address to, euint64 encryptedAmount) external returns (ebool);
     /// @dev Performs operation after transfer.
     function postTransferHook(address from, address to, euint64 encryptedAmount) external;
 }

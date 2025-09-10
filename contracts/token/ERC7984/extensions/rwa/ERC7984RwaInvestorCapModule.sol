@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.27;
 
-import {euint64} from "@fhevm/solidity/lib/FHE.sol";
+import {FHE, ebool, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {ERC7984RwaTransferComplianceModule} from "./ERC7984RwaTransferComplianceModule.sol";
 
@@ -33,16 +33,17 @@ abstract contract ERC7984RwaInvestorCapModule is ERC7984RwaTransferComplianceMod
     function _isCompliantTransfer(
         address /*from*/,
         address to,
-        euint64 /*encryptedAmount*/
-    ) internal override returns (bool) {
+        euint64 encryptedAmount
+    ) internal override returns (ebool) {
         if (
-            to == address(0) || // burning
+            FHE.isInitialized(encryptedAmount) || // no amount
+            to == address(0) || // or burning
             _investors.contains(to) || // or already investor
             _investors.length() < _maxInvestor // or not reached max investors limit
         ) {
-            return true;
+            return FHE.asEbool(true);
         }
-        return false;
+        return FHE.asEbool(false);
     }
 
     /// @dev Internal function which Performs operation after transfer.

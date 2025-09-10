@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.27;
 
-import {euint64} from "@fhevm/solidity/lib/FHE.sol";
+import {FHE, ebool, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC7984RwaTransferComplianceModule, TRANSFER_COMPLIANCE_MODULE_TYPE} from "./../../../../interfaces/IERC7984Rwa.sol";
 
@@ -24,7 +24,7 @@ abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferCompl
     }
 
     /// @inheritdoc IERC7984RwaTransferComplianceModule
-    function isCompliantTransfer(address from, address to, euint64 encryptedAmount) public virtual returns (bool) {
+    function isCompliantTransfer(address from, address to, euint64 encryptedAmount) public virtual returns (ebool) {
         return _isCompliantTransfer(from, to, encryptedAmount);
     }
 
@@ -38,9 +38,9 @@ abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferCompl
         address /*from*/,
         address /*to*/,
         euint64 /*encryptedAmount*/
-    ) internal virtual returns (bool) {
+    ) internal virtual returns (ebool) {
         // default to non-compliant
-        return false;
+        return FHE.asEbool(false);
     }
 
     /// @dev Internal function which Performs operation after transfer.

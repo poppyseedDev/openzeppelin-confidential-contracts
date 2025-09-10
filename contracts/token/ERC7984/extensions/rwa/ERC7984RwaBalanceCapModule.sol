@@ -36,18 +36,16 @@ abstract contract ERC7984RwaBalanceCapModule is ERC7984RwaTransferComplianceModu
         address /*from*/,
         address to,
         euint64 encryptedAmount
-    ) internal override returns (bool) {
+    ) internal override returns (ebool compliant) {
         if (
-            to == address(0) // burning
+            !FHE.isInitialized(encryptedAmount) || to == address(0) // if no amount or burning
         ) {
-            return true;
+            return FHE.asEbool(true);
         }
         (ebool increased, euint64 futureBalance) = FHESafeMath.tryIncrease(
             IERC7984(_token).confidentialBalanceOf(to),
             encryptedAmount
         );
-        ebool isCompliant = FHE.and(increased, FHE.le(futureBalance, _maxBalance));
-        isCompliant;
-        return false;
+        compliant = FHE.and(increased, FHE.le(futureBalance, _maxBalance));
     }
 }

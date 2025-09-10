@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.27;
 
-import {FHE, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
+import {FHE, ebool, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
@@ -30,8 +30,6 @@ abstract contract ERC7984Rwa is
 
     /// @dev The caller account is not authorized to perform the operation.
     error UnauthorizedSender(address account);
-    /// @dev The transfer does not follow token compliance.
-    error UncompliantTransfer(address from, address to, euint64 encryptedAmount);
 
     /// @dev Checks if the sender is an admin or an agent.
     modifier onlyAdminOrAgent() {
@@ -167,7 +165,14 @@ abstract contract ERC7984Rwa is
         address to,
         euint64 encryptedAmount
     ) internal virtual returns (euint64 transferred) {
-        require(_isForceTransferCompliant(from, to, encryptedAmount), UncompliantTransfer(from, to, encryptedAmount));
+        if (!FHE.isInitialized(encryptedAmount)) {
+            return encryptedAmount;
+        }
+        encryptedAmount = FHE.select(
+            _isForceTransferCompliant(from, to, encryptedAmount),
+            encryptedAmount,
+            FHE.asEuint64(0)
+        );
         _disableERC7984FreezableUpdateCheck(); // bypass frozen check
         _disableERC7984RestrictedUpdateCheck(); // bypass default restriction check
         if (to != address(0)) _checkRestriction(to); // only perform restriction check on `to`
@@ -183,7 +188,14 @@ abstract contract ERC7984Rwa is
         address to,
         euint64 encryptedAmount
     ) internal override(ERC7984Freezable, ERC7984Restricted, ERC7984) whenNotPaused returns (euint64 transferred) {
-        require(_isTransferCompliant(from, to, encryptedAmount), UncompliantTransfer(from, to, encryptedAmount));
+        if (!FHE.isInitialized(encryptedAmount)) {
+            return encryptedAmount;
+        }
+        encryptedAmount = FHE.select(
+            _isTransferCompliant(from, to, encryptedAmount),
+            encryptedAmount,
+            FHE.asEuint64(0)
+        );
         // frozen and restriction checks performed through inheritance
         transferred = super._update(from, to, encryptedAmount);
         _postTransferHook(from, to, encryptedAmount);
@@ -196,14 +208,14 @@ abstract contract ERC7984Rwa is
     function _checkFreezer() internal override onlyAdminOrAgent {}
 
     /// @dev Checks if a transfer follows compliance.
-    function _isTransferCompliant(address from, address to, euint64 encryptedAmount) internal virtual returns (bool);
+    function _isTransferCompliant(address from, address to, euint64 encryptedAmount) internal virtual returns (ebool);
 
     /// @dev Checks if a force transfer follows compliance.
     function _isForceTransferCompliant(
         address from,
         address to,
         euint64 encryptedAmount
-    ) internal virtual returns (bool);
+    ) internal virtual returns (ebool);
 
     /// @dev Performs operation after transfer.
     function _postTransferHook(address from, address to, euint64 encryptedAmount) internal virtual {}

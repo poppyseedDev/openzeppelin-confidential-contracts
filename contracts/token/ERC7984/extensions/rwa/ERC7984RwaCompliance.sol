@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.27;
 
-import {FHE, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
+import {FHE, ebool, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IERC7984RwaCompliance, IERC7984RwaTransferComplianceModule, FORCE_TRANSFER_COMPLIANCE_MODULE_TYPE, TRANSFER_COMPLIANCE_MODULE_TYPE} from "./../../../../interfaces/IERC7984Rwa.sol";
 import {ERC7984Rwa} from "../ERC7984Rwa.sol";
@@ -99,15 +99,19 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
         address from,
         address to,
         euint64 encryptedAmount
-    ) internal virtual returns (bool) {
+    ) internal virtual returns (ebool compliant) {
+        if (!FHE.isInitialized(encryptedAmount)) {
+            return FHE.asEbool(true);
+        }
         address[] memory modules = _transferComplianceModules.values();
         uint256 modulesLength = modules.length;
+        compliant = FHE.asEbool(true);
         for (uint256 i = 0; i < modulesLength; i++) {
-            if (!IERC7984RwaTransferComplianceModule(modules[i]).isCompliantTransfer(from, to, encryptedAmount)) {
-                return false;
-            }
+            compliant = FHE.and(
+                compliant,
+                IERC7984RwaTransferComplianceModule(modules[i]).isCompliantTransfer(from, to, encryptedAmount)
+            );
         }
-        return true;
     }
 
     /// @dev Checks if a force transfer is compliant.
@@ -115,15 +119,19 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
         address from,
         address to,
         euint64 encryptedAmount
-    ) internal virtual returns (bool) {
+    ) internal virtual returns (ebool compliant) {
+        if (!FHE.isInitialized(encryptedAmount)) {
+            return FHE.asEbool(true);
+        }
         address[] memory modules = _forceTransferComplianceModules.values();
         uint256 modulesLength = modules.length;
+        compliant = FHE.asEbool(true);
         for (uint256 i = 0; i < modulesLength; i++) {
-            if (!IERC7984RwaTransferComplianceModule(modules[i]).isCompliantTransfer(from, to, encryptedAmount)) {
-                return false;
-            }
+            compliant = FHE.and(
+                compliant,
+                IERC7984RwaTransferComplianceModule(modules[i]).isCompliantTransfer(from, to, encryptedAmount)
+            );
         }
-        return true;
     }
 
     /// @dev Performs operation after transfer.
