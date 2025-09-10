@@ -34,19 +34,19 @@ contract ERC7984RwaMock is ERC7984Rwa, HandleAccessManager, SepoliaConfig {
         FHE.allow(encryptedAmount, msg.sender);
     }
 
-    function $_setCompliant() public {
+    function $_setCompliantTransfer() public {
         compliantTransfer = true;
     }
 
-    function $_unsetCompliant() public {
+    function $_unsetCompliantTransfer() public {
         compliantTransfer = false;
     }
 
-    function $_setForceCompliant() public {
+    function $_setCompliantForceTransfer() public {
         compliantForceTransfer = true;
     }
 
-    function $_unsetForceCompliant() public {
+    function $_unsetCompliantForceTransfer() public {
         compliantForceTransfer = false;
     }
 

@@ -17,7 +17,8 @@ abstract contract ERC7984RwaBalanceCapModule is ERC7984RwaTransferComplianceModu
     euint64 private _maxBalance;
     address private _token;
 
-    constructor(address compliance, euint64 maxBalance) ERC7984RwaTransferComplianceModule(compliance) {
+    constructor(address compliance, address token, euint64 maxBalance) ERC7984RwaTransferComplianceModule(compliance) {
+        _token = token;
         setMaxBalance(maxBalance);
     }
 
