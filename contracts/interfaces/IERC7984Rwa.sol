@@ -7,8 +7,8 @@ import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC7984} from "./IERC7984.sol";
 import {IERC7984Restricted} from "./IERC7984Restricted.sol";
 
-uint256 constant TRANSFER_COMPLIANCE_MODULE_TYPE = 1;
-uint256 constant FORCE_TRANSFER_COMPLIANCE_MODULE_TYPE = 2;
+uint256 constant ALWAYS_ON_MODULE_TYPE = 1;
+uint256 constant TRANSFER_ONLY_MODULE_TYPE = 2;
 
 /// @dev Base interface for confidential RWA contracts.
 interface IERC7984RwaBase {
@@ -101,5 +101,5 @@ interface IERC7984RwaTransferComplianceModule {
     /// @dev Checks if a transfer is compliant. Should be non-mutating.
     function isCompliantTransfer(address from, address to, euint64 encryptedAmount) external returns (ebool);
     /// @dev Performs operation after transfer.
-    function postTransferHook(address from, address to, euint64 encryptedAmount) external;
+    function postTransfer(address from, address to, euint64 encryptedAmount) external;
 }

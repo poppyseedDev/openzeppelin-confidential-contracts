@@ -169,7 +169,7 @@ abstract contract ERC7984Rwa is
             return encryptedAmount;
         }
         encryptedAmount = FHE.select(
-            _isForceTransferCompliant(from, to, encryptedAmount),
+            _preCheckForceTransfer(from, to, encryptedAmount),
             encryptedAmount,
             FHE.asEuint64(0)
         );
@@ -177,7 +177,7 @@ abstract contract ERC7984Rwa is
         _disableERC7984RestrictedUpdateCheck(); // bypass default restriction check
         if (to != address(0)) _checkRestriction(to); // only perform restriction check on `to`
         transferred = super._update(from, to, encryptedAmount); // bypass compliance check
-        _postForceTransferHook(from, to, encryptedAmount);
+        _postForceTransfer(from, to, encryptedAmount);
         _restoreERC7984FreezableUpdateCheck();
         _restoreERC7984RestrictedUpdateCheck();
     }
@@ -191,14 +191,10 @@ abstract contract ERC7984Rwa is
         if (!FHE.isInitialized(encryptedAmount)) {
             return encryptedAmount;
         }
-        encryptedAmount = FHE.select(
-            _isTransferCompliant(from, to, encryptedAmount),
-            encryptedAmount,
-            FHE.asEuint64(0)
-        );
+        encryptedAmount = FHE.select(_preCheckTransfer(from, to, encryptedAmount), encryptedAmount, FHE.asEuint64(0));
         // frozen and restriction checks performed through inheritance
         transferred = super._update(from, to, encryptedAmount);
-        _postTransferHook(from, to, encryptedAmount);
+        _postTransfer(from, to, encryptedAmount);
     }
 
     /**
@@ -208,18 +204,14 @@ abstract contract ERC7984Rwa is
     function _checkFreezer() internal override onlyAdminOrAgent {}
 
     /// @dev Checks if a transfer follows compliance.
-    function _isTransferCompliant(address from, address to, euint64 encryptedAmount) internal virtual returns (ebool);
+    function _preCheckTransfer(address from, address to, euint64 encryptedAmount) internal virtual returns (ebool);
 
     /// @dev Checks if a force transfer follows compliance.
-    function _isForceTransferCompliant(
-        address from,
-        address to,
-        euint64 encryptedAmount
-    ) internal virtual returns (ebool);
+    function _preCheckForceTransfer(address from, address to, euint64 encryptedAmount) internal virtual returns (ebool);
 
     /// @dev Performs operation after transfer.
-    function _postTransferHook(address from, address to, euint64 encryptedAmount) internal virtual {}
+    function _postTransfer(address from, address to, euint64 encryptedAmount) internal virtual {}
 
     /// @dev Performs operation after force transfer.
-    function _postForceTransferHook(address from, address to, euint64 encryptedAmount) internal virtual {}
+    function _postForceTransfer(address from, address to, euint64 encryptedAmount) internal virtual {}
 }

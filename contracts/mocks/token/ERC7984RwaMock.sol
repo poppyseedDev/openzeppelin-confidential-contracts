@@ -54,7 +54,7 @@ contract ERC7984RwaMock is ERC7984Rwa, HandleAccessManager, SepoliaConfig {
         return _mint(to, FHE.asEuint64(amount));
     }
 
-    function _isTransferCompliant(
+    function _preCheckTransfer(
         address /*from*/,
         address /*to*/,
         euint64 /*encryptedAmount*/
@@ -63,7 +63,7 @@ contract ERC7984RwaMock is ERC7984Rwa, HandleAccessManager, SepoliaConfig {
         FHE.allowThis(compliant);
     }
 
-    function _isForceTransferCompliant(
+    function _preCheckForceTransfer(
         address /*from*/,
         address /*to*/,
         euint64 /*encryptedAmount*/

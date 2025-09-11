@@ -46,8 +46,8 @@ abstract contract ERC7984RwaInvestorCapModule is ERC7984RwaTransferComplianceMod
         return FHE.asEbool(false);
     }
 
-    /// @dev Internal function which Performs operation after transfer.
-    function _postTransferHook(address /*from*/, address to, euint64 /*encryptedAmount*/) internal override {
+    /// @dev Internal function which performs operation after transfer.
+    function _postTransfer(address /*from*/, address to, euint64 /*encryptedAmount*/) internal override {
         if (!_investors.contains(to)) {
             _investors.add(to);
         }
