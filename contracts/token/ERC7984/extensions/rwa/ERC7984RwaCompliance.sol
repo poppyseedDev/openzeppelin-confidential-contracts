@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 
 import {FHE, ebool, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IERC7984RwaCompliance, IERC7984RwaTransferComplianceModule, TRANSFER_ONLY_MODULE_TYPE, ALWAYS_ON_MODULE_TYPE} from "./../../../../interfaces/IERC7984Rwa.sol";
+import {IERC7984RwaCompliance, IERC7984RwaTransferComplianceModule} from "./../../../../interfaces/IERC7984Rwa.sol";
 import {ERC7984Rwa} from "../ERC7984Rwa.sol";
 
 /**
@@ -18,18 +18,18 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
     EnumerableSet.AddressSet private _transferOnlyModules;
 
     /// @dev Emitted when a module is installed.
-    event ModuleInstalled(uint256 moduleTypeId, address module);
+    event ModuleInstalled(ComplianceModuleType moduleType, address module);
     /// @dev Emitted when a module is uninstalled.
-    event ModuleUninstalled(uint256 moduleTypeId, address module);
+    event ModuleUninstalled(ComplianceModuleType moduleType, address module);
 
     /// @dev The module type is not supported.
-    error ERC7984RwaUnsupportedModuleType(uint256 moduleTypeId);
+    error ERC7984RwaUnsupportedModuleType(ComplianceModuleType moduleType);
     /// @dev The address is not a transfer compliance module.
     error ERC7984RwaNotTransferComplianceModule(address module);
     /// @dev The module is already installed.
-    error ERC7984RwaAlreadyInstalledModule(uint256 moduleTypeId, address module);
+    error ERC7984RwaAlreadyInstalledModule(ComplianceModuleType moduleType, address module);
     /// @dev The module is already uninstalled.
-    error ERC7984RwaAlreadyUninstalledModule(uint256 moduleTypeId, address module);
+    error ERC7984RwaAlreadyUninstalledModule(ComplianceModuleType moduleType, address module);
 
     /**
      * @dev Check if a certain module typeId is supported.
@@ -39,8 +39,8 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
      * * Transfer compliance module
      * * Force transfer compliance module
      */
-    function supportsModule(uint256 moduleTypeId) public view virtual returns (bool) {
-        return moduleTypeId == ALWAYS_ON_MODULE_TYPE || moduleTypeId == TRANSFER_ONLY_MODULE_TYPE;
+    function supportsModule(ComplianceModuleType moduleType) public view virtual returns (bool) {
+        return moduleType == ComplianceModuleType.ALWAYS_ON || moduleType == ComplianceModuleType.TRANSFER_ONLY;
     }
 
     /**
@@ -48,41 +48,41 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
      * @dev Consider gas footprint of the module before adding it since all modules will perform
      * all steps (pre-check, compliance check, post-hook) in a single transaction.
      */
-    function installModule(uint256 moduleTypeId, address module) public virtual onlyAdminOrAgent {
-        _installModule(moduleTypeId, module);
+    function installModule(ComplianceModuleType moduleType, address module) public virtual onlyAdminOrAgent {
+        _installModule(moduleType, module);
     }
 
     /// @inheritdoc IERC7984RwaCompliance
-    function uninstallModule(uint256 moduleTypeId, address module) public virtual onlyAdminOrAgent {
-        _uninstallModule(moduleTypeId, module);
+    function uninstallModule(ComplianceModuleType moduleType, address module) public virtual onlyAdminOrAgent {
+        _uninstallModule(moduleType, module);
     }
 
     /// @dev Internal function which installs a transfer compliance module.
-    function _installModule(uint256 moduleTypeId, address module) internal virtual {
-        require(supportsModule(moduleTypeId), ERC7984RwaUnsupportedModuleType(moduleTypeId));
+    function _installModule(ComplianceModuleType moduleType, address module) internal virtual {
+        require(supportsModule(moduleType), ERC7984RwaUnsupportedModuleType(moduleType));
         require(
             IERC7984RwaTransferComplianceModule(module).isModule() ==
                 IERC7984RwaTransferComplianceModule.isModule.selector,
             ERC7984RwaNotTransferComplianceModule(module)
         );
 
-        if (moduleTypeId == ALWAYS_ON_MODULE_TYPE) {
-            require(_alwaysOnModules.add(module), ERC7984RwaAlreadyInstalledModule(moduleTypeId, module));
-        } else if (moduleTypeId == TRANSFER_ONLY_MODULE_TYPE) {
-            require(_transferOnlyModules.add(module), ERC7984RwaAlreadyInstalledModule(moduleTypeId, module));
+        if (moduleType == ComplianceModuleType.ALWAYS_ON) {
+            require(_alwaysOnModules.add(module), ERC7984RwaAlreadyInstalledModule(moduleType, module));
+        } else if (moduleType == ComplianceModuleType.TRANSFER_ONLY) {
+            require(_transferOnlyModules.add(module), ERC7984RwaAlreadyInstalledModule(moduleType, module));
         }
-        emit ModuleInstalled(moduleTypeId, module);
+        emit ModuleInstalled(moduleType, module);
     }
 
     /// @dev Internal function which uninstalls a transfer compliance module.
-    function _uninstallModule(uint256 moduleTypeId, address module) internal virtual {
-        require(supportsModule(moduleTypeId), ERC7984RwaUnsupportedModuleType(moduleTypeId));
-        if (moduleTypeId == ALWAYS_ON_MODULE_TYPE) {
-            require(_alwaysOnModules.remove(module), ERC7984RwaAlreadyUninstalledModule(moduleTypeId, module));
-        } else if (moduleTypeId == TRANSFER_ONLY_MODULE_TYPE) {
-            require(_transferOnlyModules.remove(module), ERC7984RwaAlreadyUninstalledModule(moduleTypeId, module));
+    function _uninstallModule(ComplianceModuleType moduleType, address module) internal virtual {
+        require(supportsModule(moduleType), ERC7984RwaUnsupportedModuleType(moduleType));
+        if (moduleType == ComplianceModuleType.ALWAYS_ON) {
+            require(_alwaysOnModules.remove(module), ERC7984RwaAlreadyUninstalledModule(moduleType, module));
+        } else if (moduleType == ComplianceModuleType.TRANSFER_ONLY) {
+            require(_transferOnlyModules.remove(module), ERC7984RwaAlreadyUninstalledModule(moduleType, module));
         }
-        emit ModuleUninstalled(moduleTypeId, module);
+        emit ModuleUninstalled(moduleType, module);
     }
 
     /// @dev Checks if a transfer follows compliance.

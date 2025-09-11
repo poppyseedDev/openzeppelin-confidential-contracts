@@ -7,9 +7,6 @@ import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC7984} from "./IERC7984.sol";
 import {IERC7984Restricted} from "./IERC7984Restricted.sol";
 
-uint256 constant ALWAYS_ON_MODULE_TYPE = 1;
-uint256 constant TRANSFER_ONLY_MODULE_TYPE = 2;
-
 /// @dev Base interface for confidential RWA contracts.
 interface IERC7984RwaBase {
     /// @dev Emitted when the contract is paused.
@@ -88,10 +85,15 @@ interface IERC7984Rwa is IERC7984, IERC7984RwaBase, IERC165, IAccessControl {}
 
 /// @dev Interface for confidential RWA compliance.
 interface IERC7984RwaCompliance {
+    enum ComplianceModuleType {
+        ALWAYS_ON,
+        TRANSFER_ONLY
+    }
+
     /// @dev Installs a transfer compliance module.
-    function installModule(uint256 moduleTypeId, address module) external;
+    function installModule(ComplianceModuleType moduleType, address module) external;
     /// @dev Uninstalls a transfer compliance module.
-    function uninstallModule(uint256 moduleTypeId, address module) external;
+    function uninstallModule(ComplianceModuleType moduleType, address module) external;
 }
 
 /// @dev Interface for confidential RWA transfer compliance module.
