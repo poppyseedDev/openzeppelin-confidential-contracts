@@ -100,13 +100,13 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
         return _checkAlwaysBefore(from, to, encryptedAmount);
     }
 
-    /// @dev Peforms operations after transfer.
+    /// @dev Performs operations after transfer.
     function _postTransfer(address from, address to, euint64 encryptedAmount) internal override {
         _runAlwaysAfter(from, to, encryptedAmount);
         _runOnlyAfterTransfer(from, to, encryptedAmount);
     }
 
-    /// @dev Peforms operations after force transfer.
+    /// @dev Performs operations after force transfer.
     function _postForceTransfer(address from, address to, euint64 encryptedAmount) internal override {
         _runAlwaysAfter(from, to, encryptedAmount);
     }
