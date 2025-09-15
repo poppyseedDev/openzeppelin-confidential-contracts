@@ -18,9 +18,13 @@ Miscellaneous contracts and libraries containing utility functions you can use t
 
 :tryIncrease: pass:normal[xref:#FHESafeMath-tryIncrease-euint64-euint64-[`++tryIncrease++`]]
 :tryDecrease: pass:normal[xref:#FHESafeMath-tryDecrease-euint64-euint64-[`++tryDecrease++`]]
+:tryAdd: pass:normal[xref:#FHESafeMath-tryAdd-euint64-euint64-[`++tryAdd++`]]
+:trySub: pass:normal[xref:#FHESafeMath-trySub-euint64-euint64-[`++trySub++`]]
 
 :tryIncrease-euint64-euint64: pass:normal[xref:#FHESafeMath-tryIncrease-euint64-euint64-[`++tryIncrease++`]]
 :tryDecrease-euint64-euint64: pass:normal[xref:#FHESafeMath-tryDecrease-euint64-euint64-[`++tryDecrease++`]]
+:tryAdd-euint64-euint64: pass:normal[xref:#FHESafeMath-tryAdd-euint64-euint64-[`++tryAdd++`]]
+:trySub-euint64-euint64: pass:normal[xref:#FHESafeMath-trySub-euint64-euint64-[`++trySub++`]]
 
 [.contract]
 [[FHESafeMath]]
@@ -39,6 +43,8 @@ to handle potential overflows in FHE operations.
 --
 * `++tryIncrease(oldValue, delta)++`
 * `++tryDecrease(oldValue, delta)++`
+* `++tryAdd(a, b)++`
+* `++trySub(a, b)++`
 
 --
 
@@ -57,6 +63,20 @@ and `updated` will be the original value.
 Try to decrease the encrypted value `oldValue` by `delta`. If the operation is successful,
 `success` will be true and `updated` will be the new value. Otherwise, `success` will be false
 and `updated` will be the original value.
+
+[.contract-item]
+[[FHESafeMath-tryAdd-euint64-euint64-]]
+==== `[.contract-item-name]#++tryAdd++#++(euint64 a, euint64 b) → ebool success, euint64 res++` [.item-kind]#internal#
+
+Try to add `a` and `b`. If the operation is successful, `success` will be true and `res`
+will be the sum of `a` and `b`. Otherwise, `success` will be false, and `res` will be 0.
+
+[.contract-item]
+[[FHESafeMath-trySub-euint64-euint64-]]
+==== `[.contract-item-name]#++trySub++#++(euint64 a, euint64 b) → ebool success, euint64 res++` [.item-kind]#internal#
+
+Try to subtract `b` from `a`. If the operation is successful, `success` will be true and `res`
+will be `a - b`. Otherwise, `success` will be false, and `res` will be 0.
 
 == Structs
 
