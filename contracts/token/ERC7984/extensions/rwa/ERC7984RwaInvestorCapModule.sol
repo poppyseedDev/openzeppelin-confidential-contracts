@@ -16,17 +16,22 @@ abstract contract ERC7984RwaInvestorCapModule is ERC7984RwaTransferComplianceMod
     EnumerableSet.AddressSet private _investors;
 
     constructor(address compliance, uint256 maxInvestor) ERC7984RwaTransferComplianceModule(compliance) {
-        setMaxInvestor(maxInvestor);
+        _maxInvestor = maxInvestor;
     }
 
     /// @dev Sets max number of investors.
-    function setMaxInvestor(uint256 maxInvestor) public virtual onlyCompliance {
+    function setMaxInvestor(uint256 maxInvestor) public virtual onlyTokenAdmin {
         _maxInvestor = maxInvestor;
     }
 
     /// @dev Gets max number of investors.
-    function getMaxInvestor() public virtual returns (uint256) {
+    function getMaxInvestor() public view virtual returns (uint256) {
         return _maxInvestor;
+    }
+
+    /// @dev Gets current number of investors.
+    function getCurrentInvestor() public view virtual returns (uint256) {
+        return _investors.length();
     }
 
     /// @dev Internal function which checks if a transfer is compliant.
@@ -36,13 +41,14 @@ abstract contract ERC7984RwaInvestorCapModule is ERC7984RwaTransferComplianceMod
         euint64 encryptedAmount
     ) internal override returns (ebool) {
         if (
-            FHE.isInitialized(encryptedAmount) || // no amount
+            !FHE.isInitialized(encryptedAmount) || // no amount
             to == address(0) || // or burning
             _investors.contains(to) || // or already investor
             _investors.length() < _maxInvestor // or not reached max investors limit
         ) {
             return FHE.asEbool(true);
         }
+
         return FHE.asEbool(false);
     }
 

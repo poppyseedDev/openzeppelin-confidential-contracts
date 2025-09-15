@@ -21,6 +21,10 @@ interface IERC7984RwaBase {
     /// @dev The operation failed because the contract is paused.
     error EnforcedPause();
 
+    /// @dev Returns true if has admin role, false otherwise.
+    function isAdmin(address account) external view returns (bool);
+    /// @dev Returns true if agent, false otherwise.
+    function isAgent(address account) external view returns (bool);
     /// @dev Returns true if the contract is paused, and false otherwise.
     function paused() external view returns (bool);
     /// @dev Pauses contract.
@@ -94,6 +98,8 @@ interface IERC7984RwaCompliance {
     function installModule(ComplianceModuleType moduleType, address module) external;
     /// @dev Uninstalls a transfer compliance module.
     function uninstallModule(ComplianceModuleType moduleType, address module) external;
+    /// @dev Checks if a compliance module is installed.
+    function isModuleInstalled(ComplianceModuleType moduleType, address module) external view returns (bool);
 }
 
 /// @dev Interface for confidential RWA transfer compliance module.

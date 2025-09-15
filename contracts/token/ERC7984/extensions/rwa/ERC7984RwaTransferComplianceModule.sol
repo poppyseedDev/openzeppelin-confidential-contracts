@@ -3,19 +3,35 @@
 pragma solidity ^0.8.27;
 
 import {FHE, ebool, euint64} from "@fhevm/solidity/lib/FHE.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IERC7984RwaTransferComplianceModule} from "./../../../../interfaces/IERC7984Rwa.sol";
+import {IERC7984Rwa, IERC7984RwaTransferComplianceModule} from "../../../../interfaces/IERC7984Rwa.sol";
+import {HandleAccessManager} from "../../../../utils/HandleAccessManager.sol";
+
 /**
  * @dev A contract which allows to build a transfer compliance module for confidential Real World Assets (RWAs).
  */
-abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferComplianceModule, Ownable {
-    /// @dev Throws if called by any account other than the compliance.
-    modifier onlyCompliance() {
-        _checkOwner();
+abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferComplianceModule {
+    address private immutable _token;
+
+    /// @dev The sender is not the token.
+    error SenderNotToken(address account);
+    /// @dev The sender is not the token admin.
+    error SenderNotTokenAdmin(address account);
+
+    /// @dev Throws if called by any account other than the token.
+    modifier onlyToken() {
+        require(msg.sender == _token, SenderNotToken(msg.sender));
         _;
     }
 
-    constructor(address compliance) Ownable(compliance) {}
+    /// @dev Throws if called by any account other than the token admin.
+    modifier onlyTokenAdmin() {
+        require(IERC7984Rwa(_token).isAdmin(msg.sender), SenderNotTokenAdmin(msg.sender));
+        _;
+    }
+
+    constructor(address token) {
+        _token = token;
+    }
 
     /// @inheritdoc IERC7984RwaTransferComplianceModule
     function isModule() public pure override returns (bytes4) {
@@ -23,8 +39,12 @@ abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferCompl
     }
 
     /// @inheritdoc IERC7984RwaTransferComplianceModule
-    function isCompliantTransfer(address from, address to, euint64 encryptedAmount) public virtual returns (ebool) {
-        return _isCompliantTransfer(from, to, encryptedAmount);
+    function isCompliantTransfer(
+        address from,
+        address to,
+        euint64 encryptedAmount
+    ) public virtual onlyToken returns (ebool compliant) {
+        FHE.allow(compliant = _isCompliantTransfer(from, to, encryptedAmount), msg.sender);
     }
 
     /// @inheritdoc IERC7984RwaTransferComplianceModule
@@ -37,13 +57,20 @@ abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferCompl
         address /*from*/,
         address /*to*/,
         euint64 /*encryptedAmount*/
-    ) internal virtual returns (ebool) {
-        // default to non-compliant
-        return FHE.asEbool(false);
-    }
+    ) internal virtual returns (ebool);
 
     /// @dev Internal function which Performs operation after transfer.
     function _postTransfer(address /*from*/, address /*to*/, euint64 /*encryptedAmount*/) internal virtual {
         // default to no-op
+    }
+
+    /// @dev Allow modules to get access to token handles within transaction time.
+    function _allowTokenHandleToThis(euint64 handle) internal virtual {
+        _allowTokenHandleToThis(handle, false);
+    }
+
+    /// @dev Allow modules to get access to token handles.
+    function _allowTokenHandleToThis(euint64 handle, bool persistent) internal virtual {
+        HandleAccessManager(_token).getHandleAllowance(euint64.unwrap(handle), address(this), persistent);
     }
 }

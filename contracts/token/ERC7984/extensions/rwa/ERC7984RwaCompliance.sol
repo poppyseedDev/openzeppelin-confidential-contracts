@@ -2,16 +2,17 @@
 
 pragma solidity ^0.8.27;
 
-import {FHE, ebool, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
+import {FHE, ebool, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IERC7984RwaCompliance, IERC7984RwaTransferComplianceModule} from "./../../../../interfaces/IERC7984Rwa.sol";
+import {IERC7984RwaCompliance, IERC7984RwaTransferComplianceModule} from "../../../../interfaces/IERC7984Rwa.sol";
+import {HandleAccessManager} from "../../../../utils/HandleAccessManager.sol";
 import {ERC7984Rwa} from "../ERC7984Rwa.sol";
 
 /**
  * @dev Extension of {ERC7984Rwa} that supports compliance modules for confidential Real World Assets (RWAs).
  * Inspired by ERC-7579 modules.
  */
-abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
+abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance, HandleAccessManager {
     using EnumerableSet for *;
 
     EnumerableSet.AddressSet private _alwaysOnModules;
@@ -30,6 +31,8 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
     error ERC7984RwaAlreadyInstalledModule(ComplianceModuleType moduleType, address module);
     /// @dev The module is already uninstalled.
     error ERC7984RwaAlreadyUninstalledModule(ComplianceModuleType moduleType, address module);
+    /// @dev The sender is not a compliance module.
+    error SenderNotComplianceModule(address account);
 
     /**
      * @dev Check if a certain module typeId is supported.
@@ -57,12 +60,19 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
         _uninstallModule(moduleType, module);
     }
 
+    /// @inheritdoc IERC7984RwaCompliance
+    function isModuleInstalled(ComplianceModuleType moduleType, address module) public view virtual returns (bool) {
+        return _isModuleInstalled(moduleType, module);
+    }
+
     /// @dev Internal function which installs a transfer compliance module.
     function _installModule(ComplianceModuleType moduleType, address module) internal virtual {
         require(supportsModule(moduleType), ERC7984RwaUnsupportedModuleType(moduleType));
+        (bool success, bytes memory returnData) = module.staticcall(
+            abi.encodePacked(IERC7984RwaTransferComplianceModule.isModule.selector)
+        );
         require(
-            IERC7984RwaTransferComplianceModule(module).isModule() ==
-                IERC7984RwaTransferComplianceModule.isModule.selector,
+            success && bytes4(returnData) == IERC7984RwaTransferComplianceModule.isModule.selector,
             ERC7984RwaNotTransferComplianceModule(module)
         );
 
@@ -83,6 +93,13 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
             require(_transferOnlyModules.remove(module), ERC7984RwaAlreadyUninstalledModule(moduleType, module));
         }
         emit ModuleUninstalled(moduleType, module);
+    }
+
+    /// @dev Checks if a compliance module is installed.
+    function _isModuleInstalled(ComplianceModuleType moduleType, address module) internal view virtual returns (bool) {
+        if (moduleType == ComplianceModuleType.ALWAYS_ON) return _alwaysOnModules.contains(module);
+        if (moduleType == ComplianceModuleType.TRANSFER_ONLY) return _transferOnlyModules.contains(module);
+        return false;
     }
 
     /// @dev Checks if a transfer follows compliance.
@@ -151,7 +168,7 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
         }
     }
 
-    /// @dev Runs always.
+    /// @dev Runs always after.
     function _runAlwaysAfter(address from, address to, euint64 encryptedAmount) internal virtual {
         address[] memory modules = _alwaysOnModules.values();
         uint256 modulesLength = modules.length;
@@ -167,5 +184,13 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance {
         for (uint256 i = 0; i < modulesLength; i++) {
             IERC7984RwaTransferComplianceModule(modules[i]).postTransfer(from, to, encryptedAmount);
         }
+    }
+
+    /// @dev Allow modules to get access to token handles over {HandleAccessManager-getHandleAllowance}.
+    function _validateHandleAllowance(bytes32) internal view override {
+        require(
+            _alwaysOnModules.contains(msg.sender) || _transferOnlyModules.contains(msg.sender),
+            SenderNotComplianceModule(msg.sender)
+        );
     }
 }
