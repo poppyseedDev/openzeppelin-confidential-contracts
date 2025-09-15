@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.20;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -26,6 +27,15 @@ contract ProtocolStaking is Ownable, ERC20Votes {
     uint256 private _rewardRate;
     mapping(address => UserStakingInfo) private _userStakingInfo;
 
+    event OperatorAdded(address operator);
+    event OperatorRemoved(address operator);
+    event TokensStaked(address operator, uint256 amount);
+    event TokensUnstaked(address operator, uint256 amount);
+
+    error InvalidAmount();
+    error OperatorAlreadyExists(address operator);
+    error OperatorDoesNotExist(address operator);
+
     constructor(
         string memory name,
         string memory symbol,
@@ -41,7 +51,7 @@ contract ProtocolStaking is Ownable, ERC20Votes {
         _updateRewards();
         _updateRewards(msg.sender);
 
-        require(amount > 0, "Cannot stake 0");
+        require(amount != 0, InvalidAmount());
 
         if (isOperator(msg.sender)) {
             uint256 previousStakedAmount = balanceOf(msg.sender);
@@ -52,6 +62,8 @@ contract ProtocolStaking is Ownable, ERC20Votes {
 
         _mint(msg.sender, amount);
         IERC20(_stakingToken).safeTransferFrom(msg.sender, address(this), amount);
+
+        emit TokensStaked(msg.sender, amount);
     }
 
     function unstake(uint256 amount) public virtual {
@@ -62,7 +74,7 @@ contract ProtocolStaking is Ownable, ERC20Votes {
         _updateRewards();
         _updateRewards(msg.sender);
 
-        require(amount > 0, "Cannot unstake 0");
+        require(amount != 0, InvalidAmount());
 
         if (isOperator(msg.sender)) {
             uint256 previousStakedAmount = balanceOf(msg.sender);
@@ -73,6 +85,8 @@ contract ProtocolStaking is Ownable, ERC20Votes {
 
         _burn(msg.sender, amount);
         IERC20(_stakingToken).safeTransfer(msg.sender, amount);
+
+        emit TokensUnstaked(msg.sender, amount);
     }
 
     function earned(address account) public view virtual returns (uint256) {
@@ -126,22 +140,26 @@ contract ProtocolStaking is Ownable, ERC20Votes {
     }
 
     function addOperator(address account) public virtual onlyOwner {
-        require(_operators.add(account));
+        require(_operators.add(account), OperatorAlreadyExists(account));
 
         _updateRewards();
         _userStakingInfo[account].rewardsPerUnitPaid = _rewardsPerUnit;
 
         _totalStakedLog += log(balanceOf(account));
+
+        emit OperatorAdded(account);
     }
 
     function removeOperator(address account) public virtual onlyOwner {
-        require(_operators.remove(account));
+        require(_operators.remove(account), OperatorDoesNotExist(account));
 
         _updateRewards();
         _updateRewards(account);
         _userStakingInfo[account].rewardsPerUnitPaid = 0;
 
         _totalStakedLog -= log(balanceOf(account));
+
+        emit OperatorRemoved(account);
     }
 
     /// @dev Calculate the logarithm base 2 of the amount `amount`.
