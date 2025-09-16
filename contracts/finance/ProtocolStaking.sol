@@ -101,6 +101,7 @@ contract ProtocolStaking is Ownable, ERC20Votes {
         return (logStakedAmount * (_rewardsPerUnit - userInfo.rewardsPerUnitPaid)) / 1e18 + userInfo.rewards;
     }
 
+    /// @dev Claim staking rewards for `account`.
     function claimRewards(address account) public virtual {
         _updateRewards();
         _updateRewards(account);
