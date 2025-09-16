@@ -110,9 +110,13 @@ abstract contract ERC7984Freezable is ERC7984 {
         euint64 transferred = super._update(from, to, encryptedAmount);
         if (from != address(0) && _skipUpdateCheck) {
             // Reset frozen to balance if transferred more than available
+            euint64 frozen = confidentialFrozen(from);
+            if (!FHE.isInitialized(frozen)) {
+                frozen = FHE.asEuint64(0);
+            }
             _setConfidentialFrozen(
                 from,
-                FHE.select(FHE.gt(transferred, available), confidentialBalanceOf(from), confidentialFrozen(from)),
+                FHE.select(FHE.gt(transferred, available), confidentialBalanceOf(from), frozen),
                 false
             );
         }

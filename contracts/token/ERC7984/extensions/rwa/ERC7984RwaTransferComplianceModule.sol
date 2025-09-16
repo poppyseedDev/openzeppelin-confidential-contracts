@@ -48,7 +48,7 @@ abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferCompl
     }
 
     /// @inheritdoc IERC7984RwaTransferComplianceModule
-    function postTransfer(address from, address to, euint64 encryptedAmount) public virtual {
+    function postTransfer(address from, address to, euint64 encryptedAmount) public virtual onlyToken {
         _postTransfer(from, to, encryptedAmount);
     }
 

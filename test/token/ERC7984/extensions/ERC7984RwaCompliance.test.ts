@@ -1,5 +1,6 @@
 import { callAndGetResult } from '../../../helpers/event';
 import { FhevmType } from '@fhevm/hardhat-plugin';
+import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { ethers, fhevm } from 'hardhat';
 
@@ -7,6 +8,8 @@ const transferEventSignature = 'ConfidentialTransfer(address,address,bytes32)';
 const alwaysOnType = 0;
 const transferOnlyType = 1;
 const moduleTypes = [alwaysOnType, transferOnlyType];
+const alwaysOn = 'always-on';
+const transferOnly = 'transfer-only';
 const maxInverstor = 2;
 const maxBalance = 100;
 
@@ -16,6 +19,14 @@ const fixture = async () => {
     anyone,
   );
   await token.connect(admin).addAgent(agent1);
+  const alwaysOnModule = await ethers.deployContract('ERC7984RwaComplianceModuleMock', [
+    await token.getAddress(),
+    alwaysOn,
+  ]);
+  const transferOnlyModule = await ethers.deployContract('ERC7984RwaComplianceModuleMock', [
+    await token.getAddress(),
+    transferOnly,
+  ]);
   const investorCapModule = await ethers.deployContract('ERC7984RwaInvestorCapModuleMock', [
     await token.getAddress(),
     maxInverstor,
@@ -30,6 +41,8 @@ const fixture = async () => {
     ['setMaxBalance(bytes32,bytes)'](encryptedInput.handles[0], encryptedInput.inputProof);
   return {
     token,
+    alwaysOnModule,
+    transferOnlyModule,
     investorCapModule,
     balanceCapModule,
     admin,
@@ -104,6 +117,82 @@ describe('ERC7984RwaModularCompliance', function () {
   });
 
   describe('Modules', async function () {
+    for (const forceTransfer of [false, true]) {
+      for (const compliant of [true, false]) {
+        it(`should ${forceTransfer ? 'force transfer' : 'transfer'} ${
+          compliant ? 'if' : 'zero if not'
+        } compliant`, async function () {
+          const { token, alwaysOnModule, transferOnlyModule, admin, recipient, anyone } = await fixture();
+          await token.connect(admin).installModule(alwaysOnType, alwaysOnModule);
+          await token.connect(admin).installModule(transferOnlyType, transferOnlyModule);
+          const amount = 100;
+          const encryptedMint = await fhevm
+            .createEncryptedInput(await token.getAddress(), admin.address)
+            .add64(amount)
+            .encrypt();
+          // set compliant for initial mint
+          await alwaysOnModule.$_setCompliant();
+          await transferOnlyModule.$_setCompliant();
+          await token
+            .connect(admin)
+            ['confidentialMint(address,bytes32,bytes)'](
+              recipient.address,
+              encryptedMint.handles[0],
+              encryptedMint.inputProof,
+            );
+          await expect(
+            fhevm.userDecryptEuint(
+              FhevmType.euint64,
+              await token.confidentialBalanceOf(recipient.address),
+              await token.getAddress(),
+              recipient,
+            ),
+          ).to.eventually.equal(amount);
+          const encryptedMint2 = await fhevm
+            .createEncryptedInput(await token.getAddress(), admin.address)
+            .add64(amount)
+            .encrypt();
+          if (compliant) {
+            await alwaysOnModule.$_setCompliant();
+            await transferOnlyModule.$_setCompliant();
+          } else {
+            await alwaysOnModule.$_unsetCompliant();
+            await transferOnlyModule.$_unsetCompliant();
+          }
+          if (!forceTransfer) {
+            await token.connect(recipient).setOperator(admin.address, (await time.latest()) + 1000);
+          }
+          const tx = token
+            .connect(admin)
+            [
+              forceTransfer
+                ? 'forceConfidentialTransferFrom(address,address,bytes32,bytes)'
+                : 'confidentialTransferFrom(address,address,bytes32,bytes)'
+            ](recipient.address, anyone.address, encryptedMint2.handles[0], encryptedMint2.inputProof);
+          const [, , transferredHandle] = await callAndGetResult(tx, transferEventSignature);
+          await expect(
+            fhevm.userDecryptEuint(FhevmType.euint64, transferredHandle, await token.getAddress(), recipient),
+          ).to.eventually.equal(compliant ? amount : 0);
+          await expect(tx)
+            .to.emit(alwaysOnModule, 'PreTransfer')
+            .withArgs(alwaysOn)
+            .to.emit(alwaysOnModule, 'PostTransfer')
+            .withArgs(alwaysOn);
+          if (forceTransfer) {
+            await expect(tx)
+              .to.not.emit(transferOnlyModule, 'PreTransfer')
+              .to.not.emit(transferOnlyModule, 'PostTransfer');
+          } else {
+            await expect(tx)
+              .to.emit(transferOnlyModule, 'PreTransfer')
+              .withArgs(transferOnly)
+              .to.emit(transferOnlyModule, 'PostTransfer')
+              .withArgs(transferOnly);
+          }
+        });
+      }
+    }
+
     for (const type of moduleTypes) {
       it(`should transfer if compliant to balance cap module with type ${type}`, async function () {
         const { token, admin, balanceCapModule, recipient, anyone } = await fixture();
@@ -233,6 +322,7 @@ describe('ERC7984RwaModularCompliance', function () {
           recipient,
         ),
       ).to.eventually.equal(100);
+      await expect(investorCapModule.getCurrentInvestor()).to.eventually.equal(3); //TODO: Should be 2
     });
   }
 });
