@@ -1,0 +1,111 @@
+import { FhevmType } from '@fhevm/hardhat-plugin';
+import { time, mine } from '@nomicfoundation/hardhat-network-helpers';
+import { expect } from 'chai';
+import chai from 'chai';
+import { ethers, fhevm } from 'hardhat';
+
+// Extend Chai Assertion interface to include closeToBigInt
+declare global {
+  namespace Chai {
+    interface Assertion {
+      closeToBigInt(expected: bigint, tolerance: bigint): Assertion;
+    }
+  }
+}
+
+chai.Assertion.addMethod('closeToBigInt', function (expected, tolerance) {
+  const actual = this._obj;
+
+  new chai.Assertion(actual).to.be.a('bigint');
+  new chai.Assertion(expected).to.be.a('bigint');
+  new chai.Assertion(tolerance).to.be.a('bigint');
+
+  const diff = actual > expected ? actual - expected : expected - actual;
+
+  this.assert(
+    diff <= tolerance,
+    `expected ${actual} to be within ${tolerance} of ${expected}`,
+    `expected ${actual} not to be within ${tolerance} of ${expected}`,
+    `Difference was ${diff}`,
+  );
+});
+
+/* eslint-disable no-unexpected-multiline */
+describe.only('Protocol Staking', function () {
+  beforeEach(async function () {
+    const accounts = await ethers.getSigners();
+    const [staker1, staker2, admin] = accounts;
+
+    const token = await ethers.deployContract('$ERC20Mock', ['StakingToken', 'ST', 18]);
+    const protocolStaking = await ethers.deployContract('$ProtocolStaking', [
+      'StakedToken',
+      'SST',
+      '1',
+      token.target,
+      admin,
+    ]);
+
+    this.accounts = accounts.slice(3);
+    this.staker1 = staker1;
+    this.staker2 = staker2;
+    this.admin = admin;
+    this.token = token;
+    this.mock = protocolStaking;
+
+    for (const account of [staker1, staker2]) {
+      await token.mint(account, ethers.parseEther('1000'));
+      await this.token.connect(account).approve(this.mock.target, ethers.MaxUint256);
+    }
+  });
+
+  describe('Staking', function () {
+    it('should emit event on stake', async function () {
+      await expect(this.mock.connect(this.staker1).stake(ethers.parseEther('100')))
+        .to.emit(this.mock, 'TokensStaked')
+        .withArgs(this.staker1.address, ethers.parseEther('100'))
+        .to.emit(this.token, 'Transfer')
+        .withArgs(this.staker1.address, this.mock.target, ethers.parseEther('100'));
+      await expect(this.mock.balanceOf(this.staker1)).to.eventually.equal(ethers.parseEther('100'));
+    });
+
+    it("should not reward accounts that aren't operators", async function () {
+      await this.mock.connect(this.staker1).stake(ethers.parseEther('100'));
+
+      // Reward 0.5 tokens per block in aggregate
+      await this.mock.connect(this.admin).setRewardRate(ethers.parseEther('0.5'));
+      await mine(10);
+
+      await expect(this.mock.connect(this.staker1).earned(this.staker1)).to.eventually.equal(0);
+    });
+
+    it('Single user should get 100% of rewards', async function () {
+      await this.mock.connect(this.staker1).stake(ethers.parseEther('100'));
+
+      // Reward 0.5 tokens per block in aggregate
+      await this.mock.connect(this.admin).setRewardRate(ethers.parseEther('0.5'));
+      await this.mock.connect(this.admin).addOperator(this.staker1.address);
+      await mine(9);
+      await this.mock.connect(this.admin).setRewardRate(0);
+      expect(await this.mock.earned(this.staker1)).to.be.closeToBigInt(ethers.parseEther('5'), 10n);
+    });
+
+    it('Two users should split rewards according to logarithm', async function () {
+      await this.mock.connect(this.staker1).stake(ethers.parseEther('100'));
+      await this.mock.connect(this.staker2).stake(ethers.parseEther('1000'));
+
+      // Reward 0.5 tokens per block in aggregate
+      await this.mock.connect(this.admin).addOperator(this.staker1.address);
+      await this.mock.connect(this.admin).addOperator(this.staker2.address);
+      await this.mock.connect(this.admin).setRewardRate(ethers.parseEther('0.5'));
+      await mine(9);
+      await this.mock.connect(this.admin).setRewardRate(0);
+
+      const earned1 = await this.mock.earned(this.staker1);
+      const earned2 = await this.mock.earned(this.staker2);
+
+      expect(earned1 + earned2).to.be.closeToBigInt(ethers.parseEther('5'), 10n);
+      // Should come back to this. Checking that ratio is correct
+      expect((earned2 * 1000n) / earned1).to.be.closeToBigInt(1050n, 5n);
+    });
+  });
+});

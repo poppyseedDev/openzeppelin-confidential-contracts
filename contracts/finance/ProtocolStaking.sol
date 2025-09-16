@@ -4,11 +4,15 @@ pragma solidity ^0.8.20;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ERC20Votes, ERC20} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
-import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+
+interface IERC20Mintable is IERC20 {
+    function mint(address to, uint256 amount) external;
+}
 
 contract ProtocolStaking is Ownable, ERC20Votes {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -40,8 +44,11 @@ contract ProtocolStaking is Ownable, ERC20Votes {
         string memory name,
         string memory symbol,
         string memory version,
+        address stakingToken_,
         address governor
-    ) Ownable(governor) ERC20(name, symbol) EIP712(name, version) {}
+    ) Ownable(governor) ERC20(name, symbol) EIP712(name, version) {
+        _stakingToken = stakingToken_;
+    }
 
     function stake(uint256 amount) public virtual {
         _stake(amount);
@@ -106,13 +113,10 @@ contract ProtocolStaking is Ownable, ERC20Votes {
         _updateRewards();
         _updateRewards(account);
 
-        // Ensure deposited tokens remain collateralized
-        uint256 availableRewards = IERC20(_stakingToken).balanceOf(address(this)) - totalSupply();
-        uint256 rewardsToPayOut = Math.min(_userStakingInfo[account].rewards, availableRewards);
-
-        if (rewardsToPayOut > 0) {
-            _userStakingInfo[account].rewards -= rewardsToPayOut;
-            IERC20(_stakingToken).safeTransfer(account, rewardsToPayOut);
+        uint256 rewards = _userStakingInfo[account].rewards;
+        if (rewards > 0) {
+            _userStakingInfo[account].rewards = 0;
+            IERC20Mintable(_stakingToken).mint(account, rewards);
         }
     }
 
@@ -122,11 +126,17 @@ contract ProtocolStaking is Ownable, ERC20Votes {
     }
 
     function _updateRewards() internal virtual {
-        if (block.number == _lastUpdateBlock || totalSupply() == 0) {
+        if (block.number == _lastUpdateBlock) {
             return;
         }
 
         uint256 blocksElapsed = block.number - _lastUpdateBlock;
+        _lastUpdateBlock = block.number;
+
+        if (_totalStakedLog == 0) {
+            return;
+        }
+
         uint256 rewardsPerUnitDiff = (blocksElapsed * _rewardRate * 1e18) / _totalStakedLog;
         _rewardsPerUnit += rewardsPerUnitDiff;
         _lastUpdateBlock = block.number;
@@ -161,6 +171,11 @@ contract ProtocolStaking is Ownable, ERC20Votes {
         _totalStakedLog -= log(balanceOf(account));
 
         emit OperatorRemoved(account);
+    }
+
+    function setRewardRate(uint256 rewardRate) public virtual onlyOwner {
+        _updateRewards();
+        _rewardRate = rewardRate;
     }
 
     /// @dev Calculate the logarithm base 2 of the amount `amount`.
