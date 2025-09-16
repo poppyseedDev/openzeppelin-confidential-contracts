@@ -108,4 +108,33 @@ describe.only('Protocol Staking', function () {
       expect((earned2 * 1000n) / earned1).to.be.closeToBigInt(1050n, 5n);
     });
   });
+
+  describe('Unstaking', function () {
+    beforeEach(async function () {
+      await this.mock.connect(this.staker1).stake(ethers.parseEther('100'));
+      await this.mock.connect(this.staker2).stake(ethers.parseEther('1000'));
+    });
+
+    it('should transfer instantly if cooldown is 0', async function () {
+      const tx = this.mock.connect(this.staker1).unstake(ethers.parseEther('50'));
+      await expect(tx).to.changeTokenBalance(this.token, this.staker1, ethers.parseEther('50'));
+      await expect(tx).to.changeTokenBalance(this.mock, this.staker1, -ethers.parseEther('50'));
+    });
+
+    it('should not transfer if cooldown is set', async function () {
+      await this.mock.connect(this.admin).setUnstakeCooldownPeriod(60); // 1 minute
+      await expect(this.mock.connect(this.staker1).unstake(ethers.parseEther('50')))
+        .to.emit(this.mock, 'Transfer')
+        .withArgs(this.staker1.address, ethers.ZeroAddress, ethers.parseEther('50'))
+        .to.not.emit(this.token, 'Transfer');
+
+      time.setNextBlockTimestamp((await time.latest()) + 60);
+
+      await expect(this.mock.connect(this.staker1).release()).to.changeTokenBalance(
+        this.token,
+        this.staker1,
+        ethers.parseEther('50'),
+      );
+    });
+  });
 });

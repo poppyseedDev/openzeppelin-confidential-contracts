@@ -9,6 +9,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {DoubleEndedQueue} from "@openzeppelin/contracts/utils/structs/DoubleEndedQueue.sol";
 
 interface IERC20Mintable is IERC20 {
     function mint(address to, uint256 amount) external;
@@ -16,6 +17,7 @@ interface IERC20Mintable is IERC20 {
 
 contract ProtocolStaking is Ownable, ERC20Votes {
     using EnumerableSet for EnumerableSet.AddressSet;
+    using DoubleEndedQueue for DoubleEndedQueue.Bytes32Deque;
     using SafeERC20 for IERC20;
 
     struct UserStakingInfo {
@@ -29,7 +31,9 @@ contract ProtocolStaking is Ownable, ERC20Votes {
     uint256 private _lastUpdateBlock;
     uint256 private _rewardsPerUnit = 1;
     uint256 private _rewardRate;
+    uint256 private _unstakeCooldownPeriod;
     mapping(address => UserStakingInfo) private _userStakingInfo;
+    mapping(address => DoubleEndedQueue.Bytes32Deque) private _unstakeRequests;
 
     event OperatorAdded(address operator);
     event OperatorRemoved(address operator);
@@ -91,9 +95,31 @@ contract ProtocolStaking is Ownable, ERC20Votes {
         }
 
         _burn(msg.sender, amount);
-        IERC20(_stakingToken).safeTransfer(msg.sender, amount);
+
+        if (_unstakeCooldownPeriod == 0) {
+            IERC20(_stakingToken).safeTransfer(msg.sender, amount);
+        } else {
+            uint256 releaseTime = block.timestamp + _unstakeCooldownPeriod;
+            _unstakeRequests[msg.sender].pushBack(_encodeReleaseData(uint48(releaseTime), amount));
+        }
 
         emit TokensUnstaked(msg.sender, amount);
+    }
+
+    function release() public virtual {
+        uint256 amountToRelease = 0;
+        DoubleEndedQueue.Bytes32Deque storage queue = _unstakeRequests[msg.sender];
+        while (!queue.empty()) {
+            (uint48 releaseTime, uint256 amount) = _decodeReleaseData(queue.front());
+            if (block.timestamp < releaseTime) {
+                break;
+            }
+            queue.popFront();
+            amountToRelease += amount;
+        }
+        if (amountToRelease > 0) {
+            IERC20(_stakingToken).safeTransfer(msg.sender, amountToRelease);
+        }
     }
 
     function earned(address account) public view virtual returns (uint256) {
@@ -178,6 +204,10 @@ contract ProtocolStaking is Ownable, ERC20Votes {
         _rewardRate = rewardRate;
     }
 
+    function setUnstakeCooldownPeriod(uint256 unstakeCooldownPeriod) public virtual onlyOwner {
+        _unstakeCooldownPeriod = unstakeCooldownPeriod;
+    }
+
     /// @dev Calculate the logarithm base 2 of the amount `amount`.
     function log(uint256 amount) public view virtual returns (uint256) {
         return Math.log2(amount);
@@ -186,6 +216,15 @@ contract ProtocolStaking is Ownable, ERC20Votes {
     /// @dev Returns the staking token which is used for staking and rewards.
     function stakingToken() public view virtual returns (address) {
         return _stakingToken;
+    }
+
+    function _encodeReleaseData(uint48 releaseTime, uint256 amount) private pure returns (bytes32) {
+        return bytes32((uint256(releaseTime) << 208) | amount);
+    }
+
+    function _decodeReleaseData(bytes32 data) private pure returns (uint48 releaseTime, uint256 amount) {
+        amount = uint208(uint256(data));
+        releaseTime = uint48(uint256(data) >> 208);
     }
 
     // MARK: Disable Transfers
