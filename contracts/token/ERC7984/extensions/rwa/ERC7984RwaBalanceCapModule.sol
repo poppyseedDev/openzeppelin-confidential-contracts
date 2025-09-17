@@ -6,17 +6,17 @@ import {FHE, ebool, euint64, externalEuint64} from "@fhevm/solidity/lib/FHE.sol"
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IERC7984} from "../../../../interfaces/IERC7984.sol";
 import {FHESafeMath} from "../../../../utils/FHESafeMath.sol";
-import {ERC7984RwaTransferComplianceModule} from "./ERC7984RwaTransferComplianceModule.sol";
+import {ERC7984RwaComplianceModule} from "./ERC7984RwaComplianceModule.sol";
 
 /**
  * @dev A transfer compliance module for confidential Real World Assets (RWAs) which limits the balance of an investor.
  */
-abstract contract ERC7984RwaBalanceCapModule is ERC7984RwaTransferComplianceModule {
+abstract contract ERC7984RwaBalanceCapModule is ERC7984RwaComplianceModule {
     using EnumerableSet for *;
 
     euint64 private _maxBalance;
 
-    constructor(address token) ERC7984RwaTransferComplianceModule(token) {
+    constructor(address token) ERC7984RwaComplianceModule(token) {
         _token = token;
     }
 

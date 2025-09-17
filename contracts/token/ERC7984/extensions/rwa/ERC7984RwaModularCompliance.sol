@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 
 import {FHE, ebool, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IERC7984RwaCompliance, IERC7984RwaTransferComplianceModule} from "../../../../interfaces/IERC7984Rwa.sol";
+import {IERC7984RwaModularCompliance, IERC7984RwaComplianceModule} from "../../../../interfaces/IERC7984Rwa.sol";
 import {HandleAccessManager} from "../../../../utils/HandleAccessManager.sol";
 import {ERC7984Rwa} from "../ERC7984Rwa.sol";
 
@@ -12,7 +12,7 @@ import {ERC7984Rwa} from "../ERC7984Rwa.sol";
  * @dev Extension of {ERC7984Rwa} that supports compliance modules for confidential Real World Assets (RWAs).
  * Inspired by ERC-7579 modules.
  */
-abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance, HandleAccessManager {
+abstract contract ERC7984RwaModularCompliance is ERC7984Rwa, IERC7984RwaModularCompliance, HandleAccessManager {
     using EnumerableSet for *;
 
     EnumerableSet.AddressSet private _alwaysOnModules;
@@ -47,7 +47,7 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance, Han
     }
 
     /**
-     * @inheritdoc IERC7984RwaCompliance
+     * @inheritdoc IERC7984RwaModularCompliance
      * @dev Consider gas footprint of the module before adding it since all modules will perform
      * all steps (pre-check, compliance check, post-hook) in a single transaction.
      */
@@ -55,12 +55,12 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance, Han
         _installModule(moduleType, module);
     }
 
-    /// @inheritdoc IERC7984RwaCompliance
+    /// @inheritdoc IERC7984RwaModularCompliance
     function uninstallModule(ComplianceModuleType moduleType, address module) public virtual onlyAdminOrAgent {
         _uninstallModule(moduleType, module);
     }
 
-    /// @inheritdoc IERC7984RwaCompliance
+    /// @inheritdoc IERC7984RwaModularCompliance
     function isModuleInstalled(ComplianceModuleType moduleType, address module) public view virtual returns (bool) {
         return _isModuleInstalled(moduleType, module);
     }
@@ -69,10 +69,10 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance, Han
     function _installModule(ComplianceModuleType moduleType, address module) internal virtual {
         require(supportsModule(moduleType), ERC7984RwaUnsupportedModuleType(moduleType));
         (bool success, bytes memory returnData) = module.staticcall(
-            abi.encodePacked(IERC7984RwaTransferComplianceModule.isModule.selector)
+            abi.encodePacked(IERC7984RwaComplianceModule.isModule.selector)
         );
         require(
-            success && bytes4(returnData) == IERC7984RwaTransferComplianceModule.isModule.selector,
+            success && bytes4(returnData) == IERC7984RwaComplianceModule.isModule.selector,
             ERC7984RwaNotTransferComplianceModule(module)
         );
 
@@ -143,7 +143,7 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance, Han
         for (uint256 i = 0; i < modulesLength; i++) {
             compliant = FHE.and(
                 compliant,
-                IERC7984RwaTransferComplianceModule(modules[i]).isCompliantTransfer(from, to, encryptedAmount)
+                IERC7984RwaComplianceModule(modules[i]).isCompliantTransfer(from, to, encryptedAmount)
             );
         }
     }
@@ -163,7 +163,7 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance, Han
         for (uint256 i = 0; i < modulesLength; i++) {
             compliant = FHE.and(
                 compliant,
-                IERC7984RwaTransferComplianceModule(modules[i]).isCompliantTransfer(from, to, encryptedAmount)
+                IERC7984RwaComplianceModule(modules[i]).isCompliantTransfer(from, to, encryptedAmount)
             );
         }
     }
@@ -173,7 +173,7 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance, Han
         address[] memory modules = _alwaysOnModules.values();
         uint256 modulesLength = modules.length;
         for (uint256 i = 0; i < modulesLength; i++) {
-            IERC7984RwaTransferComplianceModule(modules[i]).postTransfer(from, to, encryptedAmount);
+            IERC7984RwaComplianceModule(modules[i]).postTransfer(from, to, encryptedAmount);
         }
     }
 
@@ -182,7 +182,7 @@ abstract contract ERC7984RwaCompliance is ERC7984Rwa, IERC7984RwaCompliance, Han
         address[] memory modules = _transferOnlyModules.values();
         uint256 modulesLength = modules.length;
         for (uint256 i = 0; i < modulesLength; i++) {
-            IERC7984RwaTransferComplianceModule(modules[i]).postTransfer(from, to, encryptedAmount);
+            IERC7984RwaComplianceModule(modules[i]).postTransfer(from, to, encryptedAmount);
         }
     }
 

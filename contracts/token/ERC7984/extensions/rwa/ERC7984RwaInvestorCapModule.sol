@@ -4,16 +4,16 @@ pragma solidity ^0.8.27;
 
 import {FHE, ebool, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {IERC7984} from "../../../../interfaces/IERC7984.sol";
-import {ERC7984RwaTransferComplianceModule} from "./ERC7984RwaTransferComplianceModule.sol";
+import {ERC7984RwaComplianceModule} from "./ERC7984RwaComplianceModule.sol";
 
 /**
  * @dev A transfer compliance module for confidential Real World Assets (RWAs) which limits the number of investors.
  */
-abstract contract ERC7984RwaInvestorCapModule is ERC7984RwaTransferComplianceModule {
+abstract contract ERC7984RwaInvestorCapModule is ERC7984RwaComplianceModule {
     uint64 private _maxInvestor;
     euint64 private _investors;
 
-    constructor(address token, uint64 maxInvestor) ERC7984RwaTransferComplianceModule(token) {
+    constructor(address token, uint64 maxInvestor) ERC7984RwaComplianceModule(token) {
         _maxInvestor = maxInvestor;
     }
 

@@ -2,4 +2,4 @@
 'openzeppelin-confidential-contracts': minor
 ---
 
-`ERC7984RwaCompliance`: Support compliance modules for confidential RWAs.
+`ERC7984RwaModularCompliance`: Support compliance modules for confidential RWAs.

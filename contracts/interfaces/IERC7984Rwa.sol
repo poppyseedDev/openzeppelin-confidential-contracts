@@ -87,8 +87,8 @@ interface IERC7984RwaBase {
 /// @dev Full interface for confidential RWA contracts.
 interface IERC7984Rwa is IERC7984, IERC7984RwaBase, IERC165, IAccessControl {}
 
-/// @dev Interface for confidential RWA compliance.
-interface IERC7984RwaCompliance {
+/// @dev Interface for confidential RWA with modular compliance.
+interface IERC7984RwaModularCompliance {
     enum ComplianceModuleType {
         ALWAYS_ON,
         TRANSFER_ONLY
@@ -103,7 +103,7 @@ interface IERC7984RwaCompliance {
 }
 
 /// @dev Interface for confidential RWA transfer compliance module.
-interface IERC7984RwaTransferComplianceModule {
+interface IERC7984RwaComplianceModule {
     /// @dev Returns magic number if it is a module.
     function isModule() external returns (bytes4);
     /// @dev Checks if a transfer is compliant. Should be non-mutating.

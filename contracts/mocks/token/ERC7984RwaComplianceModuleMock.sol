@@ -4,17 +4,17 @@ pragma solidity ^0.8.24;
 
 import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {FHE, ebool, euint64} from "@fhevm/solidity/lib/FHE.sol";
-import {ERC7984RwaTransferComplianceModule} from "../../token/ERC7984/extensions/rwa/ERC7984RwaTransferComplianceModule.sol";
+import {ERC7984RwaComplianceModule} from "../../token/ERC7984/extensions/rwa/ERC7984RwaComplianceModule.sol";
 
 // solhint-disable func-name-mixedcase
-contract ERC7984RwaComplianceModuleMock is ERC7984RwaTransferComplianceModule, SepoliaConfig {
+contract ERC7984RwaModularComplianceModuleMock is ERC7984RwaComplianceModule, SepoliaConfig {
     bool private _compliant = false;
     string private _name;
 
     event PostTransfer(string name);
     event PreTransfer(string name);
 
-    constructor(address compliance, string memory name) ERC7984RwaTransferComplianceModule(compliance) {
+    constructor(address compliance, string memory name) ERC7984RwaComplianceModule(compliance) {
         _name = name;
     }
 

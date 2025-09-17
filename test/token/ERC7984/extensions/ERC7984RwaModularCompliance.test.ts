@@ -19,11 +19,11 @@ const fixture = async () => {
     anyone,
   );
   await token.connect(admin).addAgent(agent1);
-  const alwaysOnModule = await ethers.deployContract('ERC7984RwaComplianceModuleMock', [
+  const alwaysOnModule = await ethers.deployContract('ERC7984RwaModularComplianceModuleMock', [
     await token.getAddress(),
     alwaysOn,
   ]);
-  const transferOnlyModule = await ethers.deployContract('ERC7984RwaComplianceModuleMock', [
+  const transferOnlyModule = await ethers.deployContract('ERC7984RwaModularComplianceModuleMock', [
     await token.getAddress(),
     transferOnly,
   ]);

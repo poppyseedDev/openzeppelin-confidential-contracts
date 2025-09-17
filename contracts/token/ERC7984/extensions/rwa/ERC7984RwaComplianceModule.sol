@@ -3,13 +3,13 @@
 pragma solidity ^0.8.27;
 
 import {FHE, ebool, euint64} from "@fhevm/solidity/lib/FHE.sol";
-import {IERC7984Rwa, IERC7984RwaTransferComplianceModule} from "../../../../interfaces/IERC7984Rwa.sol";
+import {IERC7984Rwa, IERC7984RwaComplianceModule} from "../../../../interfaces/IERC7984Rwa.sol";
 import {HandleAccessManager} from "../../../../utils/HandleAccessManager.sol";
 
 /**
  * @dev A contract which allows to build a transfer compliance module for confidential Real World Assets (RWAs).
  */
-abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferComplianceModule, HandleAccessManager {
+abstract contract ERC7984RwaComplianceModule is IERC7984RwaComplianceModule, HandleAccessManager {
     address internal immutable _token;
 
     /// @dev The sender is not the token.
@@ -33,12 +33,12 @@ abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferCompl
         _token = token;
     }
 
-    /// @inheritdoc IERC7984RwaTransferComplianceModule
+    /// @inheritdoc IERC7984RwaComplianceModule
     function isModule() public pure override returns (bytes4) {
         return this.isModule.selector;
     }
 
-    /// @inheritdoc IERC7984RwaTransferComplianceModule
+    /// @inheritdoc IERC7984RwaComplianceModule
     function isCompliantTransfer(
         address from,
         address to,
@@ -47,7 +47,7 @@ abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferCompl
         FHE.allow(compliant = _isCompliantTransfer(from, to, encryptedAmount), msg.sender);
     }
 
-    /// @inheritdoc IERC7984RwaTransferComplianceModule
+    /// @inheritdoc IERC7984RwaComplianceModule
     function postTransfer(address from, address to, euint64 encryptedAmount) public virtual onlyToken {
         _postTransfer(from, to, encryptedAmount);
     }
