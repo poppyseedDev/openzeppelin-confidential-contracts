@@ -1,86 +1,107 @@
 # ERC7984 Quickstart
 
-This quickstart shows how to deploy a simple `ERC7984` token and perform confidential transfers using input proofs.
+This tutorial explains how to create a confidential fungible token using Fully Homomorphic Encryption (FHE) and the OpenZeppelin smart contract library. By following this guide, you will learn how to build a token where balances and transactions remain encrypted while maintaining full functionality.
 
-Example token contract used here: `contracts/mocks/docs/ERC7984MintableBurnable.sol`.
+## Why FHE for Confidential Tokens?
 
-## 1) Deploy a token
+Confidential tokens make sense in many real-world scenarios:
 
-Constructor: `ERC7984MintableBurnable(address owner, string name, string symbol, string uri)`
+- **Privacy**: Users can transact without revealing their exact balances or transaction amounts
+- **Regulatory Compliance**: Maintains privacy while allowing for selective disclosure when needed
+- **Business Intelligence**: Companies can keep their token holdings private from competitors
+- **Personal Privacy**: Individuals can participate in DeFi without exposing their financial position
+- **Audit Trail**: All transactions are still recorded on-chain, just in encrypted form
 
-Example Hardhat script snippet:
+FHE enables these benefits by allowing computations on encrypted data without decryption, ensuring privacy while maintaining the security and transparency of blockchain.
 
-```ts
-import { ethers } from "hardhat";
 
-async function main() {
-  const [deployer] = await ethers.getSigners();
-  const Token = await ethers.getContractFactory("ERC7984MintableBurnable");
-  const token = await Token.deploy(deployer.address, "ConfToken", "CONF", "ipfs://token-metadata");
-  await token.waitForDeployment();
-  console.log("Token:", await token.getAddress());
-}
 
-main().catch((e) => { console.error(e); process.exit(1); });
-```
+## Understanding the Architecture
 
-## 2) Mint with input proof
+Our confidential token will inherit from several key contracts:
 
-The token owner can mint using an `externalEuint64` encrypted amount plus an `inputProof` provided by the fhEVM gateway.
+1. **`ERC7984`** - OpenZeppelin's base for confidential tokens
+2. **`Ownable2Step`** - Access control for minting and administrative functions
+3. **`SepoliaConfig`** - FHE configuration for the Sepolia testnet
+
+## The base smart contract
+
+Create a new file `contracts/ERC7984Example.sol`:
+
+Contract written like this assumes minimal privacy assumptions. Here you are minting a clear amount directly when instantiating.
+
+base example it assumes that the mint has been done only once, with a clear amount.
 
 ```solidity
-// Solidity example (owner context)
-function mint(address to, externalEuint64 amount, bytes memory inputProof) public onlyOwner {
-    _mint(to, FHE.fromExternal(amount, inputProof));
+// SPDX-License-Identifier: BSD-3-Clause-Clear
+pragma solidity ^0.8.24;
+
+import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {FHE, externalEuint64, euint64} from "@fhevm/solidity/lib/FHE.sol";
+import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
+import {ERC7984} from "@openzeppelin/confidential-contracts/token/ERC7984.sol";
+
+contract ERC7984Example is SepoliaConfig, ERC7984, Ownable2Step {
+    constructor(
+        uint64 amount,
+        string memory name_,
+        string memory symbol_,
+        string memory tokenURI_
+    ) ERC7984(name_, symbol_, tokenURI_) Ownable(msg.sender) {
+        euint64 encryptedAmount = FHE.asEuint64(amount);
+        _mint(msg.sender, encryptedAmount);
+    }
 }
 ```
 
-High-level flow:
 
-- Obtain `amount` ciphertext and `inputProof` from the fhEVM gateway
-- Call `mint(to, amount, inputProof)`
+## Test workflow
+_here should be a simple tests that just allows you to deploy the contract_
+_then it should showcase the transfer process_
 
-## 3) Confidential transfer with proof
 
-Two ways to transfer:
+## Possible "addons"
 
-- With proof: `confidentialTransfer(to, externalEuint64, bytes inputProof)`
-- Without proof: `confidentialTransfer(to, euint64)` if caller already has ACL access to the encrypted amount
-
-Example with proof:
-
-```ts
-// TypeScript sketch
-const { ciphertext, inputProof } = await getProofFromGateway(/* amount = 100 */);
-await token.confidentialTransfer(recipient, ciphertext, inputProof);
+Additional "addons"
+visible mint
+```solidity
+    function mint(address to, uint64 amount) external onlyOwner {
+        _mint(to, FHE.asEuint64(amount));
+    }
 ```
 
-## 4) Transfer and call
-
-If the receiver implements `IERC7984Receiver`, you can call:
-
-```ts
-await token.confidentialTransferAndCall(receiver, ciphertext, inputProof, "0x");
+confidential mint
+```solidity
+    function confidentialMint(
+        address to,
+        externalEuint64 encryptedAmount,
+        bytes calldata inputProof
+    ) external onlyOwner returns (euint64 transferred) {
+        return _mint(to, FHE.fromExternal(encryptedAmount, inputProof));
+    }
 ```
 
-The receiver’s `onConfidentialTransferReceived` returns `ebool`. If false, the transfer must be reverted by the token and the funds are effectively refunded.
+visible burn
+```solidity
+    function burn(address from, uint64 amount) external onlyOwner {
+        _burn(from, FHE.asEuint64(amount));
+    }
 
-## 5) Operators
-
-Grant an operator that can move funds until a timestamp:
-
-```ts
-await token.setOperator(operator, Math.floor(Date.now()/1000) + 3600);
+confidential burn
+```solidity
+    function confidentialBurn(
+        address from,
+        externalEuint64 encryptedAmount,
+        bytes calldata inputProof
+    ) external onlyOwner returns (euint64 transferred) {
+        return _burn(from, FHE.fromExternal(encryptedAmount, inputProof));
+    }
 ```
 
-Then the operator can use `confidentialTransferFrom(from, to, ...)` variants.
-
-## 6) Balance and supply (encrypted)
-
-```ts
-const eSupply = await token.confidentialTotalSupply();
-const eBal = await token.confidentialBalanceOf(user);
-// These are encrypted handles. Use fhEVM gateway flows to disclose if necessary.
+if you want the owner to be able to view the total supply
+```solidity
+    function _update(address from, address to, euint64 amount) internal virtual override returns (euint64 transferred) {
+        transferred = super._update(from, to, amount);
+        FHE.allow(confidentialTotalSupply(), owner());
+    }
 ```
-
-See `mocks/docs/SwapERC7984ToERC20.sol` and `mocks/docs/SwapERC7984ToERC7984.sol` for advanced, real-world patterns.

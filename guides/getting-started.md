@@ -1,17 +1,28 @@
-# Getting Started
-
-This repository provides experimental building blocks for confidential smart contracts on the Zama fhEVM coprocessor. Contracts use homomorphically encrypted types (for example, `euint64`) from `@fhevm/solidity` to keep token amounts and other values confidential onchain.
+# Getting started with OpenZepplin's confidential SC library
 
 Prerequisites:
 
 - Node.js >= 20
 - Hardhat ^2.24
-- Access to an fhEVM-enabled network and the Zama gateway/relayer
+- Access to an FHEVM-enabled network and the Zama gateway/relayer
 
-Install dependencies:
+## Project Setup
+
+First, you need to install a new project by cloning [Zama's Hardhat template](https://github.com/zama-ai/fhevm-hardhat-template) repository:
 
 ```bash
+git clone https://github.com/zama-ai/fhevm-hardhat-template conf-token
+cd conf-token
+```
+
+Install dependencies:
+```bash
 npm ci
+```
+
+Install OpenZeppelin's smart contract library:
+```bash
+npm i @openzeppelin/confidential-contracts
 ```
 
 Compile contracts:
