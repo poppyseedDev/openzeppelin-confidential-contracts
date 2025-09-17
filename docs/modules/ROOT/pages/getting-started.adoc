@@ -1,0 +1,108 @@
+= Getting Started
+
+This guide helps you start building with OpenZeppelin Confidential Contracts on the Zama fhEVM.
+
+== What you can build
+
+- Confidential fungible tokens where balances and transfer amounts are encrypted
+- Contracts that operate on encrypted values without revealing them publicly
+- Integrations that leverage operator approvals and transfer-and-call callbacks
+
+== Prerequisites
+
+- Node.js ≥ 20 and npm
+- Hardhat project (TypeScript recommended)
+- Zama fhEVM toolchain for local or testnet development (see https://docs.zama.ai/fhevm)
+
+== Install
+
+Install the library and required fhEVM packages in your Hardhat project:
+
+[source,bash]
+----
+npm install --save-dev openzeppelin-confidential-contracts @fhevm/solidity @fhevm/hardhat-plugin
+----
+
+Enable the fhEVM Hardhat plugin by importing it in your `hardhat.config.ts`:
+
+[source,ts]
+----
+import '@fhevm/hardhat-plugin';
+----
+
+Set the Solidity version to one compatible with fhEVM (e.g. `^0.8.27` or later as used in this repo) and enable the optimizer.
+
+== Create a confidential token
+
+`ConfidentialFungibleToken` is abstract. Create a minimal concrete token that exposes minting for testing:
+
+[source,solidity]
+----
+// contracts/MyConfidentialToken.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.27;
+
+import { euint64 } from '@fhevm/solidity/lib/FHE.sol';
+import { ConfidentialFungibleToken } from 'openzeppelin-confidential-contracts/contracts/token/ConfidentialFungibleToken.sol';
+
+contract MyConfidentialToken is ConfidentialFungibleToken {
+    constructor(string memory name_, string memory symbol_, string memory tokenURI_)
+        ConfidentialFungibleToken(name_, symbol_, tokenURI_)
+    {}
+
+    function mint(address to, euint64 amount) external returns (euint64) {
+        return _mint(to, amount);
+    }
+}
+----
+
+== Deploy
+
+Use Hardhat and Ethers v6 to deploy:
+
+[source,ts]
+----
+// scripts/deploy.ts
+import { ethers } from 'hardhat';
+
+async function main() {
+  const Token = await ethers.getContractFactory('MyConfidentialToken');
+  const token = await Token.deploy('My Token', 'MYT', 'ipfs://token-metadata');
+  await token.waitForDeployment();
+  console.log('Deployed at', await token.getAddress());
+}
+
+main().catch((e) => { console.error(e); process.exit(1); });
+----
+
+== Encrypt and transfer amounts
+
+Use `fhevm-js` to create ciphertext and input proofs, then call confidential transfer functions. See https://docs.zama.ai/fhevm for setup and ACL details.
+
+[source,ts]
+----
+import { Wallet } from 'ethers';
+import { createFhevm } from 'fhevm-js';
+
+// Initialize fhevm (keys, gateway, network) per Zama docs
+const fhe = await createFhevm({ /* network & gateway config */ });
+
+// Encrypt a value and produce an input-proof
+const { external, proof } = await fhe.encrypt64WithProof(100_000); // 100.000 with 6 decimals
+
+// Call the token
+await token.confidentialTransfer(receiver, external, proof);
+----
+
+Notes:
+
+- The token uses 6 decimals by default. Wrappers may adjust decimals to match underlying assets.
+- Use operator functions to delegate sends, and `confidentialTransferAndCall` for callbacks.
+
+== Next steps
+
+- xref:tutorial-deploy-token.adoc[Deploy a Confidential Token]
+- xref:tutorial-wrap-erc20.adoc[Wrap an ERC20 token]
+- xref:tutorial-operators-callbacks.adoc[Operators and transfer callbacks]
+- xref:local-dev.adoc[Local development and building this repo]
+

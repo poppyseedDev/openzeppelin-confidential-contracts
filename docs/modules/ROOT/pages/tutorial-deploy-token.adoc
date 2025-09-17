@@ -1,0 +1,94 @@
+= Tutorial: Deploy a Confidential Fungible Token
+
+In this tutorial you will deploy a minimal confidential fungible token that stores balances and transfers as encrypted values.
+
+== 1) Prerequisites
+
+- xref:getting-started.adoc[Completed Getting Started]
+- Access to a fhEVM-compatible network and gateway (see Zama docs)
+
+== 2) Implement a concrete token
+
+`ConfidentialFungibleToken` is abstract. Implement a small concrete contract exposing `mint` for testing:
+
+[source,solidity]
+----
+// contracts/MyConfidentialToken.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.27;
+
+import { euint64 } from '@fhevm/solidity/lib/FHE.sol';
+import { ConfidentialFungibleToken } from 'openzeppelin-confidential-contracts/contracts/token/ConfidentialFungibleToken.sol';
+
+contract MyConfidentialToken is ConfidentialFungibleToken {
+    constructor(string memory name_, string memory symbol_, string memory tokenURI_)
+        ConfidentialFungibleToken(name_, symbol_, tokenURI_)
+    {}
+
+    function mint(address to, euint64 amount) external returns (euint64) {
+        return _mint(to, amount);
+    }
+}
+----
+
+== 3) Deploy with Hardhat
+
+[source,ts]
+----
+// scripts/deploy.ts
+import { ethers } from 'hardhat';
+
+async function main() {
+  const Token = await ethers.getContractFactory('MyConfidentialToken');
+  const token = await Token.deploy('My Token', 'MYT', 'ipfs://token-metadata');
+  await token.waitForDeployment();
+  console.log('Deployed at', await token.getAddress());
+}
+
+main().catch((e) => { console.error(e); process.exit(1); });
+----
+
+== 4) Mint confidentially
+
+Use `fhevm-js` to encrypt and produce an input proof when needed. For minting via `_mint` you already pass an `euint64` constructed on-chain; for user-sourced transfers, prefer the external encryption + proof:
+
+[source,ts]
+----
+import { createFhevm } from 'fhevm-js';
+
+const fhe = await createFhevm({ /* network & gateway config */ });
+const { euint64: onchain, external, proof } = await fhe.encrypt64Triplet(1_000_000); // 1.000000
+
+// Example: call token.mint with on-chain constructed encrypted value when applicable
+await token.mint(alice, onchain);
+
+// Example: confidentialTransfer using external ciphertext + proof
+await token.connect(alice).confidentialTransfer(bob, external, proof);
+----
+
+== 5) Disclose amounts (optional)
+
+The token can disclose an encrypted amount publicly using `discloseEncryptedAmount`, which triggers an off-chain decryption and emits the clear value once finalized:
+
+[source,solidity]
+----
+// Somewhere in a workflow
+token.discloseEncryptedAmount(encryptedAmount);
+// Listen for AmountDisclosed(euint64 handle, uint64 amount)
+----
+
+== 6) Operators and transfers from
+
+Grant an operator a time-bounded approval to spend on your behalf:
+
+[source,ts]
+----
+const now = Math.floor(Date.now() / 1000);
+await token.connect(alice).setOperator(bob, now + 24 * 60 * 60);
+// bob can call confidentialTransferFrom(alice, to, ...)
+----
+
+== Done
+
+You have deployed, minted, and transferred with a confidential token. Next, try xref:tutorial-wrap-erc20.adoc[wrapping an ERC20].
+

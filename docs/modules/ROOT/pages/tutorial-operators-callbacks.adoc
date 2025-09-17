@@ -1,0 +1,60 @@
+= Tutorial: Operators and Transfer Callbacks
+
+Learn how to delegate transfers using operators and how to receive transfers with a callback.
+
+== 1) Operators
+
+Operators can move tokens on behalf of a holder for a limited time window.
+
+[source,ts]
+----
+const now = Math.floor(Date.now() / 1000);
+// Alice grants Bob operator rights for 24h
+await token.connect(alice).setOperator(bob.address, now + 24 * 60 * 60);
+
+// Bob can now transfer from Alice
+const { external, proof } = await fhe.encrypt64WithProof(50_000);
+await token.connect(bob).confidentialTransferFrom(alice.address, carol.address, external, proof);
+----
+
+Notes:
+
+- An operator can move any amount of the holder’s tokens during the validity period. Grant carefully.
+- Operators cannot read or reencrypt other users’ balances.
+
+== 2) Transfer-and-call with receiver
+
+Contracts can implement `IConfidentialFungibleTokenReceiver` to react to transfers. If the receiver returns encrypted `true`, the transfer is kept; otherwise the contract refunds.
+
+[source,solidity]
+----
+// contracts/ReceiverExample.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.27;
+
+import { ebool, euint64, FHE } from '@fhevm/solidity/lib/FHE.sol';
+import { IConfidentialFungibleTokenReceiver } from 'openzeppelin-confidential-contracts/contracts/interfaces/IConfidentialFungibleTokenReceiver.sol';
+
+contract ReceiverExample is IConfidentialFungibleTokenReceiver {
+    function onConfidentialTransferReceived(
+        address /*operator*/,
+        address /*from*/,
+        euint64 /*amount*/,
+        bytes calldata /*data*/
+    ) external returns (ebool) {
+        // Accept the transfer
+        return FHE.asEbool(true);
+    }
+}
+----
+
+Call the token’s transfer-and-call from a user:
+
+[source,ts]
+----
+const { external, proof } = await fhe.encrypt64WithProof(10_000);
+await token.confidentialTransferAndCall(receiver.address, external, proof, '0x');
+----
+
+If the receiver returns encrypted false, the token contract reverses the transfer internally.
+

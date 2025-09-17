@@ -1,2 +1,8 @@
 * xref:index.adoc[Overview]
+* xref:getting-started.adoc[Getting Started]
 * xref:token.adoc[Token]
+* Tutorials
+** xref:tutorial-deploy-token.adoc[Deploy a Confidential Token]
+** xref:tutorial-wrap-erc20.adoc[Wrap an ERC20]
+** xref:tutorial-operators-callbacks.adoc[Operators and Callbacks]
+* xref:local-dev.adoc[Local Development]

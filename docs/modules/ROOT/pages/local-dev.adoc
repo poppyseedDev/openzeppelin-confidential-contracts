@@ -1,0 +1,73 @@
+= Local Development
+
+This repository contains both the contracts library and its documentation site. This page explains how to work locally.
+
+== Requirements
+
+- Node.js ≥ 20, npm
+- Python (for some tooling) and a C++ toolchain if needed by dependencies
+
+== Install dependencies
+
+[source,bash]
+----
+npm ci
+----
+
+== Build contracts
+
+[source,bash]
+----
+npm run compile
+----
+
+== Run tests
+
+[source,bash]
+----
+npm test
+----
+
+Gas report:
+
+[source,bash]
+----
+npm run test:gas
+----
+
+Coverage:
+
+[source,bash]
+----
+npm run coverage
+----
+
+== Lint
+
+[source,bash]
+----
+npm run lint
+----
+
+Auto-fix JS/TS and Solidity issues:
+
+[source,bash]
+----
+npm run lint:fix
+----
+
+== Generate and preview docs
+
+The site is built with Antora and `solidity-docgen`.
+
+[source,bash]
+----
+# Prepare and build once
+npm run docs
+
+# Live-reload the docs during editing
+npm run docs:watch
+----
+
+Docs entry points are under `docs/modules/ROOT/pages`. API reference is extracted from contract docstrings.
+

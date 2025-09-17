@@ -1,0 +1,89 @@
+= Tutorial: Wrap an ERC20 into a Confidential Token
+
+This tutorial shows how to wrap an existing ERC20 into a confidential fungible token using `ConfidentialFungibleTokenERC20Wrapper`.
+
+== 1) Prerequisites
+
+- xref:getting-started.adoc[Completed Getting Started]
+- An ERC20 token address on your target network
+
+== 2) Implement the wrapper
+
+Extend `ConfidentialFungibleTokenERC20Wrapper` and wire the underlying ERC20 in the constructor:
+
+[source,solidity]
+----
+// contracts/MyWrappedConfidentialToken.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.27;
+
+import { IERC20 } from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import { ConfidentialFungibleTokenERC20Wrapper } from 'openzeppelin-confidential-contracts/contracts/token/extensions/ConfidentialFungibleTokenERC20Wrapper.sol';
+
+contract MyWrappedConfidentialToken is ConfidentialFungibleTokenERC20Wrapper {
+    constructor(IERC20 underlying, string memory name_, string memory symbol_, string memory tokenURI_)
+        ConfidentialFungibleTokenERC20Wrapper(underlying)
+        ConfidentialFungibleToken(name_, symbol_, tokenURI_)
+    {}
+}
+----
+
+The wrapper:
+
+- Adapts decimals to a maximum of 6 and defines a conversion `rate()`
+- Implements `wrap`/`finalizeUnwrap` and `onTransferReceived` for ERC1363 flow
+
+== 3) Deploy
+
+[source,ts]
+----
+// scripts/deploy-wrapper.ts
+import { ethers } from 'hardhat';
+
+async function main() {
+  const underlying = '0xYourERC20Address';
+  const Wrapper = await ethers.getContractFactory('MyWrappedConfidentialToken');
+  const wrapper = await Wrapper.deploy(underlying, 'Wrapped Confidential', 'WCONF', 'ipfs://wrapped');
+  await wrapper.waitForDeployment();
+  console.log('Wrapper at', await wrapper.getAddress());
+}
+
+main().catch((e) => { console.error(e); process.exit(1); });
+----
+
+== 4) Wrap tokens
+
+Approve and wrap. Amounts are rounded down to the nearest multiple of `rate()`.
+
+[source,ts]
+----
+import { IERC20__factory } from './types';
+
+const erc20 = IERC20__factory.connect(underlying, signer);
+await erc20.approve(await wrapper.getAddress(), ethers.MaxUint256);
+
+// Wrap 10,000 underlying units
+await wrapper.wrap(user.address, 10_000);
+----
+
+Alternatively, if the underlying supports ERC1363, transfer with callback to wrap automatically.
+
+== 5) Unwrap tokens
+
+Unwrapping burns confidential tokens and triggers an off-chain decryption to disburse underlying:
+
+[source,ts]
+----
+import { createFhevm } from 'fhevm-js';
+const fhe = await createFhevm({ /* network & gateway config */ });
+const { euint64 } = await fhe.encrypt64(1_000); // unwrap 1,000 units (before rate())
+
+await wrapper.unwrap(user.address, user.address, euint64);
+// Wait for gateway to call finalizeUnwrap; then underlying is transferred
+----
+
+== Notes
+
+- `rate()` defines the conversion: `underlying / rate()` equals confidential units.
+- Fee-on-transfer ERC20s are not supported by the wrapper.
+
