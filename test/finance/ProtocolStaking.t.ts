@@ -127,6 +127,11 @@ describe.only('Protocol Staking', function () {
         .to.emit(this.mock, 'Transfer')
         .withArgs(this.staker1.address, ethers.ZeroAddress, ethers.parseEther('50'))
         .to.not.emit(this.token, 'Transfer');
+    });
+
+    it('should transfer after cooldown complete', async function () {
+      await this.mock.connect(this.admin).setUnstakeCooldownPeriod(60); // 1 minute
+      await this.mock.connect(this.staker1).unstake(ethers.parseEther('50'));
 
       time.setNextBlockTimestamp((await time.latest()) + 60);
 
@@ -135,6 +140,35 @@ describe.only('Protocol Staking', function () {
         this.staker1,
         ethers.parseEther('50'),
       );
+    });
+
+    it('should combine multiple complete withdrawals', async function () {
+      await this.mock.connect(this.admin).setUnstakeCooldownPeriod(60); // 1 minute
+      await this.mock.connect(this.staker1).unstake(ethers.parseEther('50'));
+
+      time.setNextBlockTimestamp((await time.latest()) + 30);
+      await this.mock.connect(this.staker1).unstake(ethers.parseEther('50'));
+
+      time.setNextBlockTimestamp((await time.latest()) + 60);
+      await expect(this.mock.connect(this.staker1).release())
+        .to.emit(this.token, 'Transfer')
+        .withArgs(this.mock, this.staker1, ethers.parseEther('100'));
+    });
+  });
+
+  describe('Claim Rewards', function () {
+    it('should mint from null address', async function () {
+      await this.mock.connect(this.staker1).stake(ethers.parseEther('100'));
+
+      // Reward 0.5 tokens per block in aggregate
+      await this.mock.connect(this.admin).setRewardRate(ethers.parseEther('0.5'));
+      await this.mock.connect(this.admin).addOperator(this.staker1.address);
+      await mine(9);
+      await this.mock.connect(this.admin).setRewardRate(0);
+      const earned = await this.mock.earned(this.staker1);
+      await expect(this.mock.claimRewards(this.staker1))
+        .to.emit(this.token, 'Transfer')
+        .withArgs(ethers.ZeroAddress, this.staker1, earned);
     });
   });
 });
