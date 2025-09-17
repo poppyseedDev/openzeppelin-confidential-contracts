@@ -292,7 +292,17 @@ describe('ERC7984RwaModularCompliance', function () {
           .connect(admin)
           ['confidentialMint(address,bytes32,bytes)'](investor, encryptedMint.handles[0], encryptedMint.inputProof);
       }
-      await expect(investorCapModule.getCurrentInvestor())
+      await investorCapModule
+        .connect(admin)
+        .getHandleAllowance(await investorCapModule.getCurrentInvestor(), admin.address, true);
+      await expect(
+        fhevm.userDecryptEuint(
+          FhevmType.euint64,
+          await investorCapModule.getCurrentInvestor(),
+          await investorCapModule.getAddress(),
+          admin,
+        ),
+      )
         .to.eventually.equal(await investorCapModule.getMaxInvestor())
         .to.equal(2);
       const amount = 25;
@@ -322,7 +332,18 @@ describe('ERC7984RwaModularCompliance', function () {
           recipient,
         ),
       ).to.eventually.equal(100);
-      await expect(investorCapModule.getCurrentInvestor()).to.eventually.equal(3); //TODO: Should be 2
+      // current investor should be unchanged
+      await investorCapModule
+        .connect(admin)
+        .getHandleAllowance(await investorCapModule.getCurrentInvestor(), admin.address, true);
+      await expect(
+        fhevm.userDecryptEuint(
+          FhevmType.euint64,
+          await investorCapModule.getCurrentInvestor(),
+          await investorCapModule.getAddress(),
+          admin,
+        ),
+      ).to.eventually.equal(2);
     });
   }
 });

@@ -9,8 +9,8 @@ import {HandleAccessManager} from "../../../../utils/HandleAccessManager.sol";
 /**
  * @dev A contract which allows to build a transfer compliance module for confidential Real World Assets (RWAs).
  */
-abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferComplianceModule {
-    address private immutable _token;
+abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferComplianceModule, HandleAccessManager {
+    address internal immutable _token;
 
     /// @dev The sender is not the token.
     error SenderNotToken(address account);
@@ -64,13 +64,17 @@ abstract contract ERC7984RwaTransferComplianceModule is IERC7984RwaTransferCompl
         // default to no-op
     }
 
-    /// @dev Allow modules to get access to token handles within transaction time.
-    function _allowTokenHandleToThis(euint64 handle) internal virtual {
-        _allowTokenHandleToThis(handle, false);
+    /// @dev Allow modules to get access to token handles during transaction.
+    function _getTokenHandleAllowance(euint64 handle) internal virtual {
+        _getTokenHandleAllowance(handle, false);
     }
 
     /// @dev Allow modules to get access to token handles.
-    function _allowTokenHandleToThis(euint64 handle, bool persistent) internal virtual {
-        HandleAccessManager(_token).getHandleAllowance(euint64.unwrap(handle), address(this), persistent);
+    function _getTokenHandleAllowance(euint64 handle, bool persistent) internal virtual {
+        if (FHE.isInitialized(handle)) {
+            HandleAccessManager(_token).getHandleAllowance(euint64.unwrap(handle), address(this), persistent);
+        }
     }
+
+    function _validateHandleAllowance(bytes32 handle) internal view override onlyTokenAdmin {}
 }

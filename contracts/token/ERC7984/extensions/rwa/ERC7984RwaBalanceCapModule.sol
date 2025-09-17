@@ -14,7 +14,6 @@ import {ERC7984RwaTransferComplianceModule} from "./ERC7984RwaTransferCompliance
 abstract contract ERC7984RwaBalanceCapModule is ERC7984RwaTransferComplianceModule {
     using EnumerableSet for *;
 
-    address private immutable _token;
     euint64 private _maxBalance;
 
     constructor(address token) ERC7984RwaTransferComplianceModule(token) {
@@ -47,10 +46,8 @@ abstract contract ERC7984RwaBalanceCapModule is ERC7984RwaTransferComplianceModu
             return FHE.asEbool(true);
         }
         euint64 balance = IERC7984(_token).confidentialBalanceOf(to);
-        if (FHE.isInitialized(balance)) {
-            _allowTokenHandleToThis(balance);
-        }
-        _allowTokenHandleToThis(encryptedAmount);
+        _getTokenHandleAllowance(balance);
+        _getTokenHandleAllowance(encryptedAmount);
         (ebool increased, euint64 futureBalance) = FHESafeMath.tryIncrease(balance, encryptedAmount);
         compliant = FHE.and(increased, FHE.le(futureBalance, _maxBalance));
     }
