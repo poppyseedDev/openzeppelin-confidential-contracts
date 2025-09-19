@@ -1,4 +1,4 @@
-import constants from '../../node_modules/@fhevm/hardhat-plugin/src/constants';
+import constants from './constants';
 import { impersonateAccount, setBalance } from '@nomicfoundation/hardhat-network-helpers';
 import { Addressable, Signer, ethers } from 'ethers';
 import fs from 'fs';

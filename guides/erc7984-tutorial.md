@@ -1,17 +1,33 @@
-This example demonstrates how to create a confidential token using OpenZeppelin's smart contract library powered by ZAMA's FHEVM.
+# ERC7984 Tutorial
 
-{% hint style="info" %}
-To run this example correctly, make sure you clone the [fhevm-hardhat-template](https://github.com/zama-ai/fhevm-hardhat-template) and that the files are placed in the following directories:
+This tutorial explains how to create a confidential fungible token using Fully Homomorphic Encryption (FHE) and the OpenZeppelin smart contract library. By following this guide, you will learn how to build a token where balances and transactions remain encrypted while maintaining full functionality.
 
-- `.sol` file → `<your-project-root-dir>/contracts/`
-- `.ts` file → `<your-project-root-dir>/test/`
+## Why FHE for Confidential Tokens?
 
-This ensures Hardhat can compile and test your contracts as expected.
-{% endhint %}
+Confidential tokens make sense in many real-world scenarios:
 
-{% tabs %}
+- **Privacy**: Users can transact without revealing their exact balances or transaction amounts
+- **Regulatory Compliance**: Maintains privacy while allowing for selective disclosure when needed
+- **Business Intelligence**: Companies can keep their token holdings private from competitors
+- **Personal Privacy**: Individuals can participate in DeFi without exposing their financial position
+- **Audit Trail**: All transactions are still recorded on-chain, just in encrypted form
 
-{% tab title="ERC7984Example.sol" %}
+FHE enables these benefits by allowing computations on encrypted data without decryption, ensuring privacy while maintaining the security and transparency of blockchain.
+## Understanding the Architecture
+
+Our confidential token will inherit from several key contracts:
+
+1. **`ERC7984`** - OpenZeppelin's base for confidential tokens
+2. **`Ownable2Step`** - Access control for minting and administrative functions
+3. **`SepoliaConfig`** - FHE configuration for the Sepolia testnet
+
+## The base smart contract
+
+Create a new file `contracts/ERC7984Example.sol`:
+
+Contract written like this assumes minimal privacy assumptions. Here you are minting a clear amount directly when instantiating.
+
+This example assumes that the mint has been done only once, with a clear amount.
 
 ```solidity
 // SPDX-License-Identifier: BSD-3-Clause-Clear
@@ -36,8 +52,10 @@ contract ERC7984Example is SepoliaConfig, ERC7984, Ownable2Step {
 }
 ```
 
-{% endtab %}
-{% tab title="ERC7984Example.test.ts" %}
+
+## Test Workflow
+
+Now let's create comprehensive tests to verify our confidential token works correctly. Create a new file `test/ERC7984Example.test.ts`:
 
 ```ts
 import { expect } from 'chai';
@@ -65,7 +83,11 @@ describe('ERC7984Example', function () {
     ]);
   });
 
-  describe('Initialization', function () {
+  describe('Contract Deployment', function () {
+    it('should deploy successfully', async function () {
+      expect(await token.getAddress()).to.be.properAddress;
+    });
+
     it('should set the correct name', async function () {
       expect(await token.name()).to.equal('Confidential Token');
     });
@@ -85,7 +107,7 @@ describe('ERC7984Example', function () {
     });
   });
 
-  describe('Transfer Process', function () {
+  describe('Confidential Transfer Process', function () {
     it('should transfer tokens from owner to recipient', async function () {
       // Create encrypted input for transfer amount
       const encryptedInput = await fhevm
@@ -93,7 +115,7 @@ describe('ERC7984Example', function () {
         .add64(TRANSFER_AMOUNT)
         .encrypt();
 
-      // Perform the transfer
+      // Perform the confidential transfer
       await expect(token
         .connect(owner)
         ['confidentialTransfer(address,bytes32,bytes)'](
@@ -109,7 +131,7 @@ describe('ERC7984Example', function () {
       expect(ownerBalanceHandle).to.not.be.undefined;
     });
 
-    it('should allow recipient to transfer received tokens', async function () {
+    it('should allow chained transfers', async function () {
       // First transfer from owner to recipient
       const encryptedInput1 = await fhevm
         .createEncryptedInput(await token.getAddress(), owner.address)
@@ -142,6 +164,33 @@ describe('ERC7984Example', function () {
       const otherBalanceHandle = await token.confidentialBalanceOf(other.address);
       const recipientBalanceHandle = await token.confidentialBalanceOf(recipient.address);
       expect(otherBalanceHandle).to.not.be.undefined;
+      expect(recipientBalanceHandle).to.not.be.undefined;
+    });
+
+    it('should maintain privacy - balances are encrypted', async function () {
+      // Transfer some tokens
+      const encryptedInput = await fhevm
+        .createEncryptedInput(await token.getAddress(), owner.address)
+        .add64(TRANSFER_AMOUNT)
+        .encrypt();
+
+      await expect(token
+        .connect(owner)
+        ['confidentialTransfer(address,bytes32,bytes)'](
+          recipient.address,
+          encryptedInput.handles[0],
+          encryptedInput.inputProof
+        )).to.not.be.reverted;
+
+      // The balance handles should be encrypted (different values)
+      const ownerBalanceHandle = await token.confidentialBalanceOf(owner.address);
+      const recipientBalanceHandle = await token.confidentialBalanceOf(recipient.address);
+      
+      // These should be different encrypted values
+      expect(ownerBalanceHandle).to.not.equal(recipientBalanceHandle);
+      
+      // Both handles should exist (without decryption for now)
+      expect(ownerBalanceHandle).to.not.be.undefined;
       expect(recipientBalanceHandle).to.not.be.undefined;
     });
 
@@ -185,38 +234,62 @@ describe('ERC7984Example', function () {
 });
 ```
 
-{% endtab %}
+To run the tests, use:
 
-{% tab title="ERC7984Example.fixture.ts" %}
-
-```ts
-import { ethers } from "hardhat";
-import type { ERC7984Example } from "../../types";
-import type { ERC7984Example__factory } from "../../types";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-
-export async function deployERC7984ExampleFixture(owner: HardhatEthersSigner) {
-  // Deploy ERC7984Example with initial supply
-  const ERC7984ExampleFactory = (await ethers.getContractFactory(
-    "ERC7984Example",
-  )) as ERC7984Example__factory;
-  const ERC7984Example = (await ERC7984ExampleFactory.deploy(
-    owner.address, // Owner address
-    1000, // Initial amount
-    "Confidential Token",
-    "CTKN",
-    "https://example.com/token",
-  )) as ERC7984Example;
-
-  const ERC7984ExampleAddress = await ERC7984Example.getAddress();
-
-  return {
-    ERC7984Example,
-    ERC7984ExampleAddress,
-  };
-}
+```bash
+npx hardhat test test/ERC7984Example.test.ts
 ```
 
-{% endtab %}
 
-{% endtabs %}
+## Advanced Features and Extensions
+
+The basic ERC7984Example contract provides core functionality, but you can extend it with additional features:
+
+### Minting Functions
+
+**Visible Mint** - Allows the owner to mint tokens with a clear amount:
+```solidity
+    function mint(address to, uint64 amount) external onlyOwner {
+        _mint(to, FHE.asEuint64(amount));
+    }
+```
+
+**Confidential Mint** - Allows minting with encrypted amounts for enhanced privacy:
+```solidity
+    function confidentialMint(
+        address to,
+        externalEuint64 encryptedAmount,
+        bytes calldata inputProof
+    ) external onlyOwner returns (euint64 transferred) {
+        return _mint(to, FHE.fromExternal(encryptedAmount, inputProof));
+    }
+```
+
+### Burning Functions
+
+**Visible Burn** - Allows the owner to burn tokens with a clear amount:
+```solidity
+    function burn(address from, uint64 amount) external onlyOwner {
+        _burn(from, FHE.asEuint64(amount));
+    }
+
+**Confidential Burn** - Allows burning with encrypted amounts:
+```solidity
+    function confidentialBurn(
+        address from,
+        externalEuint64 encryptedAmount,
+        bytes calldata inputProof
+    ) external onlyOwner returns (euint64 transferred) {
+        return _burn(from, FHE.fromExternal(encryptedAmount, inputProof));
+    }
+```
+
+### Total Supply Visibility
+
+If you want the owner to be able to view the total supply (useful for administrative purposes):
+```solidity
+    function _update(address from, address to, euint64 amount) internal virtual override returns (euint64 transferred) {
+        transferred = super._update(from, to, amount);
+        FHE.allow(confidentialTotalSupply(), owner());
+    }
+```
